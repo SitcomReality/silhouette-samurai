@@ -3,7 +3,10 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
     if (ent.state === 'dead') continue;
     const scX = (ent.x - controller.cameraX) + viewWidth / 2;
     if (scX > 0 && scX < viewWidth) {
-      const scY = ent.y - (ent.type === 'crate' ? (ent.height || 50) : 135) + camYOffset;
+      const healthBarY = ent.type === 'crate' 
+        ? (ent.height || 50) 
+        : (ent.character ? ent.character.height + 20 : 120);
+      const scY = ent.y - healthBarY + camYOffset;
       const barW = 36;
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(scX - barW/2, scY - 8, barW, 3);

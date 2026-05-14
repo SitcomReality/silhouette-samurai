@@ -1,5 +1,5 @@
 import { smin, sdBox, sdCapsule, sdCircle } from './primitives.js';
-import { evalSkeletonSDF } from './skeleton-eval.js';
+import { evalCharacterSDF } from '../character/sdf-eval.js';
 import { getGroundY } from './ground.js';
 
 export function computeContourY(x, baseGroundY, groundedEntities, groundedParticles, shockwaves, globalBlendK = 22) {
@@ -9,10 +9,10 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
   let highestObjTop = gY;
   
   for (const ent of groundedEntities) {
-    const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 120;
+    const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 80;
     if (Math.abs(ent.x - x) < span) {
       nearbyEntities.push(ent);
-      const top = ent.type === 'crate' ? ent.y - (ent.height || 50) : ent.y - 140;
+      const top = ent.type === 'crate' ? ent.y - (ent.height || 50) : ent.y - (ent.character ? ent.character.height + 30 : 120);
       if (top < highestObjTop) highestObjTop = top;
     }
   }
@@ -34,9 +34,9 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
       if (ent.type === 'crate') {
         const boxD = sdBox(x, y, ent.x, ent.y - (ent.height || 50) / 2, ent.width || 50, ent.height || 50);
         d = smin(d, boxD, globalBlendK);
-      } else {
-        const skelD = evalSkeletonSDF(ent.skeleton, x, y);
-        d = smin(d, skelD, globalBlendK);
+      } else if (ent.character) {
+        const charD = evalCharacterSDF(ent.character, x, y);
+        d = smin(d, charD, globalBlendK);
       }
     }
 

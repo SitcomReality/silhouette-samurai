@@ -1,7 +1,8 @@
-import { createDefaultSkeleton } from '../skeleton/factory.js';
-import { triggerAttack } from './combat.js';
+import { createCharacter } from '../character/representation.js';
+import { triggerAttack } from '../combat/attacks/trigger.js';
 import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
 import { updateEngine } from './update.js';
+import { determineAttack } from '../input/controls.js';
 
 export class GameController {
   constructor() {
@@ -16,6 +17,7 @@ export class GameController {
     this.devMode = false;
     
     this.keys = {};
+    this.prevKeys = {};
     this.hitstop = 0;
     this.screenShake = 0;
     
@@ -33,14 +35,17 @@ export class GameController {
       vy: 0,
       facing: 'right',
       isGrounded: true,
+      isCrouching: false,
       health: 100,
       maxHealth: 100,
       state: 'idle',
       stateTime: 0,
       attackType: 'none',
       attackTimer: 0,
+      endlagTimer: 0,
+      attackHitConfirmed: false,
       combo: 0,
-      skeleton: createDefaultSkeleton(0, this.baseGroundY),
+      character: createCharacter(0, this.baseGroundY),
     };
 
     spawnCratesSquareWave(this, 250, 4);
@@ -48,15 +53,15 @@ export class GameController {
   }
 
   handleKeyDown(code, key) {
+    const wasPressed = this.keys[code] || this.keys[key];
     this.keys[code] = true;
     this.keys[key] = true;
 
-    if (['Digit1', 'Numpad1', '1'].includes(code) || ['Digit1', 'Numpad1', '1'].includes(key)) {
-      triggerAttack(this, 'kick_low');
-    } else if (['Digit2', 'Numpad2', '2'].includes(code) || ['Digit2', 'Numpad2', '2'].includes(key)) {
-      triggerAttack(this, 'roundhouse');
-    } else if (['Digit3', 'Numpad3', '3'].includes(code) || ['Digit3', 'Numpad3', '3'].includes(key)) {
-      triggerAttack(this, 'slam');
+    if (!wasPressed) {
+      const attackType = determineAttack(this);
+      if (attackType) {
+        triggerAttack(this, attackType);
+      }
     }
   }
 
@@ -67,5 +72,6 @@ export class GameController {
 
   update(dt) {
     updateEngine(this, dt);
+    Object.assign(this.prevKeys, this.keys);
   }
 }

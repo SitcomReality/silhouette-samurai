@@ -1,4 +1,4 @@
-import { createDefaultSkeleton } from '../skeleton/factory.js';
+import { createCharacter } from '../character/representation.js';
 
 export function spawnEnemy(controller, x) {
   controller.entities.push({
@@ -10,6 +10,7 @@ export function spawnEnemy(controller, x) {
     vy: 0,
     facing: 'left',
     isGrounded: true,
+    isCrouching: false,
     health: 60,
     maxHealth: 60,
     state: 'idle',
@@ -17,7 +18,7 @@ export function spawnEnemy(controller, x) {
     attackType: 'none',
     attackTimer: 0,
     combo: 0,
-    skeleton: createDefaultSkeleton(x, controller.baseGroundY),
+    character: createCharacter(x, controller.baseGroundY),
   });
 }
 
@@ -35,6 +36,7 @@ export function spawnCratesSquareWave(controller, startX, count) {
       vy: 0,
       facing: 'left',
       isGrounded: true,
+      isCrouching: false,
       health: 40,
       maxHealth: 40,
       state: 'idle',
@@ -42,7 +44,6 @@ export function spawnCratesSquareWave(controller, startX, count) {
       attackType: 'none',
       attackTimer: 0,
       combo: 0,
-      skeleton: createDefaultSkeleton(cx, controller.baseGroundY),
       width: crateWidth,
       height: 50,
     });

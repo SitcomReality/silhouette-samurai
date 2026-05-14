@@ -63,9 +63,8 @@ export class UIOverlay {
       setTimeout(() => this.controller.handleKeyUp(code, code), 150);
     };
     
-    document.getElementById('btn-atk-1').addEventListener('click', () => handleSimulatedKeyPress('Digit1'));
-    document.getElementById('btn-atk-2').addEventListener('click', () => handleSimulatedKeyPress('Digit2'));
-    document.getElementById('btn-atk-3').addEventListener('click', () => handleSimulatedKeyPress('Digit3'));
+    document.getElementById('btn-atk-1').addEventListener('click', () => handleSimulatedKeyPress('KeyJ'));
+    document.getElementById('btn-atk-2').addEventListener('click', () => handleSimulatedKeyPress('KeyK'));
   }
   
   update() {

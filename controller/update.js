@@ -1,5 +1,6 @@
-import { updateSkeleton } from '../skeleton/animator.js';
-import { checkMeleeImpacts } from './combat.js';
+import { animateCharacter } from '../character/animator.js';
+import { resolveAttackHits } from '../combat/attacks/resolve.js';
+import { ATTACK_CONFIG } from '../combat/attacks/config.js';
 import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
 
 export function updateEngine(controller, dt) {
@@ -15,23 +16,33 @@ export function updateEngine(controller, dt) {
   const p = controller.player;
   p.stateTime += dt;
 
+  const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
+  p.isCrouching = down && p.isGrounded && p.state !== 'attack';
+
   if (p.state !== 'attack' && p.state !== 'dead') {
     let isMoving = false;
     const moveSpeed = 7;
+    const friction = p.isCrouching ? 0.92 : 0.7;
 
     if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) {
-      p.vx = -moveSpeed;
+      if (!p.isCrouching) p.vx = -moveSpeed;
       p.facing = 'left';
       isMoving = true;
     } else if (controller.keys['KeyD'] || controller.keys['ArrowRight']) {
-      p.vx = moveSpeed;
+      if (!p.isCrouching) p.vx = moveSpeed;
       p.facing = 'right';
       isMoving = true;
     } else {
-      p.vx *= 0.7;
+      p.vx *= friction;
     }
 
-    if ((controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space']) && p.isGrounded) {
+    if (p.isCrouching && Math.abs(p.vx) > 3) {
+      isMoving = true;
+    } else {
+      p.vx *= friction;
+    }
+
+    if ((controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space']) && p.isGrounded && !down) {
       p.vy = -14;
       p.isGrounded = false;
       p.state = 'run';
@@ -42,12 +53,21 @@ export function updateEngine(controller, dt) {
     }
   } else if (p.state === 'attack') {
     p.attackTimer -= dt;
-    if (Math.random() < 0.3) {
-      checkMeleeImpacts(controller, p.attackType);
-    }
+    
+    resolveAttackHits(controller);
+    
     if (p.attackTimer <= 0) {
-      p.state = 'idle';
-      p.attackType = 'none';
+      if (p.endlagTimer > 0) {
+        p.endlagTimer -= dt;
+        p.vx *= 0.85;
+      } else {
+        const config = ATTACK_CONFIG[p.attackType];
+        if (!p.attackHitConfirmed && config.resetComboOnMiss) {
+          p.combo = Math.max(0, p.combo - 1);
+        }
+        p.state = 'idle';
+        p.attackType = 'none';
+      }
     }
   }
 
@@ -65,8 +85,10 @@ export function updateEngine(controller, dt) {
     p.y = controller.baseGroundY;
   }
 
-  const progress = p.state === 'attack' ? 1 - p.attackTimer / (p.attackType === 'slam' ? 0.45 : 0.35) : 0;
-  updateSkeleton(p.skeleton, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy);
+  const progress = p.state === 'attack' && p.attackTimer > 0 
+    ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
+    : 0;
+  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching);
 
   const targetCamX = p.x + (p.facing === 'right' ? 100 : -100);
   controller.cameraX += (targetCamX - controller.cameraX) * 0.08;
@@ -127,8 +149,8 @@ export function updateEngine(controller, dt) {
       ent.state = 'idle';
     }
 
-    if (ent.type !== 'crate') {
-      updateSkeleton(ent.skeleton, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy);
+    if (ent.type !== 'crate' && ent.character) {
+      animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false);
     }
   }
 

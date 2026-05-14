@@ -1,5 +1,5 @@
 import { smin, sdBox, sdCapsule, sdCircle } from './primitives.js';
-import { evalSkeletonSDF } from './skeleton-eval.js';
+import { evalCharacterSDF } from '../character/sdf-eval.js';
 import { getGroundY } from './ground.js';
 
 export function extractSDFSegments(
@@ -21,7 +21,7 @@ export function extractSDFSegments(
     const activeEnts = [];
     for (const ent of entities) {
       if (ent.state === 'dead') continue;
-      const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 120;
+      const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 80;
       if (Math.abs(ent.x - wx) < span + globalBlendK) activeEnts.push(ent);
     }
     colEntities.push(activeEnts);
@@ -45,7 +45,8 @@ export function extractSDFSegments(
 
     let highestTop = gY;
     for (let i = 0; i < activeEnts.length; i++) {
-      const top = activeEnts[i].type === 'crate' ? activeEnts[i].y - (activeEnts[i].height || 50) : activeEnts[i].y - 140;
+      const ent = activeEnts[i];
+      const top = ent.type === 'crate' ? ent.y - (ent.height || 50) : ent.y - (ent.character ? ent.character.height + 30 : 120);
       if (top < highestTop) highestTop = top;
     }
     for (let i = 0; i < activeParts.length; i++) {
@@ -69,9 +70,9 @@ export function extractSDFSegments(
         if (ent.type === 'crate') {
           const boxD = sdBox(wx, wy, ent.x, ent.y - (ent.height || 50) / 2, ent.width || 50, ent.height || 50);
           d = smin(d, boxD, globalBlendK);
-        } else {
-          const skelD = evalSkeletonSDF(ent.skeleton, wx, wy, globalBlendK);
-          d = smin(d, skelD, globalBlendK);
+        } else if (ent.character) {
+          const charD = evalCharacterSDF(ent.character, wx, wy, globalBlendK);
+          d = smin(d, charD, globalBlendK);
         }
       }
 
