@@ -1,0 +1,65 @@
+import { useEffect, useRef, useState } from 'react';
+import { GameCanvas } from './components/GameCanvas';
+import { UIOverlay } from './components/UIOverlay';
+import { GameController } from './game/GameController';
+
+export default function App() {
+  const controllerRef = useRef<GameController | null>(null);
+  if (!controllerRef.current) {
+    controllerRef.current = new GameController();
+  }
+  const controller = controllerRef.current;
+
+  const [themeColor, setThemeColor] = useState<string>('#06b6d4'); // Neon Cyan default
+  const [score, setScore] = useState<number>(0);
+  const [combo, setCombo] = useState<number>(0);
+  const [maxCombo, setMaxCombo] = useState<number>(0);
+
+  // Set up Keyboard event binding
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent default page scrolling for Arrow keys and Spacebar
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        e.preventDefault();
+      }
+      controller.handleKeyDown(e.code, e.key);
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      controller.handleKeyUp(e.code, e.key);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // Sync stats periodically to avoid re-rendering entire screen on every single requestAnimationFrame
+    const syncInterval = setInterval(() => {
+      setScore(Math.floor(controller.stats.score));
+      setCombo(controller.player.combo);
+      setMaxCombo(controller.stats.maxCombo);
+    }, 60);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      clearInterval(syncInterval);
+    };
+  }, [controller]);
+
+  return (
+    <main className="relative w-screen h-screen bg-slate-950 overflow-hidden flex flex-col">
+      {/* Immersive Game Simulation Viewport */}
+      <div className="relative flex-1 w-full h-full">
+        <GameCanvas controller={controller} themeColor={themeColor} />
+        <UIOverlay
+          controller={controller}
+          themeColor={themeColor}
+          setThemeColor={setThemeColor}
+          combo={combo}
+          score={score}
+          maxCombo={maxCombo}
+        />
+      </div>
+    </main>
+  );
+}

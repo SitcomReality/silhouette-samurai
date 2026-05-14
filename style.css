@@ -1,0 +1,25 @@
+:root{
+  --bg:#0b1220;
+  --card:#0f1724;
+  --muted:#94a3b8;
+  --accent:#06b6d4;
+  --glass: rgba(255,255,255,0.03);
+}
+
+*{box-sizing:border-box}
+html,body,#root{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+body{background:linear-gradient(180deg,var(--bg),#05060a);display:flex;align-items:center;justify-content:center;padding:24px;color:#e6eef8}
+.card{width:980px;max-width:100%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+.card h1{margin:0;font-size:22px;letter-spacing:2px;color:white}
+.muted{margin:6px 0 16px;color:var(--muted);font-size:13px}
+.grid{display:flex;gap:12px}
+.panel{flex:1;background:var(--glass);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+.panel h3{margin:0 0 8px;font-size:13px;color:#cfe9f3}
+.panel p, .panel ul{margin:0;color:var(--muted);font-size:13px}
+.panel ul{padding-left:18px;margin-top:6px}
+.actions{display:flex;gap:10px;margin-top:14px}
+button{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:10px 14px;border-radius:10px;color:white;cursor:pointer}
+button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+.sandbox{margin-top:16px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);display:none}
+#demo-canvas{display:block;width:100%;height:160px;background:linear-gradient(180deg,#071022,#06121a)}
+.note{margin-top:12px;color:var(--muted);font-size:12px}

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Filament — Refactor Placeholder</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom": "https://esm.sh/react-dom@18.2.0"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="root" class="root">
+    <div class="card">
+      <h1>FILAMENT</h1>
+      <p class="muted">Refactor in progress — temporary placeholder UI</p>
+
+      <div class="grid">
+        <div class="panel">
+          <h3>Status</h3>
+          <p>Core game modules detected in /refactor_me. Refactor pipeline starting.</p>
+        </div>
+
+        <div class="panel">
+          <h3>Quick Links</h3>
+          <ul>
+            <li>/refactor_me/entrypoint.txt</li>
+            <li>/refactor_me/GameCanvas.txt</li>
+            <li>/refactor_me/GameController.txt</li>
+            <li>/refactor_me/SDFMath.txt</li>
+            <li>/refactor_me/UIOverlay.txt</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="open-sandbox">Open Minimal Sandbox</button>
+        <button id="start-sim" class="secondary">Start Demo Animation</button>
+      </div>
+
+      <div id="sandbox" class="sandbox" aria-hidden="true">
+        <canvas id="demo-canvas" width="800" height="240"></canvas>
+      </div>
+
+      <p class="note">This page is only a temporary placeholder while refactoring continues.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
