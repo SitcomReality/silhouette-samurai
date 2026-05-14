@@ -3,21 +3,24 @@ import { ATTACK_CONFIG } from '../combat/attacks/config.js';
 
 export function renderDebug(ctx, controller, viewWidth, camYOffset) {
   const drawCharacterDebug = (char, x, y, color) => {
-    const scX = (x - controller.cameraX) + viewWidth / 2;
-    const scY = y + camYOffset;
+    const scX = (char.core.x - controller.cameraX) + viewWidth / 2;
+    const scY = char.core.y + camYOffset;
     
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
     
-    ctx.strokeRect(scX - char.width/2, scY - char.height, char.width, char.height);
+    // Core torso box
+    ctx.strokeRect(scX - char.width/2, scY - char.height/2, char.width, char.height);
     
+    // Head circle
     const hx = (char.head.x - controller.cameraX) + viewWidth / 2;
     const hy = char.head.y + camYOffset;
     ctx.beginPath();
     ctx.arc(hx, hy, char.head.radius, 0, Math.PI * 2);
     ctx.stroke();
     
-    if (char.arm.length > 0) {
+    // Arm - only if visible
+    if (char.arm.length > 5) {
       const ax = (char.arm.origin.x - controller.cameraX) + viewWidth / 2;
       const ay = char.arm.origin.y + camYOffset;
       const bx = ax + Math.cos(char.arm.angle) * char.arm.length;
@@ -27,6 +30,24 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       ctx.lineTo(bx, by);
       ctx.stroke();
     }
+    
+    // Legs
+    const legX = scX;
+    const legY = scY + char.height / 2;
+    
+    const leftEndX = legX - 6 + Math.sin(char.legs.leftAngle) * char.legs.length;
+    const leftEndY = legY + Math.cos(char.legs.leftAngle) * char.legs.length;
+    ctx.beginPath();
+    ctx.moveTo(legX - 6, legY);
+    ctx.lineTo(leftEndX, leftEndY);
+    ctx.stroke();
+    
+    const rightEndX = legX + 6 + Math.sin(char.legs.rightAngle) * char.legs.length;
+    const rightEndY = legY + Math.cos(char.legs.rightAngle) * char.legs.length;
+    ctx.beginPath();
+    ctx.moveTo(legX + 6, legY);
+    ctx.lineTo(rightEndX, rightEndY);
+    ctx.stroke();
   };
 
   if (controller.player.character) {
