@@ -1,76 +1,34 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+import { GameController } from './controller.js';
+import { GameCanvas } from './game-canvas.js';
+import { UIOverlay } from './ui-overlay.js';
 
-const Root = () => {
-  React.useEffect(() => {
-    const openBtn = document.getElementById('open-sandbox');
-    const startBtn = document.getElementById('start-sim');
-    const sandbox = document.getElementById('sandbox');
-    const canvas = document.getElementById('demo-canvas');
+document.addEventListener('DOMContentLoaded', () => {
+  const controller = new GameController();
+  
+  const canvasElement = document.getElementById('game-canvas');
+  const gameCanvas = new GameCanvas(canvasElement, controller, '#06b6d4');
+  
+  const uiOverlay = new UIOverlay(controller, (newColor) => {
+    gameCanvas.setThemeColor(newColor);
+  });
+  
+  const handleKeyDown = (e) => {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+      e.preventDefault();
+    }
+    controller.handleKeyDown(e.code, e.key);
+  };
 
-    openBtn?.addEventListener('click', () => {
-      if (!sandbox) return;
-      sandbox.style.display = sandbox.style.display === 'block' ? 'none' : 'block';
-    });
+  const handleKeyUp = (e) => {
+    controller.handleKeyUp(e.code, e.key);
+  };
 
-    let raf = 0;
-    let t0 = performance.now();
-    let ctx = canvas?.getContext?.('2d') || null;
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+  
+  setInterval(() => {
+    uiOverlay.update();
+  }, 60);
 
-    startBtn?.addEventListener('click', () => {
-      if (!ctx || !canvas) return;
-      if (raf) { cancelAnimationFrame(raf); raf = 0; startBtn.textContent = 'Start Demo Animation'; return; }
-      startBtn.textContent = 'Stop Demo Animation';
-      const render = (t) => {
-        const w = canvas.width = canvas.clientWidth;
-        const h = canvas.height = canvas.clientHeight;
-        ctx.clearRect(0,0,w,h);
-
-        // simple animated contour-like demo: moving sine ground + neon stroke
-        const theme = '#06b6d4';
-        ctx.fillStyle = '#071022';
-        ctx.fillRect(0,0,w,h);
-
-        ctx.beginPath();
-        const base = h * 0.65;
-        for (let x=0;x<=w;x+=2) {
-          const u = x / w;
-          const y = base + Math.sin((x + t*0.15) * 0.02) * 14 + Math.cos((x * 0.01) + t*0.002) * 8;
-          if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-        }
-        ctx.lineTo(w,h);
-        ctx.lineTo(0,h);
-        ctx.closePath();
-
-        const g = ctx.createLinearGradient(0,0,0,h);
-        g.addColorStop(0, theme + '20');
-        g.addColorStop(1, theme + '02');
-        ctx.fillStyle = g;
-        ctx.fill();
-
-        // stroke neon monoline
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = theme;
-        ctx.shadowColor = theme;
-        ctx.shadowBlur = 14;
-        ctx.stroke();
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#fff';
-        ctx.shadowBlur = 2;
-        ctx.stroke();
-
-        raf = requestAnimationFrame(render);
-      };
-      raf = requestAnimationFrame(render);
-    });
-
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  return React.createElement('div');
-};
-
-createRoot(document.getElementById('root')).render(React.createElement(Root));
+  gameCanvas.start();
+});

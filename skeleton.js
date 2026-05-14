@@ -1,6 +1,4 @@
-import { Skeleton } from './types';
-
-export function createDefaultSkeleton(x: number, y: number): Skeleton {
+export function createDefaultSkeleton(x, y) {
   return {
     head: { x, y: y - 110 },
     headRadius: 14,
@@ -24,22 +22,10 @@ export function createDefaultSkeleton(x: number, y: number): Skeleton {
   };
 }
 
-export function updateSkeleton(
-  skel: Skeleton,
-  x: number,
-  y: number,
-  facing: 'left' | 'right',
-  state: 'idle' | 'run' | 'attack' | 'hit' | 'dead',
-  stateTime: number,
-  attackType: string,
-  attackProgress: number, // 0 to 1
-  isGrounded = true,
-  vy = 0
-) {
+export function updateSkeleton(skel, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded = true, vy = 0) {
   const dir = facing === 'right' ? 1 : -1;
   
   if (state === 'dead') {
-    // Crumple onto the ground as a flat silhouette lump
     skel.head = { x: x + dir * 30, y: y - 12 };
     skel.torsoTop = { x: x + dir * 15, y: y - 10 };
     skel.torsoBottom = { x: x - dir * 10, y: y - 8 };
@@ -59,7 +45,6 @@ export function updateSkeleton(
   }
 
   if (state === 'hit') {
-    // Reeling backward
     const reel = Math.sin(stateTime * 15) * 10;
     skel.torsoBottom = { x, y: y - 45 };
     skel.torsoTop = { x: x - dir * 20, y: y - 85 };
@@ -84,18 +69,14 @@ export function updateSkeleton(
   }
 
   if (state === 'attack') {
-    // Beautiful sweeping flourishes and ballet brutal sequences
     if (attackType === 'kick_low') {
-      // Sweeping blade kick / long reach strike
-      // Plant left leg, strike out violently with right leg
-      const ext = Math.sin(attackProgress * Math.PI); // peaks at 0.5
+      const ext = Math.sin(attackProgress * Math.PI);
       const reach = 60 * ext;
       
       skel.torsoBottom = { x: x - dir * 10, y: y - 45 + ext * 10 };
       skel.torsoTop = { x: x + dir * 10, y: y - 80 + ext * 15 };
       skel.head = { x: x + dir * 20, y: y - 100 + ext * 15 };
       
-      // Arms counterbalance
       skel.leftShoulder = skel.torsoTop;
       skel.leftElbow = { x: x - dir * 15, y: y - 70 };
       skel.leftHand = { x: x - dir * 30, y: y - 60 };
@@ -104,12 +85,10 @@ export function updateSkeleton(
       skel.rightElbow = { x: x + dir * 30, y: y - 70 };
       skel.rightHand = { x: x + dir * 50, y: y - 65 };
       
-      // Planted leg
       skel.leftHip = skel.torsoBottom;
       skel.leftKnee = { x: x - dir * 15, y: y - 22 };
       skel.leftFoot = { x: x - dir * 20, y };
       
-      // Kicking leg: straight outward
       skel.rightHip = skel.torsoBottom;
       skel.rightKnee = { x: x + dir * (20 + reach * 0.5), y: y - 30 };
       skel.rightFoot = { x: x + dir * (30 + reach), y: y - 25 };
@@ -117,8 +96,7 @@ export function updateSkeleton(
     }
 
     if (attackType === 'roundhouse') {
-      // Majestic high arc circular sweep over the head
-      const angle = attackProgress * Math.PI * 2; // sweeps full circle
+      const angle = attackProgress * Math.PI * 2;
       const radius = 55;
       const kx = Math.cos(angle - Math.PI/2) * radius * dir;
       const ky = Math.sin(angle - Math.PI/2) * radius;
@@ -127,17 +105,14 @@ export function updateSkeleton(
       skel.torsoTop = { x: x - dir * 5, y: y - 90 };
       skel.head = { x: x - dir * 10, y: y - 110 };
 
-      // Supporting leg
       skel.leftHip = skel.torsoBottom;
       skel.leftKnee = { x: x - dir * 5, y: y - 25 };
       skel.leftFoot = { x, y };
 
-      // Sweeping leg draws perfect juicy circle
       skel.rightHip = skel.torsoBottom;
       skel.rightKnee = { x: x + kx * 0.5, y: y - 50 + ky * 0.5 };
       skel.rightFoot = { x: x + kx, y: y - 50 + ky };
 
-      // Arms flare gracefully
       skel.leftShoulder = skel.torsoTop;
       skel.leftElbow = { x: x - dir * 25, y: y - 80 };
       skel.leftHand = { x: x - dir * 40, y: y - 95 };
@@ -148,8 +123,6 @@ export function updateSkeleton(
     }
 
     if (attackType === 'slam') {
-      // Overhead brutal double smash
-      // Arch up, then drive down
       const hY = attackProgress < 0.4 ? -130 : -70;
       const armY = attackProgress < 0.4 ? -150 : -20;
       const reachX = attackProgress < 0.4 ? -10 : 45;
@@ -176,10 +149,8 @@ export function updateSkeleton(
     }
   }
 
-  // Gorgeous Dynamic Jump Squash and Stretch Animation
   if (!isGrounded) {
     if (vy < -8) {
-      // Start of jump ascent: limbs compress slightly before fully blasting out
       skel.torsoBottom = { x, y: y - 40 };
       skel.torsoTop = { x: x + dir * 5, y: y - 75 };
       skel.head = { x: x + dir * 10, y: y - 95 };
@@ -199,7 +170,6 @@ export function updateSkeleton(
       skel.rightFoot = { x: x + dir * 8, y: y - 5 };
       return;
     } else if (vy < -2) {
-      // Rapid Ascent: Complete streamlined stretch upwards
       skel.torsoBottom = { x, y: y - 55 };
       skel.torsoTop = { x: x + dir * 8, y: y - 100 };
       skel.head = { x: x + dir * 12, y: y - 120 };
@@ -211,7 +181,6 @@ export function updateSkeleton(
       skel.rightElbow = { x: x + dir * 15, y: y - 75 };
       skel.rightHand = { x: x + dir * 20, y: y - 50 };
 
-      // Legs stretch out fully down
       skel.leftHip = skel.torsoBottom;
       skel.leftKnee = { x: x - dir * 2, y: y - 25 };
       skel.leftFoot = { x: x - dir * 5, y: y + 5 };
@@ -220,7 +189,6 @@ export function updateSkeleton(
       skel.rightFoot = { x: x + dir * 8, y: y + 5 };
       return;
     } else if (Math.abs(vy) <= 3) {
-      // Jump Apex: Beautiful tight airborne acrobatic contraction / tuck
       skel.torsoBottom = { x, y: y - 50 };
       skel.torsoTop = { x: x + dir * 5, y: y - 80 };
       skel.head = { x: x + dir * 8, y: y - 98 };
@@ -232,7 +200,6 @@ export function updateSkeleton(
       skel.rightElbow = { x: x + dir * 20, y: y - 70 };
       skel.rightHand = { x: x + dir * 15, y: y - 60 };
 
-      // Knees pulled up
       skel.leftHip = skel.torsoBottom;
       skel.leftKnee = { x: x - dir * 10, y: y - 40 };
       skel.leftFoot = { x: x - dir * 5, y: y - 25 };
@@ -241,7 +208,6 @@ export function updateSkeleton(
       skel.rightFoot = { x: x + dir * 8, y: y - 25 };
       return;
     } else {
-      // Falling / descending: Reaching downward ready to seamlessly fuse back with ground line
       skel.torsoBottom = { x, y: y - 48 };
       skel.torsoTop = { x: x + dir * 10, y: y - 88 };
       skel.head = { x: x + dir * 15, y: y - 108 };
@@ -263,18 +229,15 @@ export function updateSkeleton(
     }
   }
 
-  // Run cycle
   if (state === 'run') {
     const cycle = stateTime * 14;
     const stride = Math.sin(cycle) * 22;
     const strideCos = Math.cos(cycle) * 12;
     
-    // Leans into the run
     skel.torsoBottom = { x, y: y - 48 + Math.abs(strideCos) * 0.3 };
     skel.torsoTop = { x: x + dir * 12, y: y - 88 + Math.abs(strideCos) * 0.4 };
     skel.head = { x: x + dir * 18, y: y - 108 + Math.abs(strideCos) * 0.4 };
 
-    // Legs alternate
     skel.leftHip = skel.torsoBottom;
     skel.leftKnee = { x: x + stride * 0.5, y: y - 25 - strideCos };
     skel.leftFoot = { x: x + stride, y: y - Math.max(0, strideCos) };
@@ -283,7 +246,6 @@ export function updateSkeleton(
     skel.rightKnee = { x: x - stride * 0.5, y: y - 25 + strideCos };
     skel.rightFoot = { x: x - stride, y: y - Math.max(0, -strideCos) };
 
-    // Arms alternate oppositely
     skel.leftShoulder = skel.torsoTop;
     skel.leftElbow = { x: skel.torsoTop.x - stride * 0.6, y: y - 70 };
     skel.leftHand = { x: skel.torsoTop.x - stride * 1.1, y: y - 55 };
@@ -294,7 +256,6 @@ export function updateSkeleton(
     return;
   }
 
-  // Default Idle state: groovy rhythmic bobbing
   const bob = Math.sin(stateTime * 4) * 4;
   skel.torsoBottom = { x, y: y - 50 + bob };
   skel.torsoTop = { x, y: y - 90 + bob };

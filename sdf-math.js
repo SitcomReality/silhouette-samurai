@@ -1,75 +1,61 @@
-import { Entity, Particle, Shockwave, Skeleton } from './types';
-
-// Fast polynomial smooth min
-export function smin(a: number, b: number, k: number): number {
+export function smin(a, b, k) {
   const h = Math.max(k - Math.abs(a - b), 0.0) / k;
   return Math.min(a, b) - h * h * k * 0.25;
 }
 
-export function sdCircle(px: number, py: number, cx: number, cy: number, r: number): number {
+export function sdCircle(px, py, cx, cy, r) {
   const dx = px - cx;
   const dy = py - cy;
   return Math.sqrt(dx * dx + dy * dy) - r;
 }
 
-export function sdBox(px: number, py: number, cx: number, cy: number, w: number, h: number): number {
+export function sdBox(px, py, cx, cy, w, h) {
   const dx = Math.abs(px - cx) - w / 2;
   const dy = Math.abs(py - cy) - h / 2;
   const length = Math.sqrt(Math.max(dx, 0) * Math.max(dx, 0) + Math.max(dy, 0) * Math.max(dy, 0));
   return length + Math.min(Math.max(dx, dy), 0);
 }
 
-export function sdCapsule(px: number, py: number, ax: number, ay: number, bx: number, by: number, r: number): number {
+export function sdCapsule(px, py, ax, ay, bx, by, r) {
   const pax = px - ax, pay = py - ay;
   const bax = bx - ax, bay = by - ay;
   const dotB = bax * bax + bay * bay;
-  // Prevent division by zero
   const h = dotB > 0 ? Math.min(Math.max((pax * bax + pay * bay) / dotB, 0), 1) : 0;
   const dx = pax - bax * h;
   const dy = pay - bay * h;
   return Math.sqrt(dx * dx + dy * dy) - r;
 }
 
-// Evaluate SDF for a single character skeleton
-export function evalSkeletonSDF(skel: Skeleton, px: number, py: number, blendK = 14): number {
+export function evalSkeletonSDF(skel, px, py, blendK = 14) {
   let d = sdCircle(px, py, skel.head.x, skel.head.y, skel.headRadius);
   d = smin(d, sdCapsule(px, py, skel.torsoTop.x, skel.torsoTop.y, skel.torsoBottom.x, skel.torsoBottom.y, skel.torsoRadius), blendK);
   
-  // Left arm
   d = smin(d, sdCapsule(px, py, skel.leftShoulder.x, skel.leftShoulder.y, skel.leftElbow.x, skel.leftElbow.y, skel.armRadius), blendK);
   d = smin(d, sdCapsule(px, py, skel.leftElbow.x, skel.leftElbow.y, skel.leftHand.x, skel.leftHand.y, skel.armRadius), blendK);
   
-  // Right arm
   d = smin(d, sdCapsule(px, py, skel.rightShoulder.x, skel.rightShoulder.y, skel.rightElbow.x, skel.rightElbow.y, skel.armRadius), blendK);
   d = smin(d, sdCapsule(px, py, skel.rightElbow.x, skel.rightElbow.y, skel.rightHand.x, skel.rightHand.y, skel.armRadius), blendK);
   
-  // Left leg
   d = smin(d, sdCapsule(px, py, skel.leftHip.x, skel.leftHip.y, skel.leftKnee.x, skel.leftKnee.y, skel.legRadius), blendK);
   d = smin(d, sdCapsule(px, py, skel.leftKnee.x, skel.leftKnee.y, skel.leftFoot.x, skel.leftFoot.y, skel.legRadius), blendK);
   
-  // Right leg
   d = smin(d, sdCapsule(px, py, skel.rightHip.x, skel.rightHip.y, skel.rightKnee.x, skel.rightKnee.y, skel.legRadius), blendK);
   d = smin(d, sdCapsule(px, py, skel.rightKnee.x, skel.rightKnee.y, skel.rightFoot.x, skel.rightFoot.y, skel.legRadius), blendK);
   
   return d;
 }
 
-// Compute base ground Y at horizontal world coordinate x with shockwaves
-export function getGroundY(x: number, baseGroundY: number, shockwaves: Shockwave[]): number {
+export function getGroundY(x, baseGroundY, shockwaves) {
   let y = baseGroundY;
   
-  // Add subtle base waviness/noise to make the monoline look organic
   y += Math.sin(x * 0.015) * 4;
   y += Math.cos(x * 0.007) * 6;
   
-  // Apply ripple deformations from active shockwaves
   for (const sw of shockwaves) {
     const dist = Math.abs(x - sw.x);
     const thickness = 60;
     if (Math.abs(dist - sw.radius) < thickness) {
-      // Smooth pulse wave
       const factor = 1 - Math.abs(dist - sw.radius) / thickness;
-      // Upward displacement (smaller Y) followed by downward dip
       const wave = Math.sin(factor * Math.PI * 1.5) * sw.amplitude * (sw.life / sw.maxLife);
       y -= wave;
     }
@@ -77,36 +63,22 @@ export function getGroundY(x: number, baseGroundY: number, shockwaves: Shockwave
   return y;
 }
 
-// Find the upper envelope Y value for a given column x.
-// This fuses the ground line and all grounded objects/particles into a single continuous top contour.
-export function computeContourY(
-  x: number,
-  baseGroundY: number,
-  groundedEntities: Entity[],
-  groundedParticles: Particle[],
-  shockwaves: Shockwave[],
-  globalBlendK = 22
-): number {
+export function computeContourY(x, baseGroundY, groundedEntities, groundedParticles, shockwaves, globalBlendK = 22) {
   const gY = getGroundY(x, baseGroundY, shockwaves);
   
-  // Quick pre-check: are there any entities overlapping this x coordinate?
-  // Filter objects within horizontal range
-  const nearbyEntities: Entity[] = [];
+  const nearbyEntities = [];
   let highestObjTop = gY;
   
   for (const ent of groundedEntities) {
     const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 120;
     if (Math.abs(ent.x - x) < span) {
       nearbyEntities.push(ent);
-      // Rough estimation of entity top
       const top = ent.type === 'crate' ? ent.y - (ent.height || 50) : ent.y - 140;
-      if (top < highestObjTop) {
-        highestObjTop = top;
-      }
+      if (top < highestObjTop) highestObjTop = top;
     }
   }
 
-  const nearbyParticles: Particle[] = [];
+  const nearbyParticles = [];
   for (const p of groundedParticles) {
     if (Math.abs(p.x - x) < p.radius + globalBlendK) {
       nearbyParticles.push(p);
@@ -114,14 +86,10 @@ export function computeContourY(
     }
   }
 
-  // If no objects are near, the contour is simply the ground level
-  if (nearbyEntities.length === 0 && nearbyParticles.length === 0) {
-    return gY;
-  }
+  if (nearbyEntities.length === 0 && nearbyParticles.length === 0) return gY;
 
-  // Define total combined SDF function for this x column at candidate height y
-  const evalTotalSDF = (y: number): number => {
-    let d = gY - y; // Distance to unblended ground surface (negative below ground, positive above)
+  const evalTotalSDF = (y) => {
+    let d = gY - y;
     
     for (const ent of nearbyEntities) {
       if (ent.type === 'crate') {
@@ -134,7 +102,7 @@ export function computeContourY(
     }
 
     for (const p of nearbyParticles) {
-      let pD: number;
+      let pD;
       if (p.shape === 'capsule') {
         const len = p.length || 30;
         const ang = p.angle || 0;
@@ -150,16 +118,12 @@ export function computeContourY(
       }
       d = smin(d, pD, globalBlendK);
     }
-
     return d;
   };
 
-  // Search downwards starting from safely above the highest object top
-  // Since Y goes down, smaller Y is higher.
   const startY = highestObjTop - globalBlendK * 1.5;
   const endY = gY;
 
-  // Perform robust binary search to find zero crossing (where SDF transitions from > 0 to <= 0)
   let low = startY;
   let high = endY;
   let ans = gY;
@@ -167,120 +131,46 @@ export function computeContourY(
   for (let iter = 0; iter < 10; iter++) {
     const mid = (low + high) / 2;
     if (evalTotalSDF(mid) <= 0) {
-      // mid is inside or on the surface contour. The top boundary is at or above mid (smaller Y)
       ans = mid;
       high = mid;
     } else {
-      // mid is outside in the open air. The contour is below mid (larger Y)
       low = mid;
     }
   }
-
   return ans;
 }
 
-// Extract top and bottom outline envelope for an airborne entity to render as a distinct closed outline
-export function computeAirborneEntityContour(ent: Entity, step = 3): { top: {x: number, y: number}[], bottom: {x: number, y: number}[] } {
-  const topSpan: {x: number, y: number}[] = [];
-  const bottomSpan: {x: number, y: number}[] = [];
-  
-  const spanW = ent.type === 'crate' ? (ent.width || 50) / 2 + 25 : 90;
-  const startX = ent.x - spanW;
-  const endX = ent.x + spanW;
-  
-  const minY = ent.y - (ent.type === 'crate' ? (ent.height || 50) : 150) - 30;
-  const maxY = ent.y + 40;
-
-  for (let x = startX; x <= endX; x += step) {
-    let topFound: number | null = null;
-    let bottomFound: number | null = null;
-
-    const evalSDF = (y: number) => {
-      if (ent.type === 'crate') {
-        return sdBox(x, y, ent.x, ent.y - (ent.height || 50) / 2, ent.width || 50, ent.height || 50);
-      } else {
-        return evalSkeletonSDF(ent.skeleton, x, y);
-      }
-    };
-
-    // Scan downward for top silhouette
-    for (let y = minY; y <= maxY; y += 2) {
-      if (evalSDF(y) <= 8) { // buffer threshold for visible outer shell
-        topFound = y;
-        break;
-      }
-    }
-
-    // Scan upward for bottom silhouette
-    for (let y = maxY; y >= minY; y -= 2) {
-      if (evalSDF(y) <= 8) {
-        bottomFound = y;
-        break;
-      }
-    }
-
-    if (topFound !== null && bottomFound !== null && topFound <= bottomFound) {
-      topSpan.push({ x, y: topFound });
-      bottomSpan.push({ x, y: bottomFound });
-    }
-  }
-
-  return { top: topSpan, bottom: bottomSpan };
-}
-
-// Global Grid-based Marching Squares algorithm to extract a unified zero-isoline for the entire visible scene.
-// Guarantees zero overlap, identical line rendering, and smooth organic merging/pinching of airborne objects and particles.
 export function extractSDFSegments(
-  viewWidth: number,
-  viewHeight: number,
-  cameraX: number,
-  camYOffset: number,
-  baseGroundY: number,
-  entities: Entity[],
-  particles: Particle[],
-  shockwaves: Shockwave[],
-  step = 5,
-  globalBlendK = 20
-): { x1: number; y1: number; x2: number; y2: number }[] {
+  viewWidth, viewHeight, cameraX, camYOffset, baseGroundY, entities, particles, shockwaves, step = 5, globalBlendK = 20
+) {
   const cols = Math.ceil(viewWidth / step);
   const rows = Math.ceil(viewHeight / step);
 
-  // Precompute X-bounds filtering per column to ensure ultra-fast 60FPS performance
-  // For each column, collect entities/particles overlapping its horizontal span
-  const colEntities: Entity[][] = [];
-  const colParticles: Particle[][] = [];
-
-  // Precompute world X for all columns
-  const colWorldX: number[] = [];
-  const colGroundY: number[] = [];
+  const colEntities = [];
+  const colParticles = [];
+  const colWorldX = [];
+  const colGroundY = [];
 
   for (let c = 0; c <= cols; c++) {
     const wx = cameraX + (c * step - viewWidth / 2);
     colWorldX.push(wx);
     colGroundY.push(getGroundY(wx, baseGroundY, shockwaves));
 
-    const activeEnts: Entity[] = [];
+    const activeEnts = [];
     for (const ent of entities) {
       if (ent.state === 'dead') continue;
       const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 120;
-      if (Math.abs(ent.x - wx) < span + globalBlendK) {
-        activeEnts.push(ent);
-      }
+      if (Math.abs(ent.x - wx) < span + globalBlendK) activeEnts.push(ent);
     }
     colEntities.push(activeEnts);
 
-    const activeParts: Particle[] = [];
+    const activeParts = [];
     for (const p of particles) {
-      if (Math.abs(p.x - wx) < p.radius + globalBlendK + 10) {
-        activeParts.push(p);
-      }
+      if (Math.abs(p.x - wx) < p.radius + globalBlendK + 10) activeParts.push(p);
     }
     colParticles.push(activeParts);
   }
 
-  // Pre-evaluate SDF grid values to avoid redundant calculations at shared cell corners
-  // Values <= 0 are inside/on contour, values > 0 are outside air.
-  // Using Float32Array for maximum JS VM cache efficiency.
   const grid = new Float32Array((cols + 1) * (rows + 1));
   const rowStride = rows + 1;
 
@@ -291,8 +181,6 @@ export function extractSDFSegments(
     const activeParts = colParticles[c];
     const cOffset = c * rowStride;
 
-    // Determine highly optimized vertical spatial bounding band where surface contour zero-crossings can exist.
-    // Completely skips grid evaluations deep underground or high in open sky.
     let highestTop = gY;
     for (let i = 0; i < activeEnts.length; i++) {
       const top = activeEnts[i].type === 'crate' ? activeEnts[i].y - (activeEnts[i].height || 50) : activeEnts[i].y - 140;
@@ -306,19 +194,12 @@ export function extractSDFSegments(
     const minRow = Math.max(0, Math.floor((highestTop - globalBlendK * 2.5 + camYOffset) / step));
     const maxRow = Math.min(rows, Math.ceil((gY + globalBlendK * 2.5 + camYOffset) / step));
 
-    // Fill regions safely outside the surface band with constant outer/inner scalar values
-    for (let r = 0; r < minRow; r++) {
-      grid[cOffset + r] = 100.0; // Open air
-    }
-    for (let r = maxRow + 1; r <= rows; r++) {
-      grid[cOffset + r] = -100.0; // Deep ground
-    }
+    for (let r = 0; r < minRow; r++) grid[cOffset + r] = 100.0;
+    for (let r = maxRow + 1; r <= rows; r++) grid[cOffset + r] = -100.0;
 
-    // Evaluate exact Signed Distance Field blending only inside the active contour strip
     for (let r = minRow; r <= maxRow; r++) {
       const sy = r * step;
       const wy = sy - camYOffset;
-      
       let d = gY - wy;
 
       for (let i = 0; i < activeEnts.length; i++) {
@@ -334,7 +215,7 @@ export function extractSDFSegments(
 
       for (let i = 0; i < activeParts.length; i++) {
         const p = activeParts[i];
-        let pD: number;
+        let pD;
         if (p.shape === 'capsule') {
           const len = p.length || 30;
           const ang = p.angle || 0;
@@ -350,67 +231,41 @@ export function extractSDFSegments(
         }
         d = smin(d, pD, globalBlendK);
       }
-
       grid[cOffset + r] = d;
     }
   }
 
-  // Generate Marching Squares Line Segments
-  const segments: { x1: number; y1: number; x2: number; y2: number }[] = [];
-
-  // Helper to find exact sub-pixel zero crossing factor t in [0, 1]
-  const getT = (vA: number, vB: number) => {
-    return vA / (vA - vB);
-  };
+  const segments = [];
+  const getT = (vA, vB) => vA / (vA - vB);
 
   for (let c = 0; c < cols; c++) {
     const c0 = c * rowStride;
     const c1 = (c + 1) * rowStride;
 
     for (let r = 0; r < rows; r++) {
-      const v0 = grid[c0 + r];     // Top-left
-      const v1 = grid[c1 + r];     // Top-right
-      const v2 = grid[c1 + r + 1]; // Bottom-right
-      const v3 = grid[c0 + r + 1]; // Bottom-left
+      const v0 = grid[c0 + r];
+      const v1 = grid[c1 + r];
+      const v2 = grid[c1 + r + 1];
+      const v3 = grid[c0 + r + 1];
 
-      // Determine 4-bit state based on whether corners are inside (<= 0)
       let state = 0;
       if (v0 <= 0) state |= 8;
       if (v1 <= 0) state |= 4;
       if (v2 <= 0) state |= 2;
       if (v3 <= 0) state |= 1;
 
-      // Trivial reject: fully outside or fully inside
       if (state === 0 || state === 15) continue;
 
-      // Compute pixel coordinates of top-left corner
       const px = c * step;
       const py = r * step;
 
-      // Edge crossing points relative to cell top-left
-      let topX = 0, topY = 0;
-      let rightX = 0, rightY = 0;
-      let bottomX = 0, bottomY = 0;
-      let leftX = 0, leftY = 0;
+      let topX = 0, topY = 0, rightX = 0, rightY = 0, bottomX = 0, bottomY = 0, leftX = 0, leftY = 0;
 
-      if ((state & 8) !== ((state & 4) << 1)) { // Top edge crosses
-        topX = px + step * getT(v0, v1);
-        topY = py;
-      }
-      if ((state & 4) !== ((state & 2) << 1)) { // Right edge crosses
-        rightX = px + step;
-        rightY = py + step * getT(v1, v2);
-      }
-      if ((state & 2) !== ((state & 1) << 1)) { // Bottom edge crosses
-        bottomX = px + step * getT(v3, v2);
-        bottomY = py + step;
-      }
-      if ((state & 8) !== ((state & 1) << 3)) { // Left edge crosses
-        leftX = px;
-        leftY = py + step * getT(v0, v3);
-      }
+      if ((state & 8) !== ((state & 4) << 1)) { topX = px + step * getT(v0, v1); topY = py; }
+      if ((state & 4) !== ((state & 2) << 1)) { rightX = px + step; rightY = py + step * getT(v1, v2); }
+      if ((state & 2) !== ((state & 1) << 1)) { bottomX = px + step * getT(v3, v2); bottomY = py + step; }
+      if ((state & 8) !== ((state & 1) << 3)) { leftX = px; leftY = py + step * getT(v0, v3); }
 
-      // Emit segments tracing the isoline boundary
       switch (state) {
         case 1:  segments.push({ x1: leftX, y1: leftY, x2: bottomX, y2: bottomY }); break;
         case 2:  segments.push({ x1: bottomX, y1: bottomY, x2: rightX, y2: rightY }); break;

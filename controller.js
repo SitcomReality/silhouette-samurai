@@ -1,30 +1,26 @@
-import { createDefaultSkeleton, updateSkeleton } from './Skeleton';
-import { AttackType, Entity, FloatingText, GameStats, Particle, Shockwave } from './types';
+import { createDefaultSkeleton, updateSkeleton } from './skeleton.js';
 
 export class GameController {
-  public player: Entity;
-  public entities: Entity[] = [];
-  public particles: Particle[] = [];
-  public shockwaves: Shockwave[] = [];
-  public floatingTexts: FloatingText[] = [];
-  public stats: GameStats = { score: 0, maxCombo: 0, enemiesDefeated: 0 };
-  
-  public baseGroundY = 400;
-  public cameraX = 0;
-  public devMode = false;
-  
-  // Controls state
-  public keys: { [key: string]: boolean } = {};
-  public hitstop = 0; // screen freeze frames for super juicy impacts
-  public screenShake = 0;
-  
-  private nextSpawnX = 400;
-  private particleId = 0;
-  private waveId = 0;
-  private textId = 0;
-
   constructor() {
-    // Initialize Player
+    this.entities = [];
+    this.particles = [];
+    this.shockwaves = [];
+    this.floatingTexts = [];
+    this.stats = { score: 0, maxCombo: 0, enemiesDefeated: 0 };
+    
+    this.baseGroundY = 400;
+    this.cameraX = 0;
+    this.devMode = false;
+    
+    this.keys = {};
+    this.hitstop = 0;
+    this.screenShake = 0;
+    
+    this.nextSpawnX = 400;
+    this.particleId = 0;
+    this.waveId = 0;
+    this.textId = 0;
+
     this.player = {
       id: 'player',
       type: 'player',
@@ -44,16 +40,14 @@ export class GameController {
       skeleton: createDefaultSkeleton(0, this.baseGroundY),
     };
 
-    // Spawn initial tutorial crate & enemy setup
     this.spawnCratesSquareWave(250, 4);
     this.spawnEnemy(550);
   }
 
-  public handleKeyDown(code: string, key: string) {
+  handleKeyDown(code, key) {
     this.keys[code] = true;
     this.keys[key] = true;
 
-    // Trigger attacks on 1, 2, 3 or Numpad equivalents
     if (['Digit1', 'Numpad1', '1'].includes(code) || ['Digit1', 'Numpad1', '1'].includes(key)) {
       this.triggerAttack('kick_low');
     } else if (['Digit2', 'Numpad2', '2'].includes(code) || ['Digit2', 'Numpad2', '2'].includes(key)) {
@@ -63,44 +57,39 @@ export class GameController {
     }
   }
 
-  public handleKeyUp(code: string, key: string) {
+  handleKeyUp(code, key) {
     this.keys[code] = false;
     this.keys[key] = false;
   }
 
-  private triggerAttack(type: AttackType) {
-    // Allow attacking/canceling early to let mashing feel like an unstoppable ballet of brutality
+  triggerAttack(type) {
     if (this.player.state === 'dead') return;
 
     this.player.state = 'attack';
     this.player.stateTime = 0;
     this.player.attackType = type;
-    this.player.attackTimer = type === 'slam' ? 0.45 : 0.35; // juicy fast attack duration
+    this.player.attackTimer = type === 'slam' ? 0.45 : 0.35;
 
-    // Attack startup dash flourish
     const dir = this.player.facing === 'right' ? 1 : -1;
     if (type === 'kick_low') {
       this.player.vx = dir * 12;
     } else if (type === 'roundhouse') {
       this.player.vx = dir * 8;
-      // Small vertical lift for pure fluid animation
       this.player.vy = -4; 
       this.player.isGrounded = false;
     } else if (type === 'slam') {
-      this.player.vy = -11; // short leap up to crash down
+      this.player.vy = -11;
       this.player.vx = dir * 6;
       this.player.isGrounded = false;
     }
 
-    // Check hitboxes immediately / continuously during attack
     this.checkMeleeImpacts(type);
   }
 
-  private checkMeleeImpacts(attackType: AttackType) {
+  checkMeleeImpacts(attackType) {
     const p = this.player;
     const dir = p.facing === 'right' ? 1 : -1;
     
-    // Determine reach and force
     let reach = 110;
     let pushback = 8;
     let damage = 25;
@@ -110,7 +99,7 @@ export class GameController {
       reach = 130;
       pushback = 12;
       damage = 35;
-      launchVy = -14; // Yeets enemies into the air!
+      launchVy = -14;
     } else if (attackType === 'slam') {
       reach = 160;
       pushback = 18;
@@ -120,19 +109,16 @@ export class GameController {
 
     let hitOccurred = false;
 
-    // Check impact against enemies and crates
     for (const ent of this.entities) {
       if (ent.state === 'dead') continue;
 
-      const distX = (ent.x - p.x) * dir; // positive if in front
+      const distX = (ent.x - p.x) * dir;
       const absDistX = Math.abs(ent.x - p.x);
 
-      // Hit if in front within reach, or extremely close
       if ((distX > -20 && distX < reach) || absDistX < 40) {
         hitOccurred = true;
         ent.health -= damage;
         
-        // Pushback & Force
         ent.vx = dir * pushback;
         ent.vy = launchVy;
         ent.isGrounded = false;
@@ -144,16 +130,15 @@ export class GameController {
           this.stats.enemiesDefeated++;
           this.stats.score += 100 * (1 + p.combo * 0.1);
 
-          // Explode enemy into its constituent skeleton pieces (head, torso, arms, legs) reacting to final impact force
           if (ent.type !== 'crate') {
             const h = ent.skeleton.head;
             const limbs = [
-              { shape: 'circle' as const, r: 13, len: 0, x: h.x, y: h.y },
-              { shape: 'capsule' as const, r: 9, len: 35, x: ent.x, y: ent.y - 70 },
-              { shape: 'capsule' as const, r: 6, len: 30, x: ent.x - 12, y: ent.y - 70 },
-              { shape: 'capsule' as const, r: 6, len: 30, x: ent.x + 12, y: ent.y - 70 },
-              { shape: 'capsule' as const, r: 7, len: 35, x: ent.x - 8, y: ent.y - 30 },
-              { shape: 'capsule' as const, r: 7, len: 35, x: ent.x + 8, y: ent.y - 30 },
+              { shape: 'circle', r: 13, len: 0, x: h.x, y: h.y },
+              { shape: 'capsule', r: 9, len: 35, x: ent.x, y: ent.y - 70 },
+              { shape: 'capsule', r: 6, len: 30, x: ent.x - 12, y: ent.y - 70 },
+              { shape: 'capsule', r: 6, len: 30, x: ent.x + 12, y: ent.y - 70 },
+              { shape: 'capsule', r: 7, len: 35, x: ent.x - 8, y: ent.y - 30 },
+              { shape: 'capsule', r: 7, len: 35, x: ent.x + 8, y: ent.y - 30 },
             ];
             for (const limb of limbs) {
               const ang = Math.random() * Math.PI * 2;
@@ -174,7 +159,6 @@ export class GameController {
                 vAngle: (Math.random() - 0.5) * 12,
               });
             }
-            // Mark for instant slicing out so the host lump completely disappears
             ent.health = -999;
           }
         } else {
@@ -182,16 +166,14 @@ export class GameController {
           ent.stateTime = 0;
         }
 
-        // Yeet particles starting from INSIDE the main isoline outwards
-        // Extremely low count to prioritize absolute buttery smooth 60FPS performance
         const pCount = attackType === 'slam' ? 4 : 2;
         for (let i = 0; i < pCount; i++) {
-          const angle = Math.random() * Math.PI - Math.PI / 2; // upwards/outwards arc
+          const angle = Math.random() * Math.PI - Math.PI / 2;
           const speed = 8 + Math.random() * 8;
           this.particles.push({
             id: `p_${this.particleId++}`,
             x: ent.x + (Math.random() - 0.5) * 10,
-            y: ent.y - 35 + (Math.random() - 0.5) * 15, // perfectly inside line to pinch out organically
+            y: ent.y - 35 + (Math.random() - 0.5) * 15,
             vx: Math.cos(angle) * speed + dir * pushback * 0.4,
             vy: Math.sin(angle) * speed + launchVy * 0.6,
             radius: 5 + Math.random() * 5,
@@ -202,7 +184,6 @@ export class GameController {
           });
         }
 
-        // Limit floating texts queue to max 3 items to completely stop framerate drops from blurred overlapping text
         if (this.floatingTexts.length < 3) {
           this.floatingTexts.push({
             id: `t_${this.textId++}`,
@@ -218,29 +199,25 @@ export class GameController {
     }
 
     if (hitOccurred) {
-      // Dopamine dripping combo counter
       p.combo++;
       if (p.combo > this.stats.maxCombo) {
         this.stats.maxCombo = p.combo;
       }
       this.stats.score += 10 * p.combo;
 
-      // Extremely satisfying hitstop & shockwaves
       this.hitstop = attackType === 'slam' ? 5 : 2;
       this.screenShake = attackType === 'slam' ? 15 : 6;
 
-      // Cause massive shockwaves to ripple along the ground line
       this.shockwaves.push({
         id: `sw_${this.waveId++}`,
         x: p.x + dir * (reach * 0.4),
         radius: 10,
         speed: attackType === 'slam' ? 24 : 16,
-        amplitude: attackType === 'slam' ? 45 : 20, // large visceral ripple magnitude
+        amplitude: attackType === 'slam' ? 45 : 20,
         life: 0,
         maxLife: attackType === 'slam' ? 0.8 : 0.5,
       });
 
-      // Special glorious combo text announcements with queue protection
       if ((p.combo % 3 === 0 || p.combo >= 10) && this.floatingTexts.length < 4) {
         const titles = ['JUICY!', 'BRUTAL BALLET!', 'UNSTOPPABLE!', 'SDF MASTER!', 'GODLIKE FLOW!'];
         const title = titles[Math.min(Math.floor(p.combo / 3) - 1, titles.length - 1)];
@@ -255,7 +232,6 @@ export class GameController {
         });
       }
     } else {
-      // If slam missed but hit ground, still trigger a majestic ground shockwave!
       if (attackType === 'slam') {
         this.screenShake = 10;
         this.shockwaves.push({
@@ -271,19 +247,16 @@ export class GameController {
     }
   }
 
-  public update(dt: number) {
-    // Hitstop freeze
+  update(dt) {
     if (this.hitstop > 0) {
       this.hitstop--;
       return;
     }
 
-    // Screenshake decay
     if (this.screenShake > 0) {
       this.screenShake = Math.max(0, this.screenShake - dt * 30);
     }
 
-    // Process Movement Inputs
     const p = this.player;
     p.stateTime += dt;
 
@@ -300,15 +273,13 @@ export class GameController {
         p.facing = 'right';
         isMoving = true;
       } else {
-        // Smooth deceleration
         p.vx *= 0.7;
       }
 
-      // Jump
       if ((this.keys['KeyW'] || this.keys['ArrowUp'] || this.keys['Space']) && p.isGrounded) {
         p.vy = -14;
         p.isGrounded = false;
-        p.state = 'run'; // smooth transition
+        p.state = 'run';
       }
 
       if (p.isGrounded) {
@@ -316,7 +287,6 @@ export class GameController {
       }
     } else if (p.state === 'attack') {
       p.attackTimer -= dt;
-      // Periodic extra hitbox checks for ongoing sweeping attacks
       if (Math.random() < 0.3) {
         this.checkMeleeImpacts(p.attackType);
       }
@@ -326,40 +296,31 @@ export class GameController {
       }
     }
 
-    // Physics Update Player
     p.x += p.vx;
     p.y += p.vy;
 
     if (!p.isGrounded) {
-      p.vy += 0.6; // Gravity
-      // Landing check
+      p.vy += 0.6;
       if (p.y >= this.baseGroundY) {
         p.y = this.baseGroundY;
         p.vy = 0;
         p.isGrounded = true;
-        // Seamless fusion back into main contour line triggers visually
       }
     } else {
       p.y = this.baseGroundY;
     }
 
-    // Update Player Skeleton
     const progress = p.state === 'attack' ? 1 - p.attackTimer / (p.attackType === 'slam' ? 0.45 : 0.35) : 0;
     updateSkeleton(p.skeleton, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy);
 
-    // Smooth Camera Tracking
     const targetCamX = p.x + (p.facing === 'right' ? 100 : -100);
     this.cameraX += (targetCamX - this.cameraX) * 0.08;
 
-    // Procedural Enemy Spawning as player moves right
     if (p.x > this.nextSpawnX - 600) {
-      // Spawn alternating configurations
       if (Math.random() < 0.4) {
-        // Spawn a row of regularly placed crates identical to a square wave
         this.spawnCratesSquareWave(this.nextSpawnX, 3 + Math.floor(Math.random() * 3));
         this.nextSpawnX += 450;
       } else {
-        // Spawn group of enemies
         const count = 1 + Math.floor(Math.random() * 3);
         for (let i = 0; i < count; i++) {
           this.spawnEnemy(this.nextSpawnX + i * 80);
@@ -368,11 +329,9 @@ export class GameController {
       }
     }
 
-    // Update Entities
     for (let i = this.entities.length - 1; i >= 0; i--) {
       const ent = this.entities[i];
 
-      // Instantly slice out host entity if exploded into skeletal debris
       if (ent.health === -999) {
         this.entities.splice(i, 1);
         continue;
@@ -380,21 +339,18 @@ export class GameController {
 
       ent.stateTime += dt;
 
-      // Process dead entities: Disable collision entirely so they freefall into the ground unseeably
       if (ent.state === 'dead') {
         ent.isGrounded = false;
-        ent.vy += 0.6; // Freefall acceleration
+        ent.vy += 0.6;
         ent.x += ent.vx;
         ent.y += ent.vy;
 
-        // Despawn if fallen sufficiently far below canvas cut-off or timed out
         if (ent.y > this.baseGroundY + 800 || ent.stateTime > 4) {
           this.entities.splice(i, 1);
         }
         continue;
       }
 
-      // Apply Gravity if airborne
       if (!ent.isGrounded) {
         ent.vy += 0.6;
         ent.x += ent.vx;
@@ -407,23 +363,20 @@ export class GameController {
           ent.isGrounded = true;
         }
       } else {
-        ent.vx *= 0.8; // ground friction
+        ent.vx *= 0.8;
         ent.x += ent.vx;
         ent.y = this.baseGroundY;
       }
 
-      // Restore idle state from hit
       if (ent.state === 'hit' && ent.stateTime > 0.4) {
         ent.state = 'idle';
       }
 
-      // Update skeleton
       if (ent.type !== 'crate') {
         updateSkeleton(ent.skeleton, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy);
       }
     }
 
-    // Update Particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const pt = this.particles[i];
       pt.life += dt;
@@ -432,7 +385,7 @@ export class GameController {
         continue;
       }
 
-      pt.vy += 0.4; // gravity
+      pt.vy += 0.4;
       pt.x += pt.vx;
       pt.y += pt.vy;
 
@@ -440,12 +393,10 @@ export class GameController {
         pt.angle = (pt.angle || 0) + pt.vAngle * dt;
       }
 
-      // Debris / exploded skeleton limbs freefall without collision through the ground line
       if (pt.id.startsWith('debris_') || pt.shape === 'capsule') {
         continue;
       }
 
-      // Check landing for standard impact hit sparks
       if (pt.y >= this.baseGroundY) {
         pt.y = this.baseGroundY;
         pt.vy = 0;
@@ -454,7 +405,6 @@ export class GameController {
       }
     }
 
-    // Update Shockwaves
     for (let i = this.shockwaves.length - 1; i >= 0; i--) {
       const sw = this.shockwaves[i];
       sw.life += dt;
@@ -465,23 +415,21 @@ export class GameController {
       sw.radius += sw.speed;
     }
 
-    // Update Floating Texts
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const ft = this.floatingTexts[i];
       ft.life += dt;
-      ft.y -= dt * 40; // float up
+      ft.y -= dt * 40;
       if (ft.life >= 1.0) {
         this.floatingTexts.splice(i, 1);
       }
     }
 
-    // Decay Combo if inactive
     if (p.state !== 'attack' && p.stateTime > 2.5 && p.combo > 0) {
       p.combo = 0;
     }
   }
 
-  private spawnEnemy(x: number) {
+  spawnEnemy(x) {
     this.entities.push({
       id: `enemy_${Math.random()}`,
       type: 'enemy',
@@ -502,9 +450,9 @@ export class GameController {
     });
   }
 
-  private spawnCratesSquareWave(startX: number, count: number) {
+  spawnCratesSquareWave(startX, count) {
     const crateWidth = 50;
-    const gap = 50; // regularly placed to form square waves
+    const gap = 50;
     for (let i = 0; i < count; i++) {
       const cx = startX + i * (crateWidth + gap);
       this.entities.push({
