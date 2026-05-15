@@ -3,11 +3,11 @@ import TinySDF from 'tiny-sdf';
 export class TextSDFManager {
   constructor() {
     this.sdfEngine = new TinySDF({
-      fontSize: 200,
+      fontSize: 128,
       fontFamily: 'sans-serif',
       fontWeight: '900',
-      buffer: 24,
-      radius: 32,
+      buffer: 16,
+      radius: 18,
       cutoff: 0.25
     });
     this.cache = new Map();
@@ -22,6 +22,8 @@ export class TextSDFManager {
     } else {
       let currentX = 0;
       const glyphs = [];
+      const kerningFactor = 1.35; // Increase space between letters to combat gooey SDF blending
+      
       for (const char of text) {
         const glyph = this.sdfEngine.draw(char);
         glyphs.push({
@@ -35,7 +37,7 @@ export class TextSDFManager {
           glyphWidth: glyph.glyphWidth,
           glyphHeight: glyph.glyphHeight
         });
-        currentX += glyph.glyphAdvance;
+        currentX += glyph.glyphAdvance * kerningFactor;
       }
       glyphData = { glyphs, totalWidth: currentX };
       this.cache.set(glyphKey, glyphData);
@@ -48,7 +50,7 @@ export class TextSDFManager {
       y,
       scale,
       width: glyphData.totalWidth * scale,
-      height: 200 * scale
+      height: 128 * scale
     };
   }
 

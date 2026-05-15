@@ -32,15 +32,14 @@ export function updateEngine(controller, dt) {
           heightFactor = t * t * (3 - 2 * t); // smoothstep sink
         }
         
-        const textHeight = 200 * 1.5; // fontSize * scale
-        const yAnchor = controller.baseGroundY + textHeight * 0.1; // 10% submerged at peak
-        const currentY = yAnchor + textHeight * (1 - heightFactor); // Fully submerged at factor 0
+        const totalRise = 165;
+        const yOffset = -totalRise * heightFactor;
         
         controller.intro.currentLayout = textSDFManager.getTextLayout(
           step.text, 
-          0, 
-          currentY,
-          1.5
+          0, // Centered around 0 world X
+          controller.baseGroundY + 180 + yOffset, // Start deep in ground so top is hidden
+          1.2
         );
         found = true;
         break;
