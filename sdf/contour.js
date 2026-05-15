@@ -9,10 +9,10 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
   let highestObjTop = gY;
   
   for (const ent of groundedEntities) {
-    const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 80;
+    const span = ent.type === 'crate' ? (ent.width || 25) / 2 + 40 : 80;
     if (Math.abs(ent.x - x) < span) {
       nearbyEntities.push(ent);
-      const top = ent.type === 'crate' ? ent.y - (ent.height || 50) : ent.y - (ent.character ? ent.character.height + 30 : 120);
+      const top = ent.type === 'crate' ? ent.y - (ent.height || 25) : ent.y - (ent.character ? ent.character.height + 30 : 120);
       if (top < highestObjTop) highestObjTop = top;
     }
   }
@@ -32,7 +32,7 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
     
     for (const ent of nearbyEntities) {
       if (ent.type === 'crate') {
-        const boxD = sdBox(x, y, ent.x, ent.y - (ent.height || 50) / 2, ent.width || 50, ent.height || 50);
+        const boxD = sdBox(x, y, ent.x, ent.y - (ent.height || 25) / 2, ent.width || 25, ent.height || 25);
         d = smin(d, boxD, globalBlendK);
       } else if (ent.character) {
         const charD = evalCharacterSDF(ent.character, x, y);

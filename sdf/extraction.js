@@ -21,7 +21,7 @@ export function extractSDFSegments(
     const activeEnts = [];
     for (const ent of entities) {
       if (ent.state === 'dead') continue;
-      const span = ent.type === 'crate' ? (ent.width || 50) / 2 + 40 : 80;
+      const span = ent.type === 'crate' ? (ent.width || 25) / 2 + 40 : 80;
       if (Math.abs(ent.x - wx) < span + globalBlendK) activeEnts.push(ent);
     }
     colEntities.push(activeEnts);
@@ -68,7 +68,7 @@ export function extractSDFSegments(
       for (let i = 0; i < activeEnts.length; i++) {
         const ent = activeEnts[i];
         if (ent.type === 'crate') {
-          const boxD = sdBox(wx, wy, ent.x, ent.y - (ent.height || 50) / 2, ent.width || 50, ent.height || 50);
+          const boxD = sdBox(wx, wy, ent.x, ent.y - (ent.height || 25) / 2, ent.width || 25, ent.height || 25);
           d = smin(d, boxD, globalBlendK);
         } else if (ent.character) {
           const charD = evalCharacterSDF(ent.character, wx, wy, globalBlendK);

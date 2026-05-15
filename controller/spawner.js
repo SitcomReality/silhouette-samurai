@@ -23,7 +23,7 @@ export function spawnEnemy(controller, x) {
 }
 
 export function spawnCratesSquareWave(controller, startX, count) {
-  const crateWidth = 50;
+  const crateWidth = 25;
   const gap = 50;
   for (let i = 0; i < count; i++) {
     const cx = startX + i * (crateWidth + gap);
@@ -45,7 +45,7 @@ export function spawnCratesSquareWave(controller, startX, count) {
       attackTimer: 0,
       combo: 0,
       width: crateWidth,
-      height: 50,
+      height: 25,
     });
   }
 }

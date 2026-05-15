@@ -4,7 +4,7 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
     const scX = (ent.x - controller.cameraX) + viewWidth / 2;
     if (scX > 0 && scX < viewWidth) {
       const healthBarY = ent.type === 'crate' 
-        ? (ent.height || 50) 
+        ? (ent.height || 25) 
         : (ent.character ? ent.character.height + 20 : 120);
       const scY = ent.y - healthBarY + camYOffset;
       const barW = 36;
