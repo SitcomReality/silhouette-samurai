@@ -61,7 +61,6 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
     }
   };
 
-  // Draw player debug capsule and active hitbox if attacking
   if (controller.player.character) {
     drawCharacterDebug(controller.player.character, controller.player.x, controller.player.y, '#38bdf8');
     
@@ -80,7 +79,6 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
     }
   }
   
-  // Draw other entities
   controller.entities.forEach(ent => {
     if (ent.type !== 'crate' && ent.character) {
       drawCharacterDebug(ent.character, ent.x, ent.y, ent.state === 'dead' ? '#64748b' : '#f43f5e');
@@ -91,69 +89,4 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       ctx.strokeRect(scX - (ent.width || 50)/2, scY - (ent.height || 50)/2, ent.width || 50, ent.height || 50);
     }
   });
-
-  // Draw intro text layout when active and devMode is on so you can see placement
-  if (controller.devMode && controller.intro && controller.intro.active && controller.intro.currentLayout) {
-    const layout = controller.intro.currentLayout;
-    // Bounding box in neon color
-    const leftWorld = layout.x;
-    const rightWorld = layout.x + layout.width;
-    const topWorld = layout.y - layout.height;
-    const bottomWorld = layout.y;
-    const left = (leftWorld - controller.cameraX) + viewWidth / 2;
-    const right = (rightWorld - controller.cameraX) + viewWidth / 2;
-    const top = topWorld + camYOffset;
-    const bottom = bottomWorld + camYOffset;
-
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0,255,255,0.9)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4,2]);
-    ctx.strokeRect(left, top, right - left, bottom - top);
-    ctx.setLineDash([]);
-
-    // Draw each glyph alpha as a low-res bitmap for inspection
-    for (const g of layout.glyphs) {
-      if (!g.data) continue;
-      const glyphXWorld = layout.x + g.offsetX;
-      const glyphYWorld = layout.y + g.offsetY;
-      const screenX = Math.round((glyphXWorld - controller.cameraX) + viewWidth / 2);
-      const screenY = Math.round(glyphYWorld + camYOffset);
-
-      // Create an ImageData and populate RGBA using glyph alpha as A
-      try {
-        const w = g.width, h = g.height;
-        if (w <= 0 || h <= 0) continue;
-        const img = ctx.createImageData(w, h);
-        for (let i = 0; i < w * h; i++) {
-          const a = g.data[i]; // 0-255
-          img.data[i * 4 + 0] = 255;
-          img.data[i * 4 + 1] = 255;
-          img.data[i * 4 + 2] = 255;
-          img.data[i * 4 + 3] = a;
-        }
-        // Draw the glyph image with slight tint
-        ctx.globalAlpha = 0.9;
-        ctx.putImageData(img, screenX, screenY - h);
-        ctx.globalAlpha = 1.0;
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.strokeRect(screenX + 0.5, screenY - h + 0.5, w, h);
-      } catch (e) {
-        // If putImageData fails (some contexts), fallback to a simple marker
-        ctx.fillStyle = 'rgba(0,255,255,0.6)';
-        ctx.fillRect(screenX, screenY, 2, 2);
-      }
-    }
-
-    // Draw baseline marker
-    const baselineX = (layout.x - controller.cameraX) + viewWidth / 2;
-    const baselineY = layout.y + camYOffset;
-    ctx.strokeStyle = 'rgba(0,255,255,0.6)';
-    ctx.beginPath();
-    ctx.moveTo(baselineX - 20, baselineY);
-    ctx.lineTo(baselineX + layout.width + 20, baselineY);
-    ctx.stroke();
-
-    ctx.restore();
-  }
 }
