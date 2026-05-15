@@ -3,11 +3,11 @@ import TinySDF from 'tiny-sdf';
 export class TextSDFManager {
   constructor() {
     this.sdfEngine = new TinySDF({
-      fontSize: 128,
+      fontSize: 200,
       fontFamily: 'sans-serif',
       fontWeight: '900',
-      buffer: 16,
-      radius: 18,
+      buffer: 24,
+      radius: 32,
       cutoff: 0.25
     });
     this.cache = new Map();
@@ -48,7 +48,7 @@ export class TextSDFManager {
       y,
       scale,
       width: glyphData.totalWidth * scale,
-      height: 128 * scale
+      height: 200 * scale
     };
   }
 
