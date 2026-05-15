@@ -29,9 +29,7 @@ export class GameController {
     this.textId = 0;
     
     this.introTexts = [
-      { text: 'SitcomReality', x: 400 },
-      { text: 'presents', x: 1100 },
-      { text: 'Untitled', x: 1800 }
+      { text: 'SitcomReality presents Untitled', x: 800 }
     ];
     this.introLayoutsGenerated = false;
     this.introLayouts = [];
