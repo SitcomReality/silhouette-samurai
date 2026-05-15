@@ -55,6 +55,18 @@ export function extractSDFSegments(
       if (top < highestTop) highestTop = top;
     }
 
+    // Ensure intro text is considered when present so its SDF is sampled even with no nearby entities/particles.
+    if (controller && controller.intro && controller.intro.active && controller.intro.currentLayout) {
+      const layout = controller.intro.currentLayout;
+      // layout.x is center X in world space; width/height are scaled sizes.
+      const halfW = (layout.width || 0) * 0.5 + globalBlendK;
+      // If this column intersects the horizontal span of the text, expand highestTop to include text top.
+      if (Math.abs(colWorldX[c] - layout.x) <= halfW) {
+        const textTop = layout.y - (layout.height || 0);
+        if (textTop < highestTop) highestTop = textTop;
+      }
+    }
+
     const minRow = Math.max(0, Math.floor((highestTop - globalBlendK * 2.5 + camYOffset) / step));
     const maxRow = Math.min(rows, Math.ceil((gY + globalBlendK * 2.5 + camYOffset) / step));
 
