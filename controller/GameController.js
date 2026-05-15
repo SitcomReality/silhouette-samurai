@@ -53,6 +53,7 @@ export class GameController {
       slideTime: 0,
       airTime: 0,
       groundStandTime: 0,
+      doubleJumped: false,
     };
 
     spawnCratesSquareWave(this, 250, 4);
@@ -79,6 +80,6 @@ export class GameController {
 
   update(dt) {
     updateEngine(this, dt);
-    Object.assign(this.prevKeys, this.keys);
+    this.prevKeys = { ...this.keys };
   }
 }

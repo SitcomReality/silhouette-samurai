@@ -20,22 +20,33 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.headX = -dir * 25; t.headY = -40;
   } else if (state === 'attack') {
     if (attackType === 'uppercut') {
-      const rise = Math.sin(attackProgress * Math.PI);
+      const rise = attackProgress;
       t.bodyBotY = -rise * 20;
-      t.bodyTopX = dir * 10; t.bodyTopY = -50 - rise * 25;
-      t.headX = dir * 15; t.headY = -70 - rise * 25;
-      t.bulgeAX = dir * 20; t.bulgeAY = -40 - rise * 30; t.bulgeAR = 14 + rise * 8;
+      t.bodyTopX = dir * 10; t.bodyTopY = -50 - rise * 35;
+      t.headX = dir * 15; t.headY = -70 - rise * 35;
+      t.bulgeAX = dir * 25; t.bulgeAY = -40 - rise * 45; t.bulgeAR = 14 + rise * 10;
+    } else if (attackType === 'jab') {
+      const punch = Math.sin(attackProgress * Math.PI);
+      t.bodyTopX = dir * 5;
+      t.headX = dir * 8;
+      t.bulgeAX = dir * 35 * punch; t.bulgeAY = -35; t.bulgeAR = 12 * punch;
+    } else if (attackType === 'lunge') {
+      const thrust = Math.sin(attackProgress * Math.PI);
+      t.bodyBotX = -dir * 10;
+      t.bodyTopX = dir * 25; t.bodyTopY = -25;
+      t.headX = dir * 35; t.headY = -35;
+      t.bulgeAX = dir * 50 * thrust; t.bulgeAY = -25; t.bulgeAR = 14 * thrust;
+    } else if (attackType === 'air_thrust') {
+      const thrust = Math.sin(attackProgress * Math.PI);
+      t.bodyTopX = dir * 20; t.bodyTopY = -35;
+      t.headX = dir * 30; t.headY = -45;
+      t.bulgeAX = dir * 45 * thrust; t.bulgeAY = -45 - 20 * thrust; t.bulgeAR = 16 * thrust;
     } else if (attackType === 'slide') {
       const sweep = Math.sin(attackProgress * Math.PI);
       t.bodyTopX = -dir * 20; t.bodyTopY = -15;
       t.headX = -dir * 35; t.headY = -20;
       t.bulgeAX = dir * 40; t.bulgeAY = -10; t.bulgeAR = 10;
       t.bodyBotX = dir * 15; t.bodyBotY = -5;
-    } else if (attackType === 'aerial') {
-      const thrust = Math.sin(attackProgress * Math.PI);
-      t.bodyTopX = dir * 15; t.bodyTopY = -30;
-      t.headX = dir * 25; t.headY = -40;
-      t.bulgeAX = dir * 40 * thrust; t.bulgeAY = -20; t.bulgeAR = 16 * thrust;
     } else if (attackType === 'slam') {
       if (attackProgress < 0.7) {
         const reach = attackProgress / 0.7;

@@ -51,63 +51,94 @@ export function updateEngine(controller, dt) {
     p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * dt);
   }
 
+  const jumpPressed = controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space'];
+  const prevJumpPressed = controller.prevKeys['KeyW'] || controller.prevKeys['ArrowUp'] || controller.prevKeys['Space'];
+  const jumpJustPressed = jumpPressed && !prevJumpPressed;
+
   if (p.state !== 'attack' && p.state !== 'dead') {
     let isMoving = false;
-    const moveSpeed = 7;
+    const accel = 45 * dt;
     
     // Variable friction based on state
-    let friction;
-    if (isSliding) {
-      friction = 0.97; // Very low friction when sliding
+    let friction = 0.92;
+    if (!p.isGrounded) {
+      friction = 0.98; // Air friction
+    } else if (isSliding) {
+      friction = 0.99; // Very low friction when sliding
     } else if (p.isCrouching) {
-      friction = 0.88;
-    } else {
-      friction = 0.7;
+      friction = 0.85; // Crouching friction
     }
 
     if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) {
       if (!p.isCrouching && !isSliding) {
-        p.vx = -moveSpeed;
-      } else if (p.isCrouching && !isSliding) {
-        p.vx += -moveSpeed * 0.3 * dt;
+        p.vx -= accel;
+      } else if (isSliding) {
+        p.vx -= accel * 0.2;
       }
-      // If sliding, direction keys add subtle influence
-      else if (isSliding) {
-        p.vx += -moveSpeed * 0.15 * dt;
-      }
-      p.facing = 'left';
+      if (!isSliding) p.facing = 'left';
       isMoving = true;
     } else if (controller.keys['KeyD'] || controller.keys['ArrowRight']) {
       if (!p.isCrouching && !isSliding) {
-        p.vx = moveSpeed;
-      } else if (p.isCrouching && !isSliding) {
-        p.vx += moveSpeed * 0.3 * dt;
+        p.vx += accel;
+      } else if (isSliding) {
+        p.vx += accel * 0.2;
       }
-      else if (isSliding) {
-        p.vx += moveSpeed * 0.15 * dt;
-      }
-      p.facing = 'right';
+      if (!isSliding) p.facing = 'right';
       isMoving = true;
-    } else {
-      p.vx *= friction;
     }
+    
+    p.vx *= friction;
 
-    if ((controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space']) && p.isGrounded && !down) {
-      p.vy = -14;
-      p.isGrounded = false;
-      p.state = 'run';
+    if (jumpJustPressed && !down) {
+      if (p.isGrounded) {
+        p.vy = -14;
+        p.isGrounded = false;
+        p.doubleJumped = false;
+        p.state = 'run';
+      } else if (!p.doubleJumped && p.aerialPower >= 20) {
+        const jumpPower = 0.5 + (p.aerialPower / 100) * 0.5;
+        p.vy = -12 * jumpPower;
+        p.aerialPower -= 20;
+        p.doubleJumped = true;
+      }
     }
 
     if (p.isGrounded) {
-      p.state = isMoving ? 'run' : 'idle';
+      p.state = isMoving && Math.abs(p.vx) > 1 ? 'run' : 'idle';
     }
   } else if (p.state === 'attack') {
     p.attackTimer -= dt;
     
-    // Handle exponential launch trajectory
+    if (p.attackType === 'jab') {
+      let friction = 0.92;
+      if (!p.isGrounded) friction = 0.98;
+      else if (isSliding) friction = 0.99;
+      p.vx *= friction;
+      
+      // Allow slight steering during jab
+      const accel = 15 * dt;
+      if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) p.vx -= accel;
+      if (controller.keys['KeyD'] || controller.keys['ArrowRight']) p.vx += accel;
+      
+      if (jumpJustPressed && !down && p.isGrounded) {
+        p.vy = -14;
+        p.isGrounded = false;
+      } else if (jumpJustPressed && !down && !p.isGrounded && !p.doubleJumped && p.aerialPower >= 20) {
+        const jumpPower = 0.5 + (p.aerialPower / 100) * 0.5;
+        p.vy = -12 * jumpPower;
+        p.aerialPower -= 20;
+        p.doubleJumped = true;
+      }
+    } else {
+      if (p.isGrounded) p.vx *= 0.96;
+      else p.vx *= 0.98;
+    }
+    
+    // Handle exponential launch trajectory for uppercut
     if (p.exponentialLaunch && p.attackTimer > 0) {
-      const progress = 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration;
-      const verticalBoost = Math.pow(progress, 2) * -8;
+      const config = ATTACK_CONFIG[p.attackType];
+      const progress = 1 - p.attackTimer / config.duration;
+      const verticalBoost = Math.pow(progress, 3) * -50;
       p.vy += verticalBoost * dt;
     }
     
@@ -138,6 +169,7 @@ export function updateEngine(controller, dt) {
       p.y = controller.baseGroundY;
       p.vy = 0;
       p.isGrounded = true;
+      p.doubleJumped = false;
       
       // Landing from air into slide if holding down and has horizontal speed
       if (down && Math.abs(p.vx) > 3) {

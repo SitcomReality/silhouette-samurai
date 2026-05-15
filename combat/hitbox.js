@@ -14,15 +14,21 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let activeStart = 0.2;
   let activeEnd = 0.8;
   
-  if (attackType === 'slide') {
+  if (attackType === 'jab') {
+    activeStart = 0.1;
+    activeEnd = 0.6;
+  } else if (attackType === 'lunge') {
+    activeStart = 0.3;
+    activeEnd = 0.8;
+  } else if (attackType === 'uppercut') {
+    activeStart = 0.2;
+    activeEnd = 0.8;
+  } else if (attackType === 'air_thrust') {
+    activeStart = 0.2;
+    activeEnd = 0.8;
+  } else if (attackType === 'slide') {
     activeStart = 0.2;
     activeEnd = 0.85;
-  } else if (attackType === 'uppercut') {
-    activeStart = 0.3;
-    activeEnd = 0.7;
-  } else if (attackType === 'aerial') {
-    activeStart = 0.3;
-    activeEnd = 0.7;
   } else if (attackType === 'slam') {
     activeStart = 0.6;
     activeEnd = 1.0;
@@ -39,19 +45,28 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let hitboxW = config.reach;
   let hitboxH = 50;
   
-  if (attackType === 'slide') {
-    hitboxW = 90;
-    hitboxH = 35;
-    hitboxY = y - 25;
+  if (attackType === 'jab') {
+    hitboxW = 40;
+    hitboxH = 30;
+    hitboxY = y - 40;
+  } else if (attackType === 'lunge') {
+    hitboxW = 60;
+    hitboxH = 40;
+    hitboxY = y - 35;
   } else if (attackType === 'uppercut') {
     hitboxW = 50;
     hitboxH = 80;
     hitboxX = x + dir * 20;
-    hitboxY = y - 80;
-  } else if (attackType === 'aerial') {
-    hitboxW = 70;
-    hitboxH = 40;
-    hitboxX = x + dir * 45;
+    hitboxY = y - 60;
+  } else if (attackType === 'air_thrust') {
+    hitboxW = 60;
+    hitboxH = 60;
+    hitboxX = x + dir * 30;
+    hitboxY = y - 50;
+  } else if (attackType === 'slide') {
+    hitboxW = 90;
+    hitboxH = 35;
+    hitboxY = y - 25;
   } else if (attackType === 'slam') {
     hitboxW = 70;
     hitboxH = 60;

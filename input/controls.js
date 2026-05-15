@@ -10,14 +10,18 @@ export function determineAttack(controller) {
   const right = controller.keys['KeyD'] || controller.keys['ArrowRight'];
   
   if (btn1) {
-    if (down && (left || right)) {
-      return 'slide';
-    } else if (!p.isGrounded) {
-      return 'aerial';
+    const forwardKey = left || right;
+    
+    if (forwardKey && up) {
+      if (p.isGrounded) return 'uppercut';
+      else return 'air_thrust';
+    } else if (forwardKey) {
+      return 'lunge';
     } else if (up) {
-      return 'uppercut';
+      if (p.isGrounded) return 'uppercut';
+      else return 'air_thrust';
     } else {
-      return 'slide';
+      return 'jab';
     }
   }
   
