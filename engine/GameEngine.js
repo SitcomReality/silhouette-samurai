@@ -5,8 +5,8 @@ import { UIOverlay } from '../ui-overlay.js';
 export class GameEngine {
   constructor() {
     this.controller = new GameController();
-    const canvasElement = document.getElementById('game-canvas');
-    this.gameCanvas = new GameCanvas(canvasElement, this.controller, '#06b6d4');
+    const canvasContainer = document.querySelector('.game-container');
+    this.gameCanvas = new GameCanvas(canvasContainer, this.controller, '#06b6d4');
     
     this.uiOverlay = new UIOverlay(this.controller, (newColor) => {
       this.gameCanvas.setThemeColor(newColor);

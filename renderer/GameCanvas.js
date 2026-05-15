@@ -1,13 +1,23 @@
 import { renderSDF } from './sdf-pass.js';
 import { renderDebug } from './debug-pass.js';
 import { renderUI } from './ui-pass.js';
+import { renderFX } from './fx-pass.js';
 
 export class GameCanvas {
-  constructor(canvasElement, controller, themeColor) {
-    this.canvas = canvasElement;
+  constructor(containerElement, controller, themeColor) {
+    this.container = containerElement;
     this.controller = controller;
     this.themeColor = themeColor;
-    this.ctx = this.canvas.getContext('2d');
+    
+    this.bgCanvas = document.getElementById('bg-canvas');
+    this.sdfCanvas = document.getElementById('sdf-canvas');
+    this.fxCanvas = document.getElementById('fx-canvas');
+    this.uiCanvas = document.getElementById('ui-canvas');
+    
+    this.bgCtx = this.bgCanvas.getContext('2d', { alpha: false });
+    this.sdfCtx = this.sdfCanvas.getContext('2d');
+    this.fxCtx = this.fxCanvas.getContext('2d');
+    this.uiCtx = this.uiCanvas.getContext('2d');
     
     this.animationId = null;
     this.lastTime = performance.now();
@@ -24,9 +34,17 @@ export class GameCanvas {
   }
 
   handleResize() {
-    if (!this.canvas.parentElement) return;
-    this.canvas.width = this.canvas.parentElement.clientWidth;
-    this.canvas.height = this.canvas.parentElement.clientHeight;
+    if (!this.container) return;
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight;
+    
+    [this.bgCanvas, this.sdfCanvas, this.fxCanvas, this.uiCanvas].forEach(c => {
+      c.width = width;
+      c.height = height;
+    });
+    
+    this.bgCtx.fillStyle = '#090d16';
+    this.bgCtx.fillRect(0, 0, width, height);
   }
 
   start() {
@@ -46,32 +64,46 @@ export class GameCanvas {
 
     this.controller.update(dt);
 
-    const ctx = this.ctx;
-    const canvas = this.canvas;
+    const viewWidth = this.sdfCanvas.width;
+    const viewHeight = this.sdfCanvas.height;
+    
+    this.sdfCtx.clearRect(0, 0, viewWidth, viewHeight);
+    this.fxCtx.clearRect(0, 0, viewWidth, viewHeight);
+    this.uiCtx.clearRect(0, 0, viewWidth, viewHeight);
 
-    ctx.save();
-    ctx.fillStyle = '#090d16';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    let shakeX = 0;
+    let shakeY = 0;
     if (this.controller.screenShake > 0) {
-      const shakeX = (Math.random() - 0.5) * this.controller.screenShake;
-      const shakeY = (Math.random() - 0.5) * this.controller.screenShake;
-      ctx.translate(shakeX, shakeY);
+      shakeX = (Math.random() - 0.5) * this.controller.screenShake;
+      shakeY = (Math.random() - 0.5) * this.controller.screenShake;
+      
+      this.sdfCtx.save();
+      this.fxCtx.save();
+      this.uiCtx.save();
+      
+      this.sdfCtx.translate(shakeX, shakeY);
+      this.fxCtx.translate(shakeX, shakeY);
+      this.uiCtx.translate(shakeX, shakeY);
     }
 
-    const viewWidth = canvas.width;
-    const viewHeight = canvas.height;
     const camYOffset = viewHeight * 0.65 - this.controller.baseGroundY;
 
-    renderSDF(ctx, canvas, this.controller, this.themeColor, viewWidth, viewHeight, camYOffset);
+    renderSDF(this.sdfCtx, this.sdfCanvas, this.controller, this.themeColor, viewWidth, viewHeight, camYOffset);
+
+    renderFX(this.fxCtx, this.controller, viewWidth, camYOffset);
 
     if (this.controller.devMode) {
-      renderDebug(ctx, this.controller, viewWidth, camYOffset);
+      renderDebug(this.uiCtx, this.controller, viewWidth, camYOffset);
     }
 
-    renderUI(ctx, this.controller, viewWidth, camYOffset);
+    renderUI(this.uiCtx, this.controller, viewWidth, camYOffset);
 
-    ctx.restore();
+    if (shakeX !== 0 || shakeY !== 0) {
+      this.sdfCtx.restore();
+      this.fxCtx.restore();
+      this.uiCtx.restore();
+    }
+
     this.animationId = requestAnimationFrame(this.render);
   }
 }

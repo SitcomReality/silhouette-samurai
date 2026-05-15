@@ -29,12 +29,17 @@ body, html {
   height: 100%;
 }
 
-canvas {
-  display: block;
+.game-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  cursor: crosshair;
+  display: block;
+  pointer-events: none;
 }
+#bg-canvas { background-color: #090d16; }
+#ui-canvas { pointer-events: auto; cursor: crosshair; }
 
 .ui-overlay {
   position: absolute;

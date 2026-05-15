@@ -10,6 +10,8 @@ export class GameController {
     this.particles = [];
     this.shockwaves = [];
     this.floatingTexts = [];
+    this.visualFx = [];
+    this.fxId = 0;
     this.stats = { score: 0, maxCombo: 0, enemiesDefeated: 0 };
     
     this.baseGroundY = 400;

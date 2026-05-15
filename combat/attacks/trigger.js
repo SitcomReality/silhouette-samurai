@@ -21,4 +21,23 @@ export function triggerAttack(controller, attackType) {
   if (config.vy !== 0) {
     p.isGrounded = false;
   }
+  
+  let angle = 0;
+  if (attackType === 'uppercut' || attackType === 'slam') {
+    angle = -Math.PI / 4 * dir;
+  }
+  
+  controller.visualFx.push({
+    id: `fx_${controller.fxId++}`,
+    type: 'swoosh',
+    x: p.x + dir * 20,
+    y: p.y - 45,
+    facing: p.facing,
+    angle: angle,
+    radius: config.reach || 60,
+    thickness: 25,
+    color: '#ffffff',
+    life: 0,
+    maxLife: 0.25
+  });
 }

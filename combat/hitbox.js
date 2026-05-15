@@ -14,20 +14,17 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let activeStart = 0.2;
   let activeEnd = 0.8;
   
-  if (attackType === 'jab') {
-    activeStart = 0.3;
-    activeEnd = 0.7;
-  } else if (attackType === 'lunge') {
-    activeStart = 0.35;
-    activeEnd = 0.75;
-  } else if (attackType.startsWith('uppercut')) {
-    activeStart = 0.3;
-    activeEnd = 0.7;
-  } else if (attackType === 'slide_tackle' || attackType === 'dive_slide') {
+  if (attackType === 'slide') {
     activeStart = 0.2;
     activeEnd = 0.85;
-  } else if (attackType === 'air_slam') {
-    activeStart = 0.7;
+  } else if (attackType === 'uppercut') {
+    activeStart = 0.3;
+    activeEnd = 0.7;
+  } else if (attackType === 'aerial') {
+    activeStart = 0.3;
+    activeEnd = 0.7;
+  } else if (attackType === 'slam') {
+    activeStart = 0.6;
     activeEnd = 1.0;
   } else if (attackType === 'roundhouse') {
     activeStart = 0.4;
@@ -42,29 +39,20 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let hitboxW = config.reach;
   let hitboxH = 50;
   
-  if (attackType === 'jab') {
-    hitboxW = 40;
-    hitboxH = 30;
-    hitboxX = x + dir * 30;
-    hitboxY = y - 60;
-  } else if (attackType === 'lunge') {
-    hitboxW = 70;
-    hitboxH = 40;
-    hitboxX = x + dir * 45;
-  } else if (attackType.includes('uppercut')) {
+  if (attackType === 'slide') {
+    hitboxW = 90;
+    hitboxH = 35;
+    hitboxY = y - 25;
+  } else if (attackType === 'uppercut') {
     hitboxW = 50;
     hitboxH = 80;
     hitboxX = x + dir * 20;
     hitboxY = y - 80;
-  } else if (attackType === 'slide_tackle') {
-    hitboxW = 90;
-    hitboxH = 35;
-    hitboxY = y - 25;
-  } else if (attackType === 'dive_slide') {
-    hitboxW = 80;
+  } else if (attackType === 'aerial') {
+    hitboxW = 70;
     hitboxH = 40;
-    hitboxY = y - 30;
-  } else if (attackType === 'air_slam') {
+    hitboxX = x + dir * 45;
+  } else if (attackType === 'slam') {
     hitboxW = 70;
     hitboxH = 60;
     hitboxY = y - 30;

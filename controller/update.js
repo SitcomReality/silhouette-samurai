@@ -255,6 +255,14 @@ export function updateEngine(controller, dt) {
     sw.radius += sw.speed;
   }
 
+  for (let i = controller.visualFx.length - 1; i >= 0; i--) {
+    const fx = controller.visualFx[i];
+    fx.life += dt;
+    if (fx.life >= fx.maxLife) {
+      controller.visualFx.splice(i, 1);
+    }
+  }
+
   for (let i = controller.floatingTexts.length - 1; i >= 0; i--) {
     const ft = controller.floatingTexts[i];
     ft.life += dt;
