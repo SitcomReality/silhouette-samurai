@@ -32,7 +32,7 @@ export function updateEngine(controller, dt) {
           heightFactor = t * t * (3 - 2 * t); // smoothstep sink
         }
         
-        const totalRise = 175;
+        const totalRise = 200;
         const yOffset = -totalRise * heightFactor;
         
         controller.intro.currentLayout = textSDFManager.getTextLayout(
