@@ -111,4 +111,8 @@ export function triggerAttack(controller, attackType) {
       maxLife: 0.25
     });
   }
+  
+  if (controller.audioEngine) {
+    controller.audioEngine.onAttackSwoosh(attackType);
+  }
 }

@@ -1,5 +1,5 @@
 export class BeatClock {
-  constructor(bpm = 120) {
+  constructor(bpm = 128) {
     this.bpm = bpm;
     this.beatsPerSecond = bpm / 60;
     this.secondsPerBeat = 60 / bpm;

@@ -31,13 +31,60 @@ export class SFXManager {
     if (!this.loaded) return;
     
     const when = rhythmSync ? this.beatClock.snapToNext16th(this.ctx, 50) : this.ctx.currentTime;
+    const isHeavy = damage > 20;
     
-    // Pitch shift based on combo
-    const basePitch = damage > 30 ? 150 : 300;
-    const pitchShift = Math.pow(2, combo / 12); // Semitone per combo
-    const frequency = basePitch * pitchShift;
+    const osc = this.ctx.createOscillator();
+    osc.type = isHeavy ? 'square' : 'sine';
+    osc.frequency.setValueAtTime(isHeavy ? 120 : 180, when);
+    osc.frequency.exponentialRampToValueAtTime(30, when + 0.1);
     
-    this.playImpact(frequency, 0.15, when, damage / 50);
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(isHeavy ? 0.6 : 0.4, when);
+    gain.gain.exponentialRampToValueAtTime(0.01, when + 0.15);
+    
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    
+    const noise = this.ctx.createBufferSource();
+    const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
+    }
+    noise.buffer = buffer;
+    
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = isHeavy ? 'bandpass' : 'highpass';
+    noiseFilter.frequency.value = isHeavy ? 800 : 2500;
+    noiseFilter.Q.value = 1;
+    
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(isHeavy ? 0.5 : 0.3, when);
+    noiseGain.gain.linearRampToValueAtTime(0, when + 0.1);
+    
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+    
+    const scale = [60, 63, 65, 67, 70, 72, 75, 77, 79, 82, 84];
+    const note = scale[Math.min(combo, scale.length - 1)];
+    const freq = 440 * Math.pow(2, (note - 69) / 12);
+    
+    const ring = this.ctx.createOscillator();
+    ring.type = 'triangle';
+    ring.frequency.value = freq;
+    const ringGain = this.ctx.createGain();
+    ringGain.gain.setValueAtTime(0.15, when);
+    ringGain.gain.exponentialRampToValueAtTime(0.01, when + 0.3);
+    
+    ring.connect(ringGain);
+    ringGain.connect(this.masterGain);
+    
+    osc.start(when);
+    osc.stop(when + 0.15);
+    noise.start(when);
+    ring.start(when);
+    ring.stop(when + 0.3);
   }
 
   playSlam(rhythmSync = true) {
@@ -62,6 +109,36 @@ export class SFXManager {
     noise.connect(noiseGain);
     noiseGain.connect(this.masterGain);
     noise.start(when);
+  }
+
+  playAttackSwoosh(attackType) {
+    if (!this.loaded) return;
+    const isHeavy = ['slam', 'uppercut', 'roundhouse'].includes(attackType);
+    
+    const noise = this.ctx.createBufferSource();
+    const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.2, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1);
+    }
+    noise.buffer = buffer;
+    
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(isHeavy ? 400 : 1200, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(isHeavy ? 100 : 300, this.ctx.currentTime + 0.2);
+    filter.Q.value = 1.5;
+    
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(isHeavy ? 0.3 : 0.15, this.ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+    
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+    
+    noise.start();
   }
 
   playWhoosh(x, cameraX, screenWidth) {

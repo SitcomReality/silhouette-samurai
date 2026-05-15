@@ -43,7 +43,7 @@ export class AudioEngine {
       await this.ctx.resume();
     }
     
-    this.music.start();
+    this.music.start(this.beatClock);
   }
 
   update(controller) {
@@ -97,5 +97,10 @@ export class AudioEngine {
   onShockwave(x, cameraX, screenWidth) {
     if (!this.initialized) return;
     this.sfx.playWhoosh(x, cameraX, screenWidth);
+  }
+
+  onAttackSwoosh(attackType) {
+    if (!this.initialized) return;
+    this.sfx.playAttackSwoosh(attackType);
   }
 }
