@@ -14,7 +14,7 @@ export function updateEngine(controller, dt) {
     controller.introLayouts = controller.introTexts.map(it => textSDFManager.getTextLayout(
       it.text,
       it.x,
-      controller.baseGroundY + 50, // Set height to fuse pleasingly with the ground floor
+      controller.baseGroundY + 5, // Positioned so bottoms of letters are just beneath the surface
       1.0
     ));
     controller.introLayoutsGenerated = true;
