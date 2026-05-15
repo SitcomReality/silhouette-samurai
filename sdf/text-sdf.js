@@ -14,39 +14,42 @@ export class TextSDFManager {
   }
 
   getTextLayout(text, x, y, scale = 1.0) {
-    const key = `${text}_${scale}`;
-    if (this.cache.has(key)) return this.cache.get(key);
-
-    let currentX = 0;
-    const glyphs = [];
-    for (const char of text) {
-      const glyph = this.sdfEngine.draw(char);
-      glyphs.push({
-        char,
-        data: glyph.data,
-        width: glyph.width,
-        height: glyph.height,
-        offsetX: currentX,
-        offsetY: -glyph.glyphTop,
-        advance: glyph.glyphAdvance,
-        glyphWidth: glyph.glyphWidth,
-        glyphHeight: glyph.glyphHeight
-      });
-      currentX += glyph.glyphAdvance;
+    const glyphKey = text;
+    let glyphData;
+    
+    if (this.cache.has(glyphKey)) {
+      glyphData = this.cache.get(glyphKey);
+    } else {
+      let currentX = 0;
+      const glyphs = [];
+      for (const char of text) {
+        const glyph = this.sdfEngine.draw(char);
+        glyphs.push({
+          char,
+          data: glyph.data,
+          width: glyph.width,
+          height: glyph.height,
+          offsetX: currentX,
+          offsetY: -glyph.glyphTop,
+          advance: glyph.glyphAdvance,
+          glyphWidth: glyph.glyphWidth,
+          glyphHeight: glyph.glyphHeight
+        });
+        currentX += glyph.glyphAdvance;
+      }
+      glyphData = { glyphs, totalWidth: currentX };
+      this.cache.set(glyphKey, glyphData);
     }
 
-    const totalWidth = currentX;
-    const layout = {
+    return {
       text,
-      glyphs,
-      x: x - (totalWidth * scale) / 2,
+      glyphs: glyphData.glyphs,
+      x: x - (glyphData.totalWidth * scale) / 2,
       y,
       scale,
-      width: totalWidth * scale,
-      height: 60 * scale // approximate
+      width: glyphData.totalWidth * scale,
+      height: 128 * scale
     };
-    this.cache.set(key, layout);
-    return layout;
   }
 
   getDistance(layout, wx, wy) {
@@ -72,9 +75,8 @@ export class TextSDFManager {
         const alpha = g.data[iy * g.width + ix];
         
         // Convert 0-255 alpha to distance
-        // In TinySDF, values > 127 are inside (if cutoff is 0.5, but here we use 0.25)
-        // Distance = (alpha/255 - cutoff) * radius
-        const d = (0.25 - alpha / 255) * 12; // 12 is radius
+        // Values > 127 (cutoff 0.25) are "inside"
+        const d = (0.25 - alpha / 255) * 18; // Using radius 18 from constructor
         minD = Math.min(minD, d * layout.scale);
       }
     }
