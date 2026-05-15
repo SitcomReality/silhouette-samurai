@@ -64,7 +64,6 @@ export class UIOverlay {
     };
     
     document.getElementById('btn-atk-1').addEventListener('click', () => handleSimulatedKeyPress('KeyJ'));
-    document.getElementById('btn-atk-2').addEventListener('click', () => handleSimulatedKeyPress('KeyK'));
   }
   
   update() {

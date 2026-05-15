@@ -46,6 +46,11 @@ export class GameController {
       attackHitConfirmed: false,
       combo: 0,
       character: createCharacter(0, this.baseGroundY),
+      slidePower: 100,
+      aerialPower: 100,
+      slideTime: 0,
+      airTime: 0,
+      groundStandTime: 0,
     };
 
     spawnCratesSquareWave(this, 250, 4);

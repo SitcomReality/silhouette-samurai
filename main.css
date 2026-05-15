@@ -165,8 +165,6 @@ canvas {
 }
 .btn-action:hover { background-color: #1e293b; }
 .btn-action:active { transform: scale(0.95); }
-.btn-action.btn-slam { border-color: #ec4899; background-color: #4a044e; }
-.btn-action.btn-slam:hover { background-color: #701a75; }
 .btn-icon { font-size: 1.25rem; }
 .btn-label { font-size: 0.625rem; font-weight: 700; margin-top: 0.25rem; }
 

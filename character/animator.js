@@ -26,23 +26,69 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
 
   // Attack animations - ballet ninja style
   if (state === 'attack') {
-    if (attackType === 'slide') {
-      const sweep = Math.sin(attackProgress * Math.PI);
-      char.core.y = y - 25;
-      char.height = 30;
-      char.head = { x: x + dir * 15 * sweep, y: char.core.y - 25, radius: 13 };
-      char.arm = { length: 60, angle: dir * (0.3 + sweep * 0.8), origin: { x, y: char.core.y } };
-      char.legs = { leftAngle: dir * (1.2 + sweep * 0.3), rightAngle: dir * (0.5 + sweep * 0.5), length: 25 };
+    if (attackType === 'jab') {
+      const punch = Math.sin(attackProgress * Math.PI);
+      char.head = { x: x + dir * 3, y: char.core.y - char.height / 2 - 8, radius: 13 };
+      char.arm = { length: 35 + punch * 15, angle: dir * 0.1, origin: { x, y: char.core.y - 10 } };
+      char.legs = { leftAngle: 0.1, rightAngle: -0.1, length: 40 };
       return;
     }
 
-    if (attackType === 'uppercut') {
+    if (attackType === 'lunge') {
+      const thrust = Math.sin(attackProgress * Math.PI);
+      char.head = { x: x + dir * 10 * thrust, y: char.core.y - char.height / 2 - 8, radius: 13 };
+      char.arm = { length: 55 + thrust * 20, angle: dir * 0.2, origin: { x, y: char.core.y - 10 } };
+      char.legs = { leftAngle: dir * 0.5, rightAngle: -dir * 0.3, length: 42 };
+      return;
+    }
+
+    if (attackType === 'uppercut_ground' || attackType === 'uppercut_air') {
       const rise = Math.sin(attackProgress * Math.PI);
       char.core.y = baseY - rise * 20;
       char.height = 60;
       char.head = { x: x + dir * 8, y: char.core.y - char.height / 2 - 10, radius: 13 };
       char.arm = { length: 70, angle: -Math.PI / 2 + dir * 0.2, origin: { x, y: char.core.y - 20 } };
       char.legs = { leftAngle: -0.1, rightAngle: 0.1, length: 40 + rise * 10 };
+      return;
+    }
+
+    if (attackType === 'slide_tackle') {
+      const sweep = Math.sin(attackProgress * Math.PI);
+      char.core.y = y - 20;
+      char.height = 25;
+      char.head = { x: x + dir * 20 * sweep, y: char.core.y - 20, radius: 13 };
+      char.arm = { length: 55, angle: dir * (0.4 + sweep * 0.7), origin: { x, y: char.core.y } };
+      char.legs = { leftAngle: dir * (1.3 + sweep * 0.2), rightAngle: dir * (0.6 + sweep * 0.4), length: 30 };
+      return;
+    }
+
+    if (attackType === 'dive_slide') {
+      const dive = Math.sin(attackProgress * Math.PI);
+      char.core.y = y - 30 + dive * 10;
+      char.height = 35;
+      char.head = { x: x + dir * 15 * dive, y: char.core.y - 25, radius: 13 };
+      char.arm = { length: 60, angle: dir * (0.5 + dive * 0.6), origin: { x, y: char.core.y - 5 } };
+      char.legs = { leftAngle: dir * (0.9 + dive * 0.4), rightAngle: dir * (0.4 + dive * 0.5), length: 38 };
+      return;
+    }
+
+    if (attackType === 'air_slam') {
+      const phase = attackProgress;
+      if (phase < 0.7) {
+        const reach = phase / 0.7;
+        char.core.y = baseY - reach * 15;
+        char.height = 60;
+        char.head = { x: x, y: char.core.y - 40, radius: 13 };
+        char.arm = { length: 80, angle: -Math.PI / 2, origin: { x, y: char.core.y - 20 } };
+        char.legs = { leftAngle: -0.2, rightAngle: 0.2, length: 50 };
+      } else {
+        const slam = (phase - 0.7) / 0.3;
+        char.core.y = y - 30;
+        char.height = 40;
+        char.head = { x: x + dir * 15 * slam, y: char.core.y - 25, radius: 13 };
+        char.arm = { length: 80, angle: Math.PI / 2, origin: { x, y: char.core.y - 10 } };
+        char.legs = { leftAngle: -0.8, rightAngle: 0.8, length: 30 };
+      }
       return;
     }
 
@@ -56,32 +102,12 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       return;
     }
 
-    if (attackType === 'slam') {
-      const phase = attackProgress;
-      if (phase < 0.5) {
-        const reach = phase * 2;
-        char.core.y = baseY - reach * 20;
-        char.height = 60;
-        char.head = { x: x, y: char.core.y - 40, radius: 13 };
-        char.arm = { length: 80, angle: -Math.PI / 2, origin: { x, y: char.core.y - 20 } };
-        char.legs = { leftAngle: -0.2, rightAngle: 0.2, length: 50 };
-      } else {
-        const slam = (phase - 0.5) * 2;
-        char.core.y = y - 30;
-        char.height = 40;
-        char.head = { x: x + dir * 15 * slam, y: char.core.y - 25, radius: 13 };
-        char.arm = { length: 80, angle: Math.PI / 2, origin: { x, y: char.core.y - 10 } };
-        char.legs = { leftAngle: -0.8, rightAngle: 0.8, length: 30 };
-      }
-      return;
-    }
-
-    if (attackType === 'aerial') {
-      const arc = Math.sin(attackProgress * Math.PI);
-      char.core.y = baseY;
-      char.head = { x: x + dir * 15 * arc, y: char.core.y - 35, radius: 13 };
-      char.arm = { length: 70, angle: dir * (0.5 + arc * 1.0), origin: { x, y: char.core.y - 10 } };
-      char.legs = { leftAngle: -dir * 0.8, rightAngle: dir * (0.4 + arc * 0.5), length: 45 };
+    if (attackType === 'brake_stop') {
+      const skid = Math.sin(attackProgress * Math.PI);
+      char.core.y = baseY + skid * 3;
+      char.head = { x: x - dir * 8 * skid, y: char.core.y - char.height / 2 - 8, radius: 13 };
+      char.arm = { length: 40, angle: -dir * 0.8, origin: { x, y: char.core.y } };
+      char.legs = { leftAngle: dir * 0.6, rightAngle: -dir * 0.4, length: 40 };
       return;
     }
   }
