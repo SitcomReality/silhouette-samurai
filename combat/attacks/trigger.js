@@ -33,6 +33,20 @@ export function triggerAttack(controller, attackType) {
     p.vy = config.vy;
     p.exponentialLaunch = true;
     p.isGrounded = false;
+  } else if (attackType === 'slide') {
+    // Sliding attack adds to momentum based on power, never slows down
+    const powerFactor = p.slidePower / 100;
+    const boost = dir * config.vx * powerFactor;
+    // If boost is in same direction as current vx, add it. 
+    // Otherwise, ensure we at least maintain current vx if it's already fast.
+    if ((boost > 0 && p.vx >= 0) || (boost < 0 && p.vx <= 0)) {
+      p.vx += boost;
+    } else {
+      // Trying to slide opposite to current momentum? 
+      // We flip direction but scale initial boost by power.
+      p.vx = boost;
+    }
+    p.slidePower = 0; // Consume power
   } else {
     p.vx = dir * config.vx;
     p.vy = config.vy;

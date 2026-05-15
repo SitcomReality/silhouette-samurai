@@ -57,14 +57,15 @@ export function updateEngine(controller, dt) {
 
   if (p.state !== 'attack' && p.state !== 'dead') {
     let isMoving = false;
-    const accel = 45 * dt;
+    // Reduced horizontal control in air
+    const accel = (p.isGrounded ? 45 : 12) * dt;
     
     // Variable friction based on state
     let friction = 0.92;
     if (!p.isGrounded) {
-      friction = 0.98; // Air friction
+      friction = 0.985; // Air friction (slight reduction for floatiness)
     } else if (isSliding) {
-      friction = 0.99; // Very low friction when sliding
+      friction = 0.975; // Sliding friction (must eventually stop)
     } else if (p.isCrouching) {
       friction = 0.85; // Crouching friction
     }
@@ -72,16 +73,17 @@ export function updateEngine(controller, dt) {
     if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) {
       if (!p.isCrouching && !isSliding) {
         p.vx -= accel;
-      } else if (isSliding) {
-        p.vx -= accel * 0.2;
+      } else if (p.isCrouching && !isSliding) {
+        p.vx -= accel * 0.4; // Slower crouch walk
       }
+      // Note: No keyboard acceleration while sliding; slide is pure momentum
       if (!isSliding) p.facing = 'left';
       isMoving = true;
     } else if (controller.keys['KeyD'] || controller.keys['ArrowRight']) {
       if (!p.isCrouching && !isSliding) {
         p.vx += accel;
-      } else if (isSliding) {
-        p.vx += accel * 0.2;
+      } else if (p.isCrouching && !isSliding) {
+        p.vx += accel * 0.4; // Slower crouch walk
       }
       if (!isSliding) p.facing = 'right';
       isMoving = true;
@@ -109,10 +111,10 @@ export function updateEngine(controller, dt) {
   } else if (p.state === 'attack') {
     p.attackTimer -= dt;
     
-    if (p.attackType === 'jab') {
+    if (p.attackType === 'jab' || p.attackType === 'slide') {
       let friction = 0.92;
       if (!p.isGrounded) friction = 0.98;
-      else if (isSliding) friction = 0.99;
+      else if (isSliding || p.attackType === 'slide') friction = 0.985; // Low drag for slide attack
       p.vx *= friction;
       
       // Allow slight steering during jab
