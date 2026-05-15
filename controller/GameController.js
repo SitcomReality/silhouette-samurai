@@ -32,9 +32,9 @@ export class GameController {
       active: true,
       time: 0,
       sequence: [
-        { text: 'SitcomReality', start: 0, end: 2.5 },
-        { text: 'presents', start: 3, end: 5.5 },
-        { text: 'Untitled', start: 6, end: 9 }
+        { text: 'SitcomReality', start: 0, end: 6 },
+        { text: 'presents', start: 6, end: 12 },
+        { text: 'Untitled', start: 12, end: 18 }
       ],
       currentLayout: null
     };

@@ -16,20 +16,31 @@ export function updateEngine(controller, dt) {
     let found = false;
     for (const step of controller.intro.sequence) {
       if (controller.intro.time >= step.start && controller.intro.time <= step.end) {
-        const stepTime = controller.intro.time - step.start;
-        const stepDuration = step.end - step.start;
-        const progress = stepTime / stepDuration;
+        const t = controller.intro.time - step.start;
         
-        // Easing for height: rises then falls
-        // Use a sin wave for smooth emergence
-        const heightFactor = Math.sin(progress * Math.PI);
-        const yOffset = -40 * heightFactor; // How high it rises from ground
+        let animProgress = 0;
+        if (t < 2) {
+          animProgress = t / 2; // Rising
+        } else if (t < 4) {
+          animProgress = 1; // Paused
+        } else {
+          animProgress = 1 - (t - 4) / 2; // Sinking
+        }
         
+        // Smooth interpolation
+        const smoothP = animProgress * animProgress * (3 - 2 * animProgress);
+        
+        const fontHeight = 110; 
+        const buriedY = controller.baseGroundY + fontHeight;
+        // Target Y: baseline is slightly below ground so 10% is buried
+        const targetY = controller.baseGroundY + (fontHeight * 0.12);
+        const currentY = buriedY + (targetY - buriedY) * smoothP;
+
         controller.intro.currentLayout = textSDFManager.getTextLayout(
           step.text, 
-          0, // Centered around 0 world X
-          controller.baseGroundY + 15 + yOffset, // Absorb slightly into ground at rest
-          1.2
+          0, 
+          currentY, 
+          1.0
         );
         found = true;
         break;
@@ -37,7 +48,7 @@ export function updateEngine(controller, dt) {
     }
     if (!found) {
       controller.intro.currentLayout = null;
-      if (controller.intro.time > 10) {
+      if (controller.intro.time > 18) {
         controller.intro.active = false;
       }
     }
