@@ -50,6 +50,11 @@ export function resolveAttackHits(controller) {
         ent.stateTime = 0;
       }
       
+      // Audio feedback
+      if (controller.audioEngine) {
+        controller.audioEngine.onHit(hitbox.damage, p.combo);
+      }
+      
       spawnHitParticles(controller, ent, dir, hitbox);
       spawnFloatingText(controller, ent, p, hitbox);
     }
@@ -66,7 +71,7 @@ export function resolveAttackHits(controller) {
     controller.screenShake = p.attackType === 'slam' ? 18 : 8;
     
     if (p.attackType === 'slam') {
-      controller.shockwaves.push({
+      const sw = {
         id: `sw_${controller.waveId++}`,
         x: p.x + dir * 40,
         radius: 10,
@@ -74,7 +79,14 @@ export function resolveAttackHits(controller) {
         amplitude: 55,
         life: 0,
         maxLife: 1.0
-      });
+      };
+      controller.shockwaves.push(sw);
+      
+      // Audio for shockwave
+      if (controller.audioEngine) {
+        controller.audioEngine.onShockwave(sw.x, controller.cameraX, 1920);
+        controller.audioEngine.onSlam();
+      }
     }
     
     if ((p.combo % 3 === 0 || p.combo >= 10) && controller.floatingTexts.length < 4) {

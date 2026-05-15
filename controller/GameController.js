@@ -18,6 +18,7 @@ export class GameController {
     this.baseGroundY = 400;
     this.cameraX = 0;
     this.devMode = false;
+    this.audioEngine = null;
     
     this.keys = {};
     this.prevKeys = {};
@@ -68,6 +69,10 @@ export class GameController {
 
     spawnCratesSquareWave(this, 2500, 4);
     spawnEnemy(this, 2800);
+  }
+
+  setAudioEngine(audioEngine) {
+    this.audioEngine = audioEngine;
   }
 
   handleKeyDown(code, key) {

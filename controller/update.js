@@ -138,12 +138,22 @@ export function updateEngine(controller, dt) {
         p.doubleJumped = false;
         p.state = 'run';
         p.jumpBuffer = 0;
+        
+        // Audio feedback
+        if (controller.audioEngine) {
+          controller.audioEngine.onJump();
+        }
       } else if (!p.doubleJumped && jumpJustPressed && p.aerialPower >= 20) {
         const jumpPower = 0.5 + (p.aerialPower / 100) * 0.5;
         p.vy = -12 * jumpPower;
         p.aerialPower -= 20;
         p.doubleJumped = true;
         p.jumpBuffer = 0;
+        
+        // Audio feedback
+        if (controller.audioEngine) {
+          controller.audioEngine.onJump();
+        }
       }
     }
 
@@ -322,6 +332,11 @@ export function updateEngine(controller, dt) {
         ent.vy = 0;
         ent.vx *= 0.5;
         ent.isGrounded = true;
+        
+        // Audio feedback for enemy landing
+        if (controller.audioEngine && Math.abs(ent.vy) > 5) {
+          controller.audioEngine.onLand();
+        }
       }
     } else {
       ent.vx *= 0.8;
@@ -416,6 +431,11 @@ export function updateEngine(controller, dt) {
       pt.vy = 0;
       pt.vx *= 0.7;
       pt.isGrounded = true;
+      
+      // Fusion hum when particles land/blend
+      if (controller.audioEngine && pt.radius > 8) {
+        controller.audioEngine.sfx.playFusionHum(pt.radius / 20);
+      }
     }
   }
 

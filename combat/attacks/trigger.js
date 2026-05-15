@@ -51,6 +51,11 @@ export function triggerAttack(controller, attackType) {
       p.vx = sign * Math.max(currentSpeed, minSlideSpeed);
     }
     p.isSliding = true;
+    
+    // Audio feedback
+    if (controller.audioEngine) {
+      controller.audioEngine.onSlide();
+    }
   } else {
     if (attackType === 'air_thrust') {
       // Air thrust costs power
