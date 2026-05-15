@@ -1,132 +1,115 @@
 export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching) {
   const dir = facing === 'right' ? 1 : -1;
-  const baseY = isCrouching ? y - 40 : y - 50;
+  const baseY = isCrouching ? y - 35 : y - 65;
   
   char.core = { x, y: baseY };
-  char.height = isCrouching ? 60 : 100;
+  char.height = isCrouching ? 30 : 50;
   char.width = 20;
   
   // Dead state - collapsed on ground
   if (state === 'dead') {
-    char.core.y = y - 15;
-    char.height = 30;
-    char.head = { x: x + dir * 40, y: y - 20, radius: 13 };
-    char.arm = { length: 50, angle: dir * 0.3, origin: { x: x + dir * 10, y: y - 15 } };
-    char.legs = { leftAngle: -0.2, rightAngle: 0.1, length: 40 };
+    char.core.y = y - 10;
+    char.height = 20;
+    char.head = { x: x + dir * 40, y: y - 15, radius: 13 };
+    char.arm = { length: 50, angle: dir * 0.3, origin: { x: x + dir * 10, y: y - 10 } };
+    char.legs = { leftAngle: 1.5, rightAngle: 1.4, length: 40 };
     return;
   }
 
   // Hit state - recoil
   if (state === 'hit') {
-    const reel = Math.sin(stateTime * 15) * 5;
-    char.core.y = baseY;
-    char.head = { x: x, y: baseY - char.height - 5, radius: 13 };
-    char.arm = { length: 45, angle: -dir * 1.4, origin: { x: x - dir * 8, y: baseY - 35 } };
-    char.legs = { leftAngle: -dir * 0.3, rightAngle: dir * 0.2, length: 45 };
+    char.head = { x: x - dir * 5, y: char.core.y - char.height / 2 - 8, radius: 13 };
+    char.arm = { length: 45, angle: -dir * 1.4, origin: { x: x - dir * 8, y: char.core.y - 15 } };
+    char.legs = { leftAngle: -dir * 0.3, rightAngle: dir * 0.2, length: 40 };
     return;
   }
 
   // Attack animations - ballet ninja style
   if (state === 'attack') {
     if (attackType === 'slide') {
-      // Low sweeping kick - body leans into it
       const sweep = Math.sin(attackProgress * Math.PI);
-      char.core.y = y - 30;
-      char.core.x = x + dir * 5 * sweep;
-      char.height = 50 + sweep * 20;
-      char.head = { x: x + dir * 10 * sweep, y: y - 55 - sweep * 10, radius: 13 };
-      char.arm = { length: 60 + sweep * 30, angle: dir * (0.3 + sweep * 0.8), origin: { x, y: y - 30 } };
-      char.legs = { leftAngle: dir * (0.5 + sweep * 0.3), rightAngle: dir * (0.2 + sweep * 0.5), length: 40 + sweep * 15 };
+      char.core.y = y - 25;
+      char.height = 30;
+      char.head = { x: x + dir * 15 * sweep, y: char.core.y - 25, radius: 13 };
+      char.arm = { length: 60, angle: dir * (0.3 + sweep * 0.8), origin: { x, y: char.core.y } };
+      char.legs = { leftAngle: dir * (1.2 + sweep * 0.3), rightAngle: dir * (0.5 + sweep * 0.5), length: 25 };
       return;
     }
 
     if (attackType === 'uppercut') {
-      // Rising uppercut - whole body extends upward
       const rise = Math.sin(attackProgress * Math.PI);
-      const extend = attackProgress > 0.4 && attackProgress < 0.8 ? rise : 0;
-      char.core.y = baseY - extend * 15;
-      char.core.x = x + dir * 5 * extend;
-      char.height = 90 + extend * 20;
-      char.head = { x: x + dir * 8, y: baseY - char.height - extend * 25, radius: 13 };
-      char.arm = { length: 65 + extend * 30, angle: -Math.PI / 2 + dir * 0.2, origin: { x, y: baseY - 45 } };
-      char.legs = { leftAngle: -0.1, rightAngle: 0.1, length: 45 };
+      char.core.y = baseY - rise * 20;
+      char.height = 60;
+      char.head = { x: x + dir * 8, y: char.core.y - char.height / 2 - 10, radius: 13 };
+      char.arm = { length: 70, angle: -Math.PI / 2 + dir * 0.2, origin: { x, y: char.core.y - 20 } };
+      char.legs = { leftAngle: -0.1, rightAngle: 0.1, length: 40 + rise * 10 };
       return;
     }
 
     if (attackType === 'roundhouse') {
-      // Spinning kick - whole body rotates
-      const spin = attackProgress * Math.PI * 1.5;
-      const lean = Math.sin(spin) * 15;
+      const spin = attackProgress * Math.PI * 2.0;
       char.core.y = baseY;
-      char.core.x = x + dir * lean * 0.5;
-      char.height = 95;
-      char.head = { x: x + dir * lean * 0.7, y: baseY - char.height, radius: 13 };
-      char.arm = { length: 50, angle: -spin * dir * 0.8, origin: { x, y: baseY - 55 } };
-      char.legs = { leftAngle: dir * 0.1, rightAngle: dir * (spin - 0.3), length: 60 };
+      char.height = 50;
+      char.head = { x, y: char.core.y - char.height/2 - 8, radius: 13 };
+      char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
+      char.legs = { leftAngle: dir * 0.2, rightAngle: dir * (spin + 1.5), length: 55 };
       return;
     }
 
     if (attackType === 'slam') {
-      // Overhead slam - dramatic arc
       const phase = attackProgress;
       if (phase < 0.5) {
-        // Wind up - reach high
         const reach = phase * 2;
-        char.core.y = baseY - reach * 10;
-        char.height = 95 + reach * 15;
-        char.head = { x: x, y: baseY - char.height - reach * 20, radius: 13 };
-        char.arm = { length: 75 + reach * 25, angle: -Math.PI / 2 + dir * 0.15, origin: { x, y: baseY - 60 } };
-        char.legs = { leftAngle: -0.15, rightAngle: 0.15, length: 45 };
+        char.core.y = baseY - reach * 20;
+        char.height = 60;
+        char.head = { x: x, y: char.core.y - 40, radius: 13 };
+        char.arm = { length: 80, angle: -Math.PI / 2, origin: { x, y: char.core.y - 20 } };
+        char.legs = { leftAngle: -0.2, rightAngle: 0.2, length: 50 };
       } else {
-        // Slam down - compress
         const slam = (phase - 0.5) * 2;
-        char.core.y = baseY + slam * 5;
-        char.height = 95 - slam * 15;
-        char.head = { x: x + dir * 10 * slam, y: baseY - char.height, radius: 13 };
-        char.arm = { length: 85, angle: Math.PI / 2 + dir * 0.2, origin: { x, y: baseY - 40 } };
-        char.legs = { leftAngle: -0.2 - slam * 0.2, rightAngle: 0.2 + slam * 0.2, length: 45 };
+        char.core.y = y - 30;
+        char.height = 40;
+        char.head = { x: x + dir * 15 * slam, y: char.core.y - 25, radius: 13 };
+        char.arm = { length: 80, angle: Math.PI / 2, origin: { x, y: char.core.y - 10 } };
+        char.legs = { leftAngle: -0.8, rightAngle: 0.8, length: 30 };
       }
       return;
     }
 
     if (attackType === 'aerial') {
-      // Aerial strike - graceful arc
       const arc = Math.sin(attackProgress * Math.PI);
-      char.core.x = x + dir * 10 * arc;
-      char.head = { x: x + dir * 15 * arc, y: baseY - char.height, radius: 13 };
-      char.arm = { length: 60 + arc * 25, angle: dir * (0.5 + arc * 0.7), origin: { x, y: baseY - 55 } };
-      char.legs = { leftAngle: -dir * 0.5, rightAngle: dir * (0.4 + arc * 0.3), length: 50 };
+      char.core.y = baseY;
+      char.head = { x: x + dir * 15 * arc, y: char.core.y - 35, radius: 13 };
+      char.arm = { length: 70, angle: dir * (0.5 + arc * 1.0), origin: { x, y: char.core.y - 10 } };
+      char.legs = { leftAngle: -dir * 0.8, rightAngle: dir * (0.4 + arc * 0.5), length: 45 };
       return;
     }
   }
 
-  // Airborne - graceful jump pose
+  // Airborne
   if (!isGrounded) {
     const tilt = Math.min(Math.max(vy * 0.03, -0.3), 0.3);
-    char.core.x = x + dir * tilt * 8;
-    char.head = { x: x + dir * tilt * 10, y: baseY - char.height, radius: 13 };
-    char.arm = { length: 0, angle: 0, origin: { x, y: baseY - 50 } }; // Arms at sides
-    char.legs = { leftAngle: tilt - 0.15, rightAngle: tilt + 0.15, length: 48 };
+    char.head = { x: x + dir * tilt * 10, y: char.core.y - char.height / 2 - 8, radius: 13 };
+    char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
+    char.legs = { leftAngle: tilt - 0.2, rightAngle: tilt + 0.2, length: 45 };
     return;
   }
 
-  // Running - dynamic stride
+  // Running
   if (state === 'run') {
     const cycle = stateTime * 14;
-    const stride = Math.sin(cycle) * 0.5;
-    const bob = Math.abs(Math.cos(cycle)) * 4;
-    
-    char.core.y = baseY - bob;
-    char.core.x = x + dir * stride * 3;
-    char.head = { x: x + dir * (5 + stride * 5), y: baseY - char.height - bob, radius: 13 };
-    char.arm = { length: 0, angle: 0, origin: { x, y: baseY - 50 } }; // Minimal arm swing
-    char.legs = { leftAngle: stride, rightAngle: -stride, length: 48 };
+    const stride = Math.sin(cycle) * 0.6;
+    const bob = Math.abs(Math.cos(cycle)) * 5;
+    char.core.y = baseY + bob;
+    char.head = { x: x + dir * 5, y: char.core.y - char.height / 2 - 8, radius: 13 };
+    char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
+    char.legs = { leftAngle: stride, rightAngle: -stride, length: 45 };
     return;
   }
 
-  // Idle - standing straight, arms invisible at sides
+  // Idle
   const bob = Math.sin(stateTime * 3) * 2;
-  char.head = { x, y: baseY - char.height + bob, radius: 13 };
-  char.arm = { length: 0, angle: 0, origin: { x, y: baseY - 40 } }; // No visible arm
-  char.legs = { leftAngle: 0, rightAngle: 0, length: 48 };
+  char.head = { x, y: char.core.y - char.height / 2 - 8 + bob, radius: 13 };
+  char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
+  char.legs = { leftAngle: 0.1, rightAngle: -0.1, length: 40 };
 }
