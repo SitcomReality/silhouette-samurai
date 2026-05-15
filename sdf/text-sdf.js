@@ -3,7 +3,7 @@ import TinySDF from 'tiny-sdf';
 export class TextSDFManager {
   constructor() {
     this.sdfEngine = new TinySDF({
-      fontSize: 128,
+      fontSize: 160,
       fontFamily: 'sans-serif',
       fontWeight: '900',
       buffer: 16,
@@ -50,7 +50,7 @@ export class TextSDFManager {
       y,
       scale,
       width: glyphData.totalWidth * scale,
-      height: 128 * scale
+      height: 160 * scale
     };
   }
 
@@ -61,8 +61,9 @@ export class TextSDFManager {
 
     let minD = 999;
     
-    // Quick bounding box check for the whole string
-    if (lx < -20 || lx > (layout.width / layout.scale) + 20 || ly < -100 || ly > 40) {
+    // Quick bounding box check for the whole string (with generous padding for SDF)
+    const padding = 60;
+    if (lx < -padding || lx > (layout.width / layout.scale) + padding || ly < -200 || ly > padding) {
       return 999;
     }
 

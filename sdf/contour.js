@@ -26,7 +26,20 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
     }
   }
 
-  if (nearbyEntities.length === 0 && nearbyParticles.length === 0) return gY;
+  let hasTextNearby = false;
+  if (controller && controller.introLayouts) {
+    for (const layout of controller.introLayouts) {
+      const textCenter = layout.x + layout.width * 0.5;
+      const halfW = layout.width * 0.5 + globalBlendK * 2.0;
+      if (Math.abs(x - textCenter) < halfW) {
+        hasTextNearby = true;
+        const textTop = layout.y - layout.height;
+        if (textTop < highestObjTop) highestObjTop = textTop;
+      }
+    }
+  }
+
+  if (nearbyEntities.length === 0 && nearbyParticles.length === 0 && !hasTextNearby) return gY;
 
   const evalTotalSDF = (y) => {
     let d = gY - y;
