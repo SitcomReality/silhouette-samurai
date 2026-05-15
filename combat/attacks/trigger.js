@@ -7,15 +7,7 @@ export function triggerAttack(controller, attackType) {
   const config = ATTACK_CONFIG[attackType];
   if (!config) return;
 
-  if (p.state === 'attack') {
-    const currentConfig = ATTACK_CONFIG[p.attackType];
-    const isJabCancel = p.attackType === 'jab' && p.attackTimer < currentConfig.duration * 0.6 && attackType === 'jab';
-    const isEndlagCancel = p.attackTimer <= 0 && p.endlagTimer > 0;
-    
-    if (!isJabCancel && !isEndlagCancel) {
-      return; 
-    }
-  }
+
   
   p.state = 'attack';
   p.stateTime = 0;

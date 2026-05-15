@@ -61,6 +61,8 @@ export class GameController {
       groundStandTime: 0,
       doubleJumped: false,
       isSliding: false,
+      jumpBuffer: 0,
+      attackBuffer: null,
     };
 
     spawnCratesSquareWave(this, 2500, 4);
@@ -73,9 +75,12 @@ export class GameController {
     this.keys[key] = true;
 
     if (!wasPressed) {
-      const attackType = determineAttack(this);
-      if (attackType) {
-        triggerAttack(this, attackType);
+      let btn = 0;
+      if (['Digit1', '1', 'KeyJ'].includes(code)) btn = 1;
+      if (['Digit2', '2', 'KeyK'].includes(code)) btn = 2;
+      
+      if (btn > 0) {
+        this.player.attackBuffer = { btn, time: 0.2 };
       }
     }
   }

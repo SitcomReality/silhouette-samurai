@@ -64,6 +64,11 @@ export class UIOverlay {
     };
     
     document.getElementById('btn-atk-1').addEventListener('click', () => handleSimulatedKeyPress('KeyJ'));
+    
+    const btnAtk2 = document.getElementById('btn-atk-2');
+    if (btnAtk2) {
+      btnAtk2.addEventListener('click', () => handleSimulatedKeyPress('KeyK'));
+    }
   }
   
   update() {

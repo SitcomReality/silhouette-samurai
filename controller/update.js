@@ -3,6 +3,8 @@ import { resolveAttackHits } from '../combat/attacks/resolve.js';
 import { textSDFManager } from '../sdf/text-sdf.js';
 import { ATTACK_CONFIG } from '../combat/attacks/config.js';
 import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
+import { triggerAttack } from '../combat/attacks/trigger.js';
+import { determineAttack } from '../input/controls.js';
 
 export function updateEngine(controller, dt) {
   if (controller.hitstop > 0) {
@@ -74,6 +76,25 @@ export function updateEngine(controller, dt) {
   const prevJumpPressed = controller.prevKeys['KeyW'] || controller.prevKeys['ArrowUp'] || controller.prevKeys['Space'];
   const jumpJustPressed = jumpPressed && !prevJumpPressed;
 
+  if (jumpJustPressed) {
+    p.jumpBuffer = 0.15;
+  }
+  if (p.jumpBuffer > 0) {
+    p.jumpBuffer -= dt;
+  }
+
+  if (p.state === 'attack' && p.jumpBuffer > 0 && !down) {
+    const isEndlagCancel = p.attackTimer <= 0 && p.endlagTimer > 0;
+    const isHitCancel = p.attackHitConfirmed && p.attackTimer < ATTACK_CONFIG[p.attackType].duration * 0.6;
+    if (isEndlagCancel || isHitCancel) {
+      p.state = 'idle';
+      p.attackType = 'none';
+      p.isSliding = false;
+      p.endlagTimer = 0;
+      p.attackTimer = 0;
+    }
+  }
+
   if (p.state !== 'attack' && p.state !== 'dead') {
     let isMoving = false;
     // Reduced horizontal control in air
@@ -110,17 +131,19 @@ export function updateEngine(controller, dt) {
     
     p.vx *= friction;
 
-    if (jumpJustPressed && !down) {
+    if (p.jumpBuffer > 0 && !down) {
       if (p.isGrounded) {
         p.vy = -14;
         p.isGrounded = false;
         p.doubleJumped = false;
         p.state = 'run';
-      } else if (!p.doubleJumped && p.aerialPower >= 20) {
+        p.jumpBuffer = 0;
+      } else if (!p.doubleJumped && jumpJustPressed && p.aerialPower >= 20) {
         const jumpPower = 0.5 + (p.aerialPower / 100) * 0.5;
         p.vy = -12 * jumpPower;
         p.aerialPower -= 20;
         p.doubleJumped = true;
+        p.jumpBuffer = 0;
       }
     }
 
@@ -141,14 +164,16 @@ export function updateEngine(controller, dt) {
       if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) p.vx -= accel;
       if (controller.keys['KeyD'] || controller.keys['ArrowRight']) p.vx += accel;
       
-      if (jumpJustPressed && !down && p.isGrounded) {
+      if (p.jumpBuffer > 0 && !down && p.isGrounded) {
         p.vy = -14;
         p.isGrounded = false;
-      } else if (jumpJustPressed && !down && !p.isGrounded && !p.doubleJumped && p.aerialPower >= 20) {
+        p.jumpBuffer = 0;
+      } else if (p.jumpBuffer > 0 && !down && !p.isGrounded && !p.doubleJumped && jumpJustPressed && p.aerialPower >= 20) {
         const jumpPower = 0.5 + (p.aerialPower / 100) * 0.5;
         p.vy = -12 * jumpPower;
         p.aerialPower -= 20;
         p.doubleJumped = true;
+        p.jumpBuffer = 0;
       }
     } else {
       if (p.isGrounded) p.vx *= 0.96;
@@ -182,17 +207,54 @@ export function updateEngine(controller, dt) {
     }
   }
 
+  if (p.attackBuffer && p.attackBuffer.time > 0) {
+    p.attackBuffer.time -= dt;
+    
+    const oldJ = controller.keys['KeyJ'];
+    const oldK = controller.keys['KeyK'];
+    if (p.attackBuffer.btn === 1) controller.keys['KeyJ'] = true;
+    if (p.attackBuffer.btn === 2) controller.keys['KeyK'] = true;
+    const bufferedType = determineAttack(controller);
+    controller.keys['KeyJ'] = oldJ;
+    controller.keys['KeyK'] = oldK;
+
+    let canAttack = false;
+    if (p.state !== 'attack' && p.state !== 'dead') {
+      canAttack = true;
+    } else if (p.state === 'attack') {
+      const currentConfig = ATTACK_CONFIG[p.attackType];
+      const isJabCancel = p.attackType === 'jab' && p.attackTimer < currentConfig.duration * 0.6 && bufferedType === 'jab';
+      const isEndlagCancel = p.attackTimer <= 0 && p.endlagTimer > 0;
+      const isHitCancel = p.attackHitConfirmed && p.attackTimer < currentConfig.duration * 0.6;
+      if (isJabCancel || isEndlagCancel || isHitCancel) canAttack = true;
+    }
+    
+    if (canAttack && bufferedType) {
+      triggerAttack(controller, bufferedType);
+      p.attackBuffer = null;
+    }
+  }
+
   p.x += p.vx;
   p.y += p.vy;
 
   if (!p.isGrounded) {
-    p.vy += 0.6;
+    let gravity = 0.6;
+    if (p.vy < 0 && !jumpPressed && !p.exponentialLaunch) {
+      gravity = 1.6; // Apply extra gravity if jump is released early
+    }
+    p.vy += gravity;
     if (p.y >= controller.baseGroundY) {
       p.y = controller.baseGroundY;
       p.vy = 0;
       p.isGrounded = true;
       p.doubleJumped = false;
       
+      // Auto-jump if holding jump upon landing (bunny hop)
+      if (jumpPressed && p.state !== 'attack') {
+        p.jumpBuffer = 0.15;
+      }
+
       // Landing from air into slide if holding down and has horizontal speed
       if (down && Math.abs(p.vx) > 5) {
         p.isSliding = true;

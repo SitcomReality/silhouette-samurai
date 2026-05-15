@@ -11,11 +11,11 @@ export const ATTACK_CONFIG = {
     resetComboOnMiss: false
   },
   lunge: {
-    duration: 0.45,
-    endlag: 0.2,
-    vx: 15,
+    duration: 0.35,
+    endlag: 0.15,
+    vx: 18,
     vy: 0,
-    reach: 70,
+    reach: 80,
     damage: 20,
     pushback: 8,
     launchVy: -3,
