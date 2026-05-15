@@ -1,4 +1,4 @@
-export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false) {
+export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0) {
   const dir = facing === 'right' ? 1 : -1;
   const t = char.target;
 
@@ -114,6 +114,14 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.headX = Math.sin(stateTime * 2) * 1.5;
   }
 
+  // Apply scale
+  t.bodyBotX *= scale; t.bodyBotY *= scale;
+  t.bodyTopX *= scale; t.bodyTopY *= scale;
+  t.bodyThickness *= scale;
+  t.headX *= scale; t.headY *= scale; t.headR *= scale;
+  t.bulgeAX *= scale; t.bulgeAY *= scale; t.bulgeAR *= scale;
+  t.bulgeBX *= scale; t.bulgeBY *= scale; t.bulgeBR *= scale;
+
   // Smoothly interpolate current to target
   // A standard framerate-independent lerp:
   const lerpRate = 20;
@@ -150,5 +158,5 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   };
   
   char.height = Math.abs(c.headY) + c.headR;
-  char.width = 30;
+  char.width = 30 * scale;
 }

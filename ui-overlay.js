@@ -14,6 +14,8 @@ export class UIOverlay {
     
     this.scoreEl = document.getElementById('score-val');
     this.maxComboEl = document.getElementById('max-combo-val');
+    this.enemiesEl = document.getElementById('enemies-val');
+    this.bossesEl = document.getElementById('bosses-val');
     this.comboContainer = document.getElementById('combo-container');
     this.comboVal = document.getElementById('combo-val');
     this.headerIcon = document.getElementById('header-icon');
@@ -25,6 +27,8 @@ export class UIOverlay {
     this.lastScore = -1;
     this.lastCombo = -1;
     this.lastMaxCombo = -1;
+    this.lastEnemies = -1;
+    this.lastBosses = -1;
   }
   
   initThemes() {
@@ -83,6 +87,16 @@ export class UIOverlay {
     if (this.lastMaxCombo !== stats.maxCombo) {
       this.maxComboEl.textContent = `${stats.maxCombo}x`;
       this.lastMaxCombo = stats.maxCombo;
+    }
+    
+    if (this.lastEnemies !== stats.enemiesDefeated) {
+      if (this.enemiesEl) this.enemiesEl.textContent = stats.enemiesDefeated.toLocaleString();
+      this.lastEnemies = stats.enemiesDefeated;
+    }
+    
+    if (this.lastBosses !== stats.bossesDefeated) {
+      if (this.bossesEl) this.bossesEl.textContent = stats.bossesDefeated.toLocaleString();
+      this.lastBosses = stats.bossesDefeated;
     }
     
     if (this.lastCombo !== currentCombo) {

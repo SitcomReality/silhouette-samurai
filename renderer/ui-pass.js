@@ -7,13 +7,21 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
         ? (ent.height || 25) 
         : (ent.character ? ent.character.height + 20 : 120);
       const scY = ent.y - healthBarY + camYOffset;
-      const barW = 36;
+      const barW = ent.isBoss ? 80 : 36;
+      const barH = ent.isBoss ? 6 : 3;
+      
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(scX - barW/2, scY - 8, barW, 3);
+      ctx.fillRect(scX - barW/2, scY - 8, barW, barH);
       
       const healthRatio = Math.max(0, ent.health / ent.maxHealth);
-      ctx.fillStyle = ent.type === 'crate' ? '#eab308' : '#f43f5e';
-      ctx.fillRect(scX - barW/2, scY - 8, barW * healthRatio, 3);
+      if (ent.type === 'crate') {
+        ctx.fillStyle = '#eab308';
+      } else if (ent.isBoss) {
+        ctx.fillStyle = '#a855f7';
+      } else {
+        ctx.fillStyle = '#f43f5e';
+      }
+      ctx.fillRect(scX - barW/2, scY - 8, barW * healthRatio, barH);
     }
   }
 

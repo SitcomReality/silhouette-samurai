@@ -21,16 +21,28 @@ export function resolveAttackHits(controller) {
       p.attackHitConfirmed = true;
       
       ent.health -= hitbox.damage;
-      ent.vx = dir * hitbox.pushback;
-      ent.vy = hitbox.launchVy;
+      
+      if (ent.isBoss) {
+        ent.vx = dir * hitbox.pushback * 0.4;
+        ent.vy = hitbox.launchVy * 0.6;
+      } else {
+        ent.vx = dir * hitbox.pushback;
+        ent.vy = hitbox.launchVy;
+      }
       ent.isGrounded = false;
       
       if (ent.health <= 0) {
         ent.health = 0;
         ent.state = 'dead';
         ent.stateTime = 0;
-        controller.stats.enemiesDefeated++;
-        controller.stats.score += 100 * (1 + p.combo * 0.1);
+        
+        if (ent.isBoss) {
+          controller.stats.bossesDefeated++;
+          controller.stats.score += 500 * (1 + p.combo * 0.1);
+        } else {
+          controller.stats.enemiesDefeated++;
+          controller.stats.score += 100 * (1 + p.combo * 0.1);
+        }
         
         spawnDebris(controller, ent, dir, hitbox);
       } else {
@@ -84,13 +96,14 @@ export function resolveAttackHits(controller) {
 function spawnDebris(controller, ent, dir, hitbox) {
   if (ent.type === 'crate') return;
   
+  const scale = ent.scale || 1.0;
   const hx = ent.character.world ? ent.character.world.head.x : ent.x;
-  const hy = ent.character.world ? ent.character.world.head.y : ent.y - 70;
+  const hy = ent.character.world ? ent.character.world.head.y : ent.y - 70 * scale;
   const parts = [
-    { r: 13, x: hx, y: hy },
-    { r: 10, x: ent.x, y: ent.y - 70 },
-    { r: 8, x: ent.x - 10, y: ent.y - 60 },
-    { r: 8, x: ent.x + 10, y: ent.y - 60 }
+    { r: 13 * scale, x: hx, y: hy },
+    { r: 10 * scale, x: ent.x, y: ent.y - 70 * scale },
+    { r: 8 * scale, x: ent.x - 10 * scale, y: ent.y - 60 * scale },
+    { r: 8 * scale, x: ent.x + 10 * scale, y: ent.y - 60 * scale }
   ];
   
   for (const part of parts) {
@@ -113,17 +126,18 @@ function spawnDebris(controller, ent, dir, hitbox) {
 }
 
 function spawnHitParticles(controller, ent, dir, hitbox) {
-  const pCount = hitbox.damage > 40 ? 5 : 3;
+  const scale = ent.scale || 1.0;
+  const pCount = (hitbox.damage > 40 ? 5 : 3) * (ent.isBoss ? 2 : 1);
   for (let i = 0; i < pCount; i++) {
     const angle = Math.random() * Math.PI - Math.PI / 2;
     const speed = 8 + Math.random() * 10;
     controller.particles.push({
       id: `p_${controller.particleId++}`,
-      x: ent.x + (Math.random() - 0.5) * 10,
-      y: ent.y - 50 + (Math.random() - 0.5) * 20,
+      x: ent.x + (Math.random() - 0.5) * 10 * scale,
+      y: ent.y - 50 * scale + (Math.random() - 0.5) * 20 * scale,
       vx: Math.cos(angle) * speed + dir * hitbox.pushback * 0.3,
       vy: Math.sin(angle) * speed + hitbox.launchVy * 0.5,
-      radius: 5 + Math.random() * 6,
+      radius: (5 + Math.random() * 6) * (ent.isBoss ? 1.5 : 1.0),
       life: 0,
       maxLife: 0.4 + Math.random() * 0.3,
       isGrounded: false,

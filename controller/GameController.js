@@ -12,7 +12,8 @@ export class GameController {
     this.floatingTexts = [];
     this.visualFx = [];
     this.fxId = 0;
-    this.stats = { score: 0, maxCombo: 0, enemiesDefeated: 0 };
+    this.stats = { score: 0, maxCombo: 0, enemiesDefeated: 0, bossesDefeated: 0 };
+    this.enemiesSpawnedSinceBoss = 0;
     
     this.baseGroundY = 400;
     this.cameraX = 0;

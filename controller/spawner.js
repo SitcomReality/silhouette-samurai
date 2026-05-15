@@ -1,6 +1,7 @@
 import { createCharacter } from '../character/representation.js';
 
-export function spawnEnemy(controller, x) {
+export function spawnEnemy(controller, x, difficulty = 1) {
+  const hp = 60 * difficulty;
   controller.entities.push({
     id: `enemy_${Math.random()}`,
     type: 'enemy',
@@ -11,13 +12,40 @@ export function spawnEnemy(controller, x) {
     facing: 'left',
     isGrounded: true,
     isCrouching: false,
-    health: 60,
-    maxHealth: 60,
+    health: hp,
+    maxHealth: hp,
+    scale: 1.0,
     state: 'idle',
     stateTime: Math.random() * 2,
     attackType: 'none',
     attackTimer: 0,
     combo: 0,
+    character: createCharacter(x, controller.baseGroundY),
+  });
+}
+
+export function spawnBoss(controller, x, difficulty = 1) {
+  const hp = 300 * difficulty;
+  const scale = 1.8 + Math.min((difficulty - 1) * 0.1, 0.6);
+  controller.entities.push({
+    id: `boss_${Math.random()}`,
+    type: 'enemy',
+    isBoss: true,
+    x,
+    y: controller.baseGroundY,
+    vx: 0,
+    vy: 0,
+    facing: 'left',
+    isGrounded: true,
+    isCrouching: false,
+    health: hp,
+    maxHealth: hp,
+    state: 'idle',
+    stateTime: Math.random() * 2,
+    attackType: 'none',
+    attackTimer: 0,
+    combo: 0,
+    scale: scale,
     character: createCharacter(x, controller.baseGroundY),
   });
 }

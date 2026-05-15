@@ -2,7 +2,7 @@ import { animateCharacter } from '../character/animator.js';
 import { resolveAttackHits } from '../combat/attacks/resolve.js';
 import { textSDFManager } from '../sdf/text-sdf.js';
 import { ATTACK_CONFIG } from '../combat/attacks/config.js';
-import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
+import { spawnCratesSquareWave, spawnEnemy, spawnBoss } from './spawner.js';
 import { triggerAttack } from '../combat/attacks/trigger.js';
 import { determineAttack } from '../input/controls.js';
 
@@ -268,15 +268,25 @@ export function updateEngine(controller, dt) {
   controller.cameraX += (targetCamX - controller.cameraX) * 0.08;
 
   if (p.x > controller.nextSpawnX - 600) {
-    if (Math.random() < 0.4) {
-      spawnCratesSquareWave(controller, controller.nextSpawnX, 3 + Math.floor(Math.random() * 3));
-      controller.nextSpawnX += 450;
+    const diff = 1 + controller.stats.bossesDefeated * 0.2;
+    
+    if (controller.enemiesSpawnedSinceBoss >= 15) {
+      // Spawn Boss
+      spawnBoss(controller, controller.nextSpawnX, diff);
+      controller.enemiesSpawnedSinceBoss = 0;
+      controller.nextSpawnX += 600;
     } else {
-      const count = 1 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < count; i++) {
-        spawnEnemy(controller, controller.nextSpawnX + i * 80);
+      if (Math.random() < 0.4) {
+        spawnCratesSquareWave(controller, controller.nextSpawnX, 3 + Math.floor(Math.random() * 3));
+        controller.nextSpawnX += 450;
+      } else {
+        const count = 1 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < count; i++) {
+          spawnEnemy(controller, controller.nextSpawnX + i * 80, diff);
+          controller.enemiesSpawnedSinceBoss++;
+        }
+        controller.nextSpawnX += 400;
       }
-      controller.nextSpawnX += 400;
     }
   }
 
@@ -340,8 +350,10 @@ export function updateEngine(controller, dt) {
       const aIsLow = (a === p && (p.isSliding || p.isCrouching));
       const bIsLow = (b === p && (p.isSliding || p.isCrouching));
       
-      const aHeight = aIsLow ? 35 : 70;
-      const bHeight = bIsLow ? 35 : 70;
+      const aScale = a.scale || 1.0;
+      const bScale = b.scale || 1.0;
+      const aHeight = (aIsLow ? 35 : 70) * aScale;
+      const bHeight = (bIsLow ? 35 : 70) * bScale;
       
       const aCenterY = a.y - aHeight / 2;
       const bCenterY = b.y - bHeight / 2;
@@ -349,7 +361,7 @@ export function updateEngine(controller, dt) {
       const dx = b.x - a.x;
       const dy = bCenterY - aCenterY; 
       
-      const minDistX = 35; // Rough character width
+      const minDistX = 17.5 * aScale + 17.5 * bScale; // Rough character width (35 total normally)
       const minDistY = (aHeight + bHeight) / 2;
 
       if (Math.abs(dx) < minDistX && Math.abs(dy) < minDistY) {
@@ -374,7 +386,8 @@ export function updateEngine(controller, dt) {
 
   for (const ent of controller.entities) {
     if (ent.state !== 'dead' && ent.type !== 'crate' && ent.character) {
-      animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt);
+      const scale = ent.scale || 1.0;
+      animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt, false, scale);
     }
   }
 
