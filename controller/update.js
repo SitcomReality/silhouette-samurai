@@ -10,47 +10,14 @@ export function updateEngine(controller, dt) {
     return;
   }
 
-  // Update Intro Sequence
-  if (controller.intro.active) {
-    controller.intro.time += dt;
-    let found = false;
-    for (const step of controller.intro.sequence) {
-      if (controller.intro.time >= step.start && controller.intro.time <= step.end) {
-        const stepTime = controller.intro.time - step.start;
-        const stepDuration = step.end - step.start;
-        const progress = stepTime / stepDuration;
-        
-        // Easing for height: 2s rise, 2s hold, 2s sink
-        let heightFactor = 0;
-        if (progress < 1/3) {
-          const t = progress * 3;
-          heightFactor = t * t * (3 - 2 * t); // smoothstep rise
-        } else if (progress < 2/3) {
-          heightFactor = 1; // hold
-        } else {
-          const t = 1 - (progress - 2/3) * 3;
-          heightFactor = t * t * (3 - 2 * t); // smoothstep sink
-        }
-        
-        const totalRise = 200;
-        const yOffset = -totalRise * heightFactor;
-        
-        controller.intro.currentLayout = textSDFManager.getTextLayout(
-          step.text, 
-          0, // Centered around 0 world X
-          controller.baseGroundY + 180 + yOffset, // Start deep in ground so top is hidden
-          1.2
-        );
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      controller.intro.currentLayout = null;
-      if (controller.intro.time > 18) {
-        controller.intro.active = false;
-      }
-    }
+  if (!controller.introLayoutsGenerated) {
+    controller.introLayouts = controller.introTexts.map(it => textSDFManager.getTextLayout(
+      it.text,
+      it.x,
+      controller.baseGroundY + 50, // Set height to fuse pleasingly with the ground floor
+      1.0
+    ));
+    controller.introLayoutsGenerated = true;
   }
 
   if (controller.screenShake > 0) {

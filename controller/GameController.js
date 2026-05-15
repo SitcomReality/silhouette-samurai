@@ -23,21 +23,18 @@ export class GameController {
     this.hitstop = 0;
     this.screenShake = 0;
     
-    this.nextSpawnX = 400;
+    this.nextSpawnX = 3000;
     this.particleId = 0;
     this.waveId = 0;
     this.textId = 0;
     
-    this.intro = {
-      active: true,
-      time: 0,
-      sequence: [
-        { text: 'SitcomReality', start: 0, end: 6 },
-        { text: 'presents', start: 6, end: 12 },
-        { text: 'Untitled', start: 12, end: 18 }
-      ],
-      currentLayout: null
-    };
+    this.introTexts = [
+      { text: 'SitcomReality', x: 400 },
+      { text: 'presents', x: 1100 },
+      { text: 'Untitled', x: 1800 }
+    ];
+    this.introLayoutsGenerated = false;
+    this.introLayouts = [];
 
     this.player = {
       id: 'player',
@@ -68,8 +65,8 @@ export class GameController {
       isSliding: false,
     };
 
-    spawnCratesSquareWave(this, 250, 4);
-    spawnEnemy(this, 550);
+    spawnCratesSquareWave(this, 2500, 4);
+    spawnEnemy(this, 2800);
   }
 
   handleKeyDown(code, key) {

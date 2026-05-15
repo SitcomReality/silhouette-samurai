@@ -41,9 +41,11 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
       }
     }
 
-    if (controller && controller.intro.active && controller.intro.currentLayout) {
-      const textD = textSDFManager.getDistance(controller.intro.currentLayout, x, y);
-      d = smin(d, textD, globalBlendK * 0.5);
+    if (controller && controller.introLayouts) {
+      for (const layout of controller.introLayouts) {
+        const textD = textSDFManager.getDistance(layout, x, y);
+        d = smin(d, textD, globalBlendK * 0.5);
+      }
     }
 
     for (const p of nearbyParticles) {

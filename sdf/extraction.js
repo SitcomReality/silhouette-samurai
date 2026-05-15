@@ -56,16 +56,14 @@ export function extractSDFSegments(
     }
 
     // Ensure intro text is considered when present so its SDF is sampled even with no nearby entities/particles.
-    if (controller && controller.intro && controller.intro.active && controller.intro.currentLayout) {
-      const layout = controller.intro.currentLayout;
-      // layout.x is the left edge in world space (getTextLayout returns x = centerX - halfWidth).
-      // Compute the text center and expand the horizontal span with extra margin so the full string is considered.
-      const textCenter = layout.x + (layout.width || 0) * 0.5;
-      const halfW = (layout.width || 0) * 0.5 + globalBlendK * 2.0;
-      // If this column intersects the horizontal span of the text, expand highestTop to include text top.
-      if (Math.abs(colWorldX[c] - textCenter) <= halfW) {
-        const textTop = layout.y - (layout.height || 0);
-        if (textTop < highestTop) highestTop = textTop;
+    if (controller && controller.introLayouts) {
+      for (const layout of controller.introLayouts) {
+        const textCenter = layout.x + (layout.width || 0) * 0.5;
+        const halfW = (layout.width || 0) * 0.5 + globalBlendK * 2.0;
+        if (Math.abs(colWorldX[c] - textCenter) <= halfW) {
+          const textTop = layout.y - (layout.height || 0);
+          if (textTop < highestTop) highestTop = textTop;
+        }
       }
     }
 
@@ -110,10 +108,12 @@ export function extractSDFSegments(
         d = smin(d, pD, globalBlendK);
       }
       // Include Intro Text SDF if active and nearby
-      if (controller.intro.active && controller.intro.currentLayout) {
-        const textD = textSDFManager.getDistance(controller.intro.currentLayout, wx, wy);
-        if (textD < 100) {
-          d = smin(d, textD, globalBlendK * 0.5); // Sharp-ish blend for text
+      if (controller.introLayouts) {
+        for (const layout of controller.introLayouts) {
+          const textD = textSDFManager.getDistance(layout, wx, wy);
+          if (textD < 100) {
+            d = smin(d, textD, globalBlendK * 0.5); // Sharp-ish blend for text
+          }
         }
       }
 
