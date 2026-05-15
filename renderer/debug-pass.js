@@ -3,51 +3,62 @@ import { ATTACK_CONFIG } from '../combat/attacks/config.js';
 
 export function renderDebug(ctx, controller, viewWidth, camYOffset) {
   const drawCharacterDebug = (char, x, y, color) => {
-    const scX = (char.core.x - controller.cameraX) + viewWidth / 2;
-    const scY = char.core.y + camYOffset;
+    if (!char.world) return;
+    const w = char.world;
     
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
     
-    // Core torso box
-    ctx.strokeRect(scX - char.width/2, scY - char.height/2, char.width, char.height);
+    // Core capsule
+    const bx1 = (w.bodyBot.x - controller.cameraX) + viewWidth / 2;
+    const by1 = w.bodyBot.y + camYOffset;
+    const bx2 = (w.bodyTop.x - controller.cameraX) + viewWidth / 2;
+    const by2 = w.bodyTop.y + camYOffset;
     
-    // Head circle
-    const hx = (char.head.x - controller.cameraX) + viewWidth / 2;
-    const hy = char.head.y + camYOffset;
     ctx.beginPath();
-    ctx.arc(hx, hy, char.head.radius, 0, Math.PI * 2);
+    ctx.moveTo(bx1, by1);
+    ctx.lineTo(bx2, by2);
     ctx.stroke();
     
-    // Arm - only if visible
-    if (char.arm.length > 5) {
-      const ax = (char.arm.origin.x - controller.cameraX) + viewWidth / 2;
-      const ay = char.arm.origin.y + camYOffset;
-      const bx = ax + Math.cos(char.arm.angle) * char.arm.length;
-      const by = ay + Math.sin(char.arm.angle) * char.arm.length;
+    ctx.beginPath();
+    ctx.arc(bx1, by1, w.bodyThickness, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(bx2, by2, w.bodyThickness, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Head circle
+    const hx = (w.head.x - controller.cameraX) + viewWidth / 2;
+    const hy = w.head.y + camYOffset;
+    ctx.beginPath();
+    ctx.arc(hx, hy, w.head.r, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Bulges
+    if (w.bulgeA.r > 0.1) {
+      const ax = (w.bulgeA.x - controller.cameraX) + viewWidth / 2;
+      const ay = w.bulgeA.y + camYOffset;
       ctx.beginPath();
-      ctx.moveTo(ax, ay);
-      ctx.lineTo(bx, by);
+      ctx.arc(ax, ay, w.bulgeA.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(bx2, by2);
+      ctx.lineTo(ax, ay);
       ctx.stroke();
     }
     
-    // Legs
-    const legX = scX;
-    const legY = scY + char.height / 2;
-    
-    const leftEndX = legX - 6 + Math.sin(char.legs.leftAngle) * char.legs.length;
-    const leftEndY = legY + Math.cos(char.legs.leftAngle) * char.legs.length;
-    ctx.beginPath();
-    ctx.moveTo(legX - 6, legY);
-    ctx.lineTo(leftEndX, leftEndY);
-    ctx.stroke();
-    
-    const rightEndX = legX + 6 + Math.sin(char.legs.rightAngle) * char.legs.length;
-    const rightEndY = legY + Math.cos(char.legs.rightAngle) * char.legs.length;
-    ctx.beginPath();
-    ctx.moveTo(legX + 6, legY);
-    ctx.lineTo(rightEndX, rightEndY);
-    ctx.stroke();
+    if (w.bulgeB.r > 0.1) {
+      const bx = (w.bulgeB.x - controller.cameraX) + viewWidth / 2;
+      const by = w.bulgeB.y + camYOffset;
+      ctx.beginPath();
+      ctx.arc(bx, by, w.bulgeB.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(bx2, by2);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
   };
 
   if (controller.player.character) {

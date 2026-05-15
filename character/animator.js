@@ -1,123 +1,124 @@
-export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching) {
+export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt) {
   const dir = facing === 'right' ? 1 : -1;
-  const baseY = isCrouching ? y - 35 : y - 65;
-  
-  char.core = { x, y: baseY };
-  char.height = isCrouching ? 30 : 50;
-  char.width = 20;
-  
-  // Dead state - collapsed on ground
+  const t = char.target;
+
+  // Default / Idle state relative to character pos (0,0)
+  t.bodyBotX = 0; t.bodyBotY = 0;
+  t.bodyTopX = 0; t.bodyTopY = -35;
+  t.bodyThickness = 12;
+  t.headX = 0; t.headY = -55; t.headR = 13;
+  t.bulgeAX = 0; t.bulgeAY = -20; t.bulgeAR = 0;
+  t.bulgeBX = 0; t.bulgeBY = -20; t.bulgeBR = 0;
+
+  // Apply state modifiers
   if (state === 'dead') {
-    char.core.y = y - 10;
-    char.height = 20;
-    char.head = { x: x + dir * 40, y: y - 15, radius: 13 };
-    char.arm = { length: 50, angle: dir * 0.3, origin: { x: x + dir * 10, y: y - 10 } };
-    char.legs = { leftAngle: 1.5, rightAngle: 1.4, length: 40 };
-    return;
-  }
-
-  // Hit state - recoil
-  if (state === 'hit') {
-    char.head = { x: x - dir * 5, y: char.core.y - char.height / 2 - 8, radius: 13 };
-    char.arm = { length: 45, angle: -dir * 1.4, origin: { x: x - dir * 8, y: char.core.y - 15 } };
-    char.legs = { leftAngle: -dir * 0.3, rightAngle: dir * 0.2, length: 40 };
-    return;
-  }
-
-  // Attack animations - ballet ninja style
-  if (state === 'attack') {
+    t.bodyBotY = -5; t.bodyTopX = dir * 20; t.bodyTopY = -10;
+    t.headX = dir * 35; t.headY = -10;
+    t.bodyThickness = 8;
+  } else if (state === 'hit') {
+    t.bodyTopX = -dir * 15; t.bodyTopY = -30;
+    t.headX = -dir * 25; t.headY = -40;
+  } else if (state === 'attack') {
     if (attackType === 'uppercut') {
       const rise = Math.sin(attackProgress * Math.PI);
-      char.core.y = baseY - rise * 20;
-      char.height = 60;
-      char.head = { x: x + dir * 8, y: char.core.y - char.height / 2 - 10, radius: 13 };
-      char.arm = { length: 70, angle: -Math.PI / 2 + dir * 0.2, origin: { x, y: char.core.y - 20 } };
-      char.legs = { leftAngle: -0.1, rightAngle: 0.1, length: 40 + rise * 10 };
-      return;
-    }
-
-    if (attackType === 'slide') {
+      t.bodyBotY = -rise * 20;
+      t.bodyTopX = dir * 10; t.bodyTopY = -50 - rise * 25;
+      t.headX = dir * 15; t.headY = -70 - rise * 25;
+      t.bulgeAX = dir * 20; t.bulgeAY = -40 - rise * 30; t.bulgeAR = 14 + rise * 8;
+    } else if (attackType === 'slide') {
       const sweep = Math.sin(attackProgress * Math.PI);
-      char.core.y = y - 20;
-      char.height = 25;
-      char.head = { x: x + dir * 20 * sweep, y: char.core.y - 20, radius: 13 };
-      char.arm = { length: 55, angle: dir * (0.4 + sweep * 0.7), origin: { x, y: char.core.y } };
-      char.legs = { leftAngle: dir * (1.3 + sweep * 0.2), rightAngle: dir * (0.6 + sweep * 0.4), length: 30 };
-      return;
-    }
-
-    if (attackType === 'aerial') {
+      t.bodyTopX = -dir * 20; t.bodyTopY = -15;
+      t.headX = -dir * 35; t.headY = -20;
+      t.bulgeAX = dir * 40; t.bulgeAY = -10; t.bulgeAR = 10;
+      t.bodyBotX = dir * 15; t.bodyBotY = -5;
+    } else if (attackType === 'aerial') {
       const thrust = Math.sin(attackProgress * Math.PI);
-      char.head = { x: x + dir * 10 * thrust, y: char.core.y - char.height / 2 - 8, radius: 13 };
-      char.arm = { length: 55 + thrust * 20, angle: dir * 0.2, origin: { x, y: char.core.y - 10 } };
-      char.legs = { leftAngle: dir * 0.5, rightAngle: -dir * 0.3, length: 42 };
-      return;
-    }
-
-    if (attackType === 'slam') {
-      const phase = attackProgress;
-      if (phase < 0.7) {
-        const reach = phase / 0.7;
-        char.core.y = baseY - reach * 15;
-        char.height = 60;
-        char.head = { x: x, y: char.core.y - 40, radius: 13 };
-        char.arm = { length: 80, angle: -Math.PI / 2, origin: { x, y: char.core.y - 20 } };
-        char.legs = { leftAngle: -0.2, rightAngle: 0.2, length: 50 };
+      t.bodyTopX = dir * 15; t.bodyTopY = -30;
+      t.headX = dir * 25; t.headY = -40;
+      t.bulgeAX = dir * 40 * thrust; t.bulgeAY = -20; t.bulgeAR = 16 * thrust;
+    } else if (attackType === 'slam') {
+      if (attackProgress < 0.7) {
+        const reach = attackProgress / 0.7;
+        t.bodyTopY = -50 - reach * 15;
+        t.headY = -70 - reach * 20;
+        t.bulgeAX = 0; t.bulgeAY = -80; t.bulgeAR = 18 * reach;
       } else {
-        const slam = (phase - 0.7) / 0.3;
-        char.core.y = y - 30;
-        char.height = 40;
-        char.head = { x: x + dir * 15 * slam, y: char.core.y - 25, radius: 13 };
-        char.arm = { length: 80, angle: Math.PI / 2, origin: { x, y: char.core.y - 10 } };
-        char.legs = { leftAngle: -0.8, rightAngle: 0.8, length: 30 };
+        const slam = (attackProgress - 0.7) / 0.3;
+        t.bodyTopX = dir * 25 * slam; t.bodyTopY = -20;
+        t.headX = dir * 30 * slam; t.headY = -25;
+        t.bulgeAX = dir * 40 * slam; t.bulgeAY = -5; t.bulgeAR = 20;
       }
-      return;
-    }
-
-    if (attackType === 'roundhouse') {
+    } else if (attackType === 'roundhouse') {
       const spin = attackProgress * Math.PI * 2.0;
-      char.core.y = baseY;
-      char.height = 50;
-      char.head = { x, y: char.core.y - char.height/2 - 8, radius: 13 };
-      char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
-      char.legs = { leftAngle: dir * 0.2, rightAngle: dir * (spin + 1.5), length: 55 };
-      return;
+      t.bodyThickness = 14;
+      t.bulgeAX = Math.cos(spin - Math.PI/2) * 45 * dir; 
+      t.bulgeAY = -30 + Math.sin(spin - Math.PI/2) * 20; 
+      t.bulgeAR = 16;
     }
-
-    if (attackType === 'brake_stop') {
-      const skid = Math.sin(attackProgress * Math.PI);
-      char.core.y = baseY + skid * 3;
-      char.head = { x: x - dir * 8 * skid, y: char.core.y - char.height / 2 - 8, radius: 13 };
-      char.arm = { length: 40, angle: -dir * 0.8, origin: { x, y: char.core.y } };
-      char.legs = { leftAngle: dir * 0.6, rightAngle: -dir * 0.4, length: 40 };
-      return;
-    }
-  }
-
-  // Airborne
-  if (!isGrounded) {
-    const tilt = Math.min(Math.max(vy * 0.03, -0.3), 0.3);
-    char.head = { x: x + dir * tilt * 10, y: char.core.y - char.height / 2 - 8, radius: 13 };
-    char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
-    char.legs = { leftAngle: tilt - 0.2, rightAngle: tilt + 0.2, length: 45 };
-    return;
-  }
-
-  // Running
-  if (state === 'run') {
+  } else if (!isGrounded) {
+    const tilt = Math.min(Math.max(vy * 0.05, -0.5), 0.5);
+    t.bodyTopX = dir * tilt * 15;
+    t.headX = dir * tilt * 25;
+    t.bodyBotY = -10;
+  } else if (isCrouching) {
+    t.bodyTopX = -dir * 10;
+    t.bodyTopY = -20;
+    t.headX = dir * 15; t.headY = -25;
+    t.bodyBotX = -dir * 5;
+  } else if (state === 'run') {
     const cycle = stateTime * 14;
-    const stride = Math.sin(cycle) * 0.6;
-    const bob = Math.abs(Math.cos(cycle)) * 5;
-    char.core.y = baseY + bob;
-    char.head = { x: x + dir * 5, y: char.core.y - char.height / 2 - 8, radius: 13 };
-    char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
-    char.legs = { leftAngle: stride, rightAngle: -stride, length: 45 };
-    return;
+    const bob = Math.abs(Math.cos(cycle)) * 4;
+    const lean = 10;
+    t.bodyBotY = -bob;
+    t.bodyTopX = dir * lean; t.bodyTopY = -35 - bob;
+    t.headX = dir * (lean + 5); t.headY = -55 - bob;
+    
+    const stride = Math.sin(cycle);
+    t.bulgeAX = dir * stride * 12; t.bulgeAY = -10; t.bulgeAR = 10;
+    t.bulgeBX = -dir * stride * 12; t.bulgeBY = -10; t.bulgeBR = 10;
+  } else {
+    // Idle
+    const bob = Math.sin(stateTime * 3) * 2;
+    t.headY = -55 + bob;
+    t.bodyTopY = -35 + bob * 0.5;
+    t.headX = Math.sin(stateTime * 2) * 1.5;
   }
 
-  // Idle
-  const bob = Math.sin(stateTime * 3) * 2;
-  char.head = { x, y: char.core.y - char.height / 2 - 8 + bob, radius: 13 };
-  char.arm = { length: 0, angle: 0, origin: { x, y: char.core.y } };
-  char.legs = { leftAngle: 0.1, rightAngle: -0.1, length: 40 };
+  // Smoothly interpolate current to target
+  // A standard framerate-independent lerp:
+  const lerpRate = 20;
+  const dtSafe = Math.min(dt || 0.016, 0.1);
+  const lerpFactor = 1.0 - Math.exp(-lerpRate * dtSafe);
+  
+  const c = char.current;
+  c.bodyBotX += (t.bodyBotX - c.bodyBotX) * lerpFactor;
+  c.bodyBotY += (t.bodyBotY - c.bodyBotY) * lerpFactor;
+  c.bodyTopX += (t.bodyTopX - c.bodyTopX) * lerpFactor;
+  c.bodyTopY += (t.bodyTopY - c.bodyTopY) * lerpFactor;
+  c.bodyThickness += (t.bodyThickness - c.bodyThickness) * lerpFactor;
+  
+  c.headX += (t.headX - c.headX) * lerpFactor;
+  c.headY += (t.headY - c.headY) * lerpFactor;
+  c.headR += (t.headR - c.headR) * lerpFactor;
+  
+  c.bulgeAX += (t.bulgeAX - c.bulgeAX) * lerpFactor;
+  c.bulgeAY += (t.bulgeAY - c.bulgeAY) * lerpFactor;
+  c.bulgeAR += (t.bulgeAR - c.bulgeAR) * lerpFactor;
+  
+  c.bulgeBX += (t.bulgeBX - c.bulgeBX) * lerpFactor;
+  c.bulgeBY += (t.bulgeBY - c.bulgeBY) * lerpFactor;
+  c.bulgeBR += (t.bulgeBR - c.bulgeBR) * lerpFactor;
+
+  // Store absolute world positions
+  char.world = {
+    bodyBot: { x: x + c.bodyBotX, y: y + c.bodyBotY },
+    bodyTop: { x: x + c.bodyTopX, y: y + c.bodyTopY },
+    bodyThickness: c.bodyThickness,
+    head: { x: x + c.headX, y: y + c.headY, r: c.headR },
+    bulgeA: { x: x + c.bulgeAX, y: y + c.bulgeAY, r: c.bulgeAR },
+    bulgeB: { x: x + c.bulgeBX, y: y + c.bulgeBY, r: c.bulgeBR }
+  };
+  
+  char.height = Math.abs(c.headY) + c.headR;
+  char.width = 30;
 }

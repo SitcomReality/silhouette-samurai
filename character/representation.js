@@ -1,19 +1,25 @@
 export function createCharacter(x, y) {
+  const shape = {
+    bodyBotX: 0, bodyBotY: 0,
+    bodyTopX: 0, bodyTopY: -35,
+    bodyThickness: 12,
+    headX: 0, headY: -55, headR: 13,
+    bulgeAX: 0, bulgeAY: -20, bulgeAR: 0,
+    bulgeBX: 0, bulgeBY: -20, bulgeBR: 0,
+  };
+  
   return {
-    core: { x, y: y - 65 },
-    coreRadius: 11,
-    height: 50,
-    width: 20,
-    head: { x, y: y - 100, radius: 13 },
-    arm: { 
-      length: 0,
-      angle: 0,
-      origin: { x, y: y - 65 }
-    },
-    legs: {
-      leftAngle: 0,
-      rightAngle: 0,
-      length: 40
+    height: 70,
+    width: 30,
+    current: { ...shape },
+    target: { ...shape },
+    world: {
+      bodyBot: { x, y },
+      bodyTop: { x, y: y - 35 },
+      bodyThickness: 12,
+      head: { x, y: y - 55, r: 13 },
+      bulgeA: { x, y: y - 20, r: 0 },
+      bulgeB: { x, y: y - 20, r: 0 },
     }
   };
 }

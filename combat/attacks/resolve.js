@@ -84,8 +84,10 @@ export function resolveAttackHits(controller) {
 function spawnDebris(controller, ent, dir, hitbox) {
   if (ent.type === 'crate') return;
   
+  const hx = ent.character.world ? ent.character.world.head.x : ent.x;
+  const hy = ent.character.world ? ent.character.world.head.y : ent.y - 70;
   const parts = [
-    { r: 13, x: ent.character.head.x, y: ent.character.head.y },
+    { r: 13, x: hx, y: hy },
     { r: 10, x: ent.x, y: ent.y - 70 },
     { r: 8, x: ent.x - 10, y: ent.y - 60 },
     { r: 8, x: ent.x + 10, y: ent.y - 60 }

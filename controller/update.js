@@ -151,7 +151,7 @@ export function updateEngine(controller, dt) {
   const progress = p.state === 'attack' && p.attackTimer > 0 
     ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
     : 0;
-  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching);
+  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt);
 
   const targetCamX = p.x + (p.facing === 'right' ? 100 : -100);
   controller.cameraX += (targetCamX - controller.cameraX) * 0.08;
@@ -213,7 +213,7 @@ export function updateEngine(controller, dt) {
     }
 
     if (ent.type !== 'crate' && ent.character) {
-      animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false);
+      animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt);
     }
   }
 
