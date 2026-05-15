@@ -32,27 +32,42 @@ export function triggerAttack(controller, attackType) {
   if (attackType === 'jab') {
     // jab doesn't override current inertia
   } else if (attackType === 'uppercut') {
-    p.vx = horizontalHeld ? dir * config.vx : 0;
-    p.vy = config.vy;
+    // Uppercut costs air power when airborne, less when grounded
+    const powerCost = p.isGrounded ? 10 : 25;
+    if (!p.isGrounded && p.aerialPower < powerCost) return; // Not enough power
+    
+    if (!p.isGrounded) p.aerialPower -= powerCost;
+    
+    const powerScale = p.isGrounded ? 1.0 : 0.5 + (p.aerialPower / 100) * 0.5;
+    p.vx = horizontalHeld ? dir * config.vx * powerScale : 0;
+    p.vy = config.vy * powerScale;
     p.exponentialLaunch = true;
     p.isGrounded = false;
   } else if (attackType === 'slide') {
-    // Sliding attack adds to momentum based on power, never slows down
-    const powerFactor = p.slidePower / 100;
-    const boost = dir * config.vx * powerFactor;
-    // If boost is in same direction as current vx, add it. 
-    // Otherwise, ensure we at least maintain current vx if it's already fast.
-    if ((boost > 0 && p.vx >= 0) || (boost < 0 && p.vx <= 0)) {
-      p.vx += boost;
+    // Slide uses momentum or creates it
+    const minSlideSpeed = 8;
+    const currentSpeed = Math.abs(p.vx);
+    
+    if (currentSpeed < minSlideSpeed) {
+      // Not moving fast enough - use slide power to boost
+      const powerBoost = (p.slidePower / 100) * config.vx;
+      p.vx = dir * Math.max(minSlideSpeed, powerBoost);
+      p.slidePower = Math.max(0, p.slidePower - 30);
     } else {
-      // Trying to slide opposite to current momentum? 
-      // We flip direction but scale initial boost by power.
-      p.vx = boost;
+      // Already moving - maintain/enhance momentum
+      const sign = Math.sign(p.vx);
+      p.vx = sign * Math.max(currentSpeed, minSlideSpeed);
     }
-    p.slidePower = 0; // Consume power
+    p.isSliding = true;
   } else {
     if (attackType === 'air_thrust') {
-      p.vx = horizontalHeld ? dir * config.vx : 0;
+      // Air thrust costs power
+      const powerCost = 20;
+      if (p.aerialPower < powerCost) return;
+      
+      p.aerialPower -= powerCost;
+      const powerScale = 0.6 + (p.aerialPower / 100) * 0.4;
+      p.vx = horizontalHeld ? dir * config.vx * powerScale : 0;
     } else {
       p.vx = dir * config.vx;
     }

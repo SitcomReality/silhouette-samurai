@@ -1,4 +1,4 @@
-export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt) {
+export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false) {
   const dir = facing === 'right' ? 1 : -1;
   const t = char.target;
 
@@ -42,12 +42,12 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       t.headX = dir * 30; t.headY = -45;
       t.bulgeAX = dir * 45 * thrust; t.bulgeAY = -45 - 20 * thrust; t.bulgeAR = 16 * thrust;
     } else if (attackType === 'slide') {
-      // L-Shape: Torso leans back, legs extend forward
-      t.bodyBotX = -dir * 15; t.bodyBotY = 0;
-      t.bodyTopX = -dir * 45; t.bodyTopY = -15;
-      t.headX = -dir * 60; t.headY = -20;
-      t.bulgeAX = dir * 45; t.bulgeAY = -5; t.bulgeAR = 13;
-      t.bodyThickness = 14;
+      // Slide: lean back, legs forward (opposite of lunge)
+      t.bodyBotX = dir * 10; t.bodyBotY = 0;
+      t.bodyTopX = -dir * 35; t.bodyTopY = -20;
+      t.headX = -dir * 50; t.headY = -28;
+      t.bulgeAX = dir * 45; t.bulgeAY = -8; t.bulgeAR = 14;
+      t.bodyThickness = 15;
     } else if (attackType === 'slam') {
       if (attackProgress < 0.7) {
         const reach = attackProgress / 0.7;
@@ -72,18 +72,28 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.bodyTopX = dir * tilt * 15;
     t.headX = dir * tilt * 25;
     t.bodyBotY = -10;
-  } else if (isCrouching) {
-    const cycle = stateTime * 8;
-    const walkBob = (state === 'run') ? Math.abs(Math.sin(cycle)) * 3 : 0;
-    const walkShift = (state === 'run') ? Math.cos(cycle) * 5 : 0;
-    
-    t.bodyTopX = -dir * 12 + walkShift;
-    t.bodyTopY = -20 + walkBob;
-    t.headX = dir * 10 + walkShift; t.headY = -28 + walkBob;
-    t.bodyBotX = -dir * 5 + walkShift;
-    
-    if (state === 'run') {
-      t.bulgeAX = dir * 15; t.bulgeAY = -5; t.bulgeAR = 10;
+  } else if (isSliding || isCrouching) {
+    if (isSliding) {
+      // Active slide pose - leaning back
+      t.bodyBotX = dir * 8;
+      t.bodyTopX = -dir * 30; t.bodyTopY = -18;
+      t.headX = -dir * 42; t.headY = -25;
+      t.bulgeAX = dir * 40; t.bulgeAY = -8; t.bulgeAR = 13;
+      t.bodyThickness = 14;
+    } else {
+      // Crouching
+      const cycle = stateTime * 8;
+      const walkBob = (state === 'run') ? Math.abs(Math.sin(cycle)) * 3 : 0;
+      const walkShift = (state === 'run') ? Math.cos(cycle) * 5 : 0;
+      
+      t.bodyTopX = -dir * 12 + walkShift;
+      t.bodyTopY = -20 + walkBob;
+      t.headX = dir * 10 + walkShift; t.headY = -28 + walkBob;
+      t.bodyBotX = -dir * 5 + walkShift;
+      
+      if (state === 'run') {
+        t.bulgeAX = dir * 15; t.bulgeAY = -5; t.bulgeAR = 10;
+      }
     }
   } else if (state === 'run') {
     const cycle = stateTime * 14;

@@ -65,6 +65,7 @@ export class GameController {
       airTime: 0,
       groundStandTime: 0,
       doubleJumped: false,
+      isSliding: false,
     };
 
     spawnCratesSquareWave(this, 250, 4);

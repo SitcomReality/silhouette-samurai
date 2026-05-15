@@ -61,8 +61,12 @@ export function updateEngine(controller, dt) {
   p.stateTime += dt;
 
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
-  const isSliding = down && p.isGrounded && Math.abs(p.vx) > 2;
-  p.isCrouching = down && p.isGrounded && p.state !== 'attack';
+  
+  // Determine if player is sliding (has slide state from attack or high speed + down)
+  const isSliding = (p.isSliding && p.state === 'attack' && p.attackType === 'slide') || 
+                    (down && p.isGrounded && Math.abs(p.vx) > 5 && p.state !== 'attack');
+  
+  p.isCrouching = down && p.isGrounded && !isSliding && p.state !== 'attack';
 
   // Track time in different states for power regeneration
   if (!p.isGrounded) {
@@ -80,17 +84,21 @@ export function updateEngine(controller, dt) {
   }
 
   // Regenerate powers
-  const baseRegenRate = 30; // per second
+  const baseRegenRate = 35; // per second
   if (!p.isGrounded) {
-    // In air: aerial power regen slow, slide power regen fast
-    p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * 0.5 * dt);
-    p.slidePower = Math.min(100, p.slidePower + baseRegenRate * 2.0 * dt);
-  } else if (isSliding || p.isCrouching) {
-    // Sliding: slide power regen slow, aerial power regen fast
-    p.slidePower = Math.min(100, p.slidePower + baseRegenRate * 0.5 * dt);
-    p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * 2.0 * dt);
+    // In air: aerial power regen very slow, slide power regen fast
+    p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * 0.2 * dt);
+    p.slidePower = Math.min(100, p.slidePower + baseRegenRate * 2.5 * dt);
+  } else if (isSliding) {
+    // Sliding: rapidly recharge air power, slow slide power
+    p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * 3.5 * dt);
+    p.slidePower = Math.min(100, p.slidePower + baseRegenRate * 0.3 * dt);
+  } else if (p.isCrouching) {
+    // Crouching: medium recharge for both
+    p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * 1.5 * dt);
+    p.slidePower = Math.min(100, p.slidePower + baseRegenRate * 0.8 * dt);
   } else {
-    // Standing: both regen at normal rate
+    // Standing: normal rate for both
     p.slidePower = Math.min(100, p.slidePower + baseRegenRate * dt);
     p.aerialPower = Math.min(100, p.aerialPower + baseRegenRate * dt);
   }
@@ -105,13 +113,13 @@ export function updateEngine(controller, dt) {
     const accel = (p.isGrounded ? 45 : 12) * dt;
     
     // Variable friction based on state
-    let friction = 0.92;
+    let friction = 0.90;
     if (!p.isGrounded) {
       friction = 0.985; // Air friction (slight reduction for floatiness)
     } else if (isSliding) {
-      friction = 0.975; // Sliding friction (must eventually stop)
+      friction = 0.992; // Very low sliding friction - maintain momentum
     } else if (p.isCrouching) {
-      friction = 0.85; // Crouching friction
+      friction = 0.82; // Crouching friction
     }
 
     if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) {
@@ -156,9 +164,9 @@ export function updateEngine(controller, dt) {
     p.attackTimer -= dt;
     
     if (p.attackType === 'jab' || p.attackType === 'slide') {
-      let friction = 0.92;
+      let friction = 0.90;
       if (!p.isGrounded) friction = 0.98;
-      else if (isSliding || p.attackType === 'slide') friction = 0.985; // Low drag for slide attack
+      else if (p.attackType === 'slide') friction = 0.995; // Extremely low drag for slide attack
       p.vx *= friction;
       
       // Allow slight steering during jab
@@ -202,6 +210,7 @@ export function updateEngine(controller, dt) {
         }
         p.state = 'idle';
         p.attackType = 'none';
+        p.isSliding = false;
       }
     }
   }
@@ -218,8 +227,8 @@ export function updateEngine(controller, dt) {
       p.doubleJumped = false;
       
       // Landing from air into slide if holding down and has horizontal speed
-      if (down && Math.abs(p.vx) > 3) {
-        p.isCrouching = true;
+      if (down && Math.abs(p.vx) > 5) {
+        p.isSliding = true;
       }
     }
   } else {
@@ -229,7 +238,7 @@ export function updateEngine(controller, dt) {
   const progress = p.state === 'attack' && p.attackTimer > 0 
     ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
     : 0;
-  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt);
+  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding);
 
   const targetCamX = p.x + (p.facing === 'right' ? 100 : -100);
   controller.cameraX += (targetCamX - controller.cameraX) * 0.08;
