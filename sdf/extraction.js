@@ -1,9 +1,10 @@
 import { smin, sdBox, sdCapsule, sdCircle } from './primitives.js';
 import { evalCharacterSDF } from '../character/sdf-eval.js';
 import { getGroundY } from './ground.js';
+import { textSDFManager } from './text-sdf.js';
 
 export function extractSDFSegments(
-  viewWidth, viewHeight, cameraX, camYOffset, baseGroundY, entities, particles, shockwaves, step = 5, globalBlendK = 20
+  viewWidth, viewHeight, cameraX, camYOffset, baseGroundY, entities, particles, shockwaves, step = 5, globalBlendK = 20, controller = null
 ) {
   const cols = Math.ceil(viewWidth / step);
   const rows = Math.ceil(viewHeight / step);
@@ -94,6 +95,14 @@ export function extractSDFSegments(
         }
         d = smin(d, pD, globalBlendK);
       }
+      // Include Intro Text SDF if active and nearby
+      if (controller.intro.active && controller.intro.currentLayout) {
+        const textD = textSDFManager.getDistance(controller.intro.currentLayout, wx, wy);
+        if (textD < 100) {
+          d = smin(d, textD, globalBlendK * 0.5); // Sharp-ish blend for text
+        }
+      }
+
       grid[cOffset + r] = d;
     }
   }

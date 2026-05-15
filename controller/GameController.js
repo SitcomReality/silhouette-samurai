@@ -27,6 +27,17 @@ export class GameController {
     this.particleId = 0;
     this.waveId = 0;
     this.textId = 0;
+    
+    this.intro = {
+      active: true,
+      time: 0,
+      sequence: [
+        { text: 'SitcomReality', start: 0, end: 2.5 },
+        { text: 'presents', start: 3, end: 5.5 },
+        { text: 'Untitled', start: 6, end: 9 }
+      ],
+      currentLayout: null
+    };
 
     this.player = {
       id: 'player',

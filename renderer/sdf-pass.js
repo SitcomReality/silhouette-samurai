@@ -13,7 +13,7 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
   for (let i = 0; i <= columns; i++) {
     const cx = i * stepPixels;
     const worldX = controller.cameraX + (cx - viewWidth / 2);
-    const worldY = computeContourY(worldX, controller.baseGroundY, groundedEntities, groundedParticles, controller.shockwaves, 20);
+    const worldY = computeContourY(worldX, controller.baseGroundY, groundedEntities, groundedParticles, controller.shockwaves, 20, controller);
     const cy = worldY + camYOffset;
     if (i === 0) {
       firstY = cy;
@@ -36,7 +36,7 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
   const allEntities = controller.entities.concat(controller.player);
   const segments = extractSDFSegments(
     viewWidth, viewHeight, controller.cameraX, camYOffset, controller.baseGroundY,
-    allEntities, controller.particles, controller.shockwaves, 4.0, 20
+    allEntities, controller.particles, controller.shockwaves, 4.0, 20, controller
   );
 
   ctx.beginPath();

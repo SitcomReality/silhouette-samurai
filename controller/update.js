@@ -1,5 +1,6 @@
 import { animateCharacter } from '../character/animator.js';
 import { resolveAttackHits } from '../combat/attacks/resolve.js';
+import { textSDFManager } from '../sdf/text-sdf.js';
 import { ATTACK_CONFIG } from '../combat/attacks/config.js';
 import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
 
@@ -7,6 +8,39 @@ export function updateEngine(controller, dt) {
   if (controller.hitstop > 0) {
     controller.hitstop--;
     return;
+  }
+
+  // Update Intro Sequence
+  if (controller.intro.active) {
+    controller.intro.time += dt;
+    let found = false;
+    for (const step of controller.intro.sequence) {
+      if (controller.intro.time >= step.start && controller.intro.time <= step.end) {
+        const stepTime = controller.intro.time - step.start;
+        const stepDuration = step.end - step.start;
+        const progress = stepTime / stepDuration;
+        
+        // Easing for height: rises then falls
+        // Use a sin wave for smooth emergence
+        const heightFactor = Math.sin(progress * Math.PI);
+        const yOffset = -40 * heightFactor; // How high it rises from ground
+        
+        controller.intro.currentLayout = textSDFManager.getTextLayout(
+          step.text, 
+          0, // Centered around 0 world X
+          controller.baseGroundY + 15 + yOffset, // Absorb slightly into ground at rest
+          1.2
+        );
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      controller.intro.currentLayout = null;
+      if (controller.intro.time > 10) {
+        controller.intro.active = false;
+      }
+    }
   }
 
   if (controller.screenShake > 0) {

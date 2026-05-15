@@ -1,8 +1,9 @@
 import { smin, sdBox, sdCapsule, sdCircle } from './primitives.js';
 import { evalCharacterSDF } from '../character/sdf-eval.js';
 import { getGroundY } from './ground.js';
+import { textSDFManager } from './text-sdf.js';
 
-export function computeContourY(x, baseGroundY, groundedEntities, groundedParticles, shockwaves, globalBlendK = 22) {
+export function computeContourY(x, baseGroundY, groundedEntities, groundedParticles, shockwaves, globalBlendK = 22, controller = null) {
   const gY = getGroundY(x, baseGroundY, shockwaves);
   
   const nearbyEntities = [];
@@ -38,6 +39,11 @@ export function computeContourY(x, baseGroundY, groundedEntities, groundedPartic
         const charD = evalCharacterSDF(ent.character, x, y);
         d = smin(d, charD, globalBlendK);
       }
+    }
+
+    if (controller && controller.intro.active && controller.intro.currentLayout) {
+      const textD = textSDFManager.getDistance(controller.intro.currentLayout, x, y);
+      d = smin(d, textD, globalBlendK * 0.5);
     }
 
     for (const p of nearbyParticles) {
