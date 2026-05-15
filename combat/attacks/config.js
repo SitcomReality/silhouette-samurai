@@ -51,7 +51,7 @@ export const ATTACK_CONFIG = {
     reach: 80,
     damage: 15,
     pushback: 6,
-    launchVy: -2,
+    launchVy: -8,
     resetComboOnMiss: false
   },
   roundhouse: {

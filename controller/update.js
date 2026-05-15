@@ -235,11 +235,6 @@ export function updateEngine(controller, dt) {
     p.y = controller.baseGroundY;
   }
 
-  const progress = p.state === 'attack' && p.attackTimer > 0 
-    ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
-    : 0;
-  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding);
-
   const targetCamX = p.x + (p.facing === 'right' ? 100 : -100);
   controller.cameraX += (targetCamX - controller.cameraX) * 0.08;
 
@@ -298,8 +293,58 @@ export function updateEngine(controller, dt) {
     if (ent.state === 'hit' && ent.stateTime > 0.4) {
       ent.state = 'idle';
     }
+  }
 
-    if (ent.type !== 'crate' && ent.character) {
+  // Character-to-character simple collision
+  const chars = [p];
+  for (const ent of controller.entities) {
+    if (ent.state !== 'dead' && ent.character) {
+      chars.push(ent);
+    }
+  }
+
+  for (let i = 0; i < chars.length; i++) {
+    for (let j = i + 1; j < chars.length; j++) {
+      const a = chars[i];
+      const b = chars[j];
+      
+      const aIsLow = (a === p && (p.isSliding || p.isCrouching));
+      const bIsLow = (b === p && (p.isSliding || p.isCrouching));
+      
+      const aHeight = aIsLow ? 35 : 70;
+      const bHeight = bIsLow ? 35 : 70;
+      
+      const aCenterY = a.y - aHeight / 2;
+      const bCenterY = b.y - bHeight / 2;
+      
+      const dx = b.x - a.x;
+      const dy = bCenterY - aCenterY; 
+      
+      const minDistX = 35; // Rough character width
+      const minDistY = (aHeight + bHeight) / 2;
+
+      if (Math.abs(dx) < minDistX && Math.abs(dy) < minDistY) {
+        let safeDx = dx === 0 ? (Math.random() - 0.5) : dx;
+        const pushX = (minDistX - Math.abs(safeDx)) * Math.sign(safeDx);
+
+        a.x -= pushX * 0.5;
+        b.x += pushX * 0.5;
+
+        // Dampen momentum to simulate solid resistance
+        a.vx *= 0.85;
+        b.vx *= 0.85;
+      }
+    }
+  }
+
+  // Animate player and entities after physics and collision
+  const progress = p.state === 'attack' && p.attackTimer > 0 
+    ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
+    : 0;
+  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding);
+
+  for (const ent of controller.entities) {
+    if (ent.state !== 'dead' && ent.type !== 'crate' && ent.character) {
       animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt);
     }
   }
