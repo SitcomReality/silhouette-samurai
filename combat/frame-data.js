@@ -133,84 +133,84 @@ export const ATTACK_FRAME_DATA = {
     range: { width: 40, height: 50, offsetX: 0, offsetY: 10 }
   }),
 
-  // Blade Dance chain attacks
+  // Blade Dance chain attacks - increased durations for rhythmic ballet feel
   dance_starter: new AttackFrameData('dance_starter', {
-    startup: 6,
-    active: 4,
-    recovery: 16,
+    startup: 10,
+    active: 5,
+    recovery: 28,
     damage: 12,
     knockback: { x: 5, y: -1 },
     hitstun: 0.35,
-    movement: { vx: 20, vy: 0 },
-    range: { width: 70, height: 35, offsetX: 40, offsetY: -38 }
+    movement: { vx: 22, vy: 0 },
+    range: { width: 75, height: 35, offsetX: 40, offsetY: -38 }
   }),
 
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {
-    startup: 5,
-    active: 3,
-    recovery: 14,
+    startup: 8,
+    active: 4,
+    recovery: 24,
     damage: 10,
     knockback: { x: 4, y: -1 },
     hitstun: 0.3,
-    movement: { vx: 10, vy: 0 },
-    range: { width: 60, height: 35, offsetX: 35, offsetY: -38 }
+    movement: { vx: 12, vy: 0 },
+    range: { width: 65, height: 35, offsetX: 35, offsetY: -38 }
   }),
 
   dance_linker_up: new AttackFrameData('dance_linker_up', {
-    startup: 5,
-    active: 3,
-    recovery: 14,
+    startup: 8,
+    active: 4,
+    recovery: 24,
     damage: 10,
     knockback: { x: 2, y: -8 },
     hitstun: 0.35,
-    movement: { vx: 5, vy: -3 },
-    range: { width: 50, height: 60, offsetX: 20, offsetY: -50 }
+    movement: { vx: 6, vy: -4 },
+    range: { width: 55, height: 60, offsetX: 20, offsetY: -50 }
   }),
 
   dance_linker_down: new AttackFrameData('dance_linker_down', {
-    startup: 5,
-    active: 3,
-    recovery: 14,
+    startup: 8,
+    active: 4,
+    recovery: 24,
     damage: 10,
     knockback: { x: 6, y: -10 },
     hitstun: 0.4,
     trip: true,
-    movement: { vx: 8, vy: 0 },
-    range: { width: 65, height: 25, offsetX: 35, offsetY: -15 }
+    movement: { vx: 10, vy: 0 },
+    range: { width: 70, height: 25, offsetX: 35, offsetY: -15 }
   }),
 
   dance_finisher_neutral: new AttackFrameData('dance_finisher_neutral', {
-    startup: 10,
-    active: 5,
-    recovery: 22,
-    damage: 25,
-    knockback: { x: 15, y: -3 },
-    hitstun: 0.6,
-    movement: { vx: 8, vy: 0 },
-    range: { width: 75, height: 50, offsetX: 42, offsetY: -40 }
+    startup: 16,
+    active: 6,
+    recovery: 40,
+    damage: 30,
+    knockback: { x: 18, y: -4 },
+    hitstun: 0.7,
+    movement: { vx: 10, vy: 0 },
+    range: { width: 85, height: 50, offsetX: 45, offsetY: -40 }
   }),
 
   dance_finisher_up: new AttackFrameData('dance_finisher_up', {
-    startup: 10,
-    active: 5,
-    recovery: 22,
-    damage: 22,
-    knockback: { x: 1, y: -18 },
-    hitstun: 0.65,
+    startup: 16,
+    active: 6,
+    recovery: 40,
+    damage: 28,
+    knockback: { x: 1, y: -22 },
+    hitstun: 0.7,
     launch: true,
-    movement: { vx: 3, vy: -8 },
-    range: { width: 55, height: 75, offsetX: 20, offsetY: -70 }
+    movement: { vx: 4, vy: -10 },
+    range: { width: 65, height: 85, offsetX: 20, offsetY: -75 }
   }),
 
   dance_finisher_down: new AttackFrameData('dance_finisher_down', {
-    startup: 10,
-    active: 5,
-    recovery: 22,
-    damage: 24,
-    knockback: { x: 0, y: 20 },
-    hitstun: 0.7,
+    startup: 16,
+    active: 6,
+    recovery: 40,
+    damage: 28,
+    knockback: { x: 0, y: 25 },
+    hitstun: 0.75,
     spike: true,
-    movement: { vx: 0, vy: 5 },
-    range: { width: 45, height: 60, offsetX: 0, offsetY: 5 }
+    movement: { vx: 0, vy: 8 },
+    range: { width: 55, height: 70, offsetX: 0, offsetY: 10 }
   })
 };

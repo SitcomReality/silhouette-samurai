@@ -3,28 +3,29 @@ import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
 export function applyBladeDancePose(t, dir, attackType, attackProgress) {
   if (attackType === 'dance_starter') {
     const easedProgress = easeOutCubic(attackProgress);
-    const startAngle = Math.PI * 0.28;
-    const currentAngle = startAngle - (easedProgress * startAngle);
-    const swordLen = 78;
-    t.swordAX = dir * 6; t.swordAY = -30;
+    const startAngle = Math.PI * 0.45; // Wider start for more drama
+    const currentAngle = startAngle - (easedProgress * (startAngle + 0.1));
+    const swordLen = 82;
+    t.swordAX = dir * 8; t.swordAY = -35;
     t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
-    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen - easedProgress * 6;
-    t.swordThickness = 2.5 + (1 - easedProgress) * 1.8;
-    t.bodyTopX = dir * (18 * easedProgress + 6 * (easedProgress * easedProgress));
-    t.headX = dir * 22 * easedProgress;
-    t.bodyBotX = -dir * 6 * easedProgress;
+    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen - easedProgress * 10;
+    t.swordThickness = 3 + (1 - easedProgress) * 2.5;
+    t.bodyTopX = dir * (22 * easedProgress + 10 * (easedProgress * easedProgress));
+    t.headX = dir * 28 * easedProgress;
+    t.bodyBotX = -dir * 12 * easedProgress;
     return true;
   }
   
   if (attackType === 'dance_linker_neutral') {
     const extend = Math.sin(attackProgress * Math.PI);
-    const swordLen = 65;
-    t.swordAX = dir * 5; t.swordAY = -35;
+    const swordLen = 70;
+    t.swordAX = dir * 8; t.swordAY = -38;
     t.swordBX = t.swordAX + dir * extend * swordLen;
-    t.swordBY = -35 + extend * 5;
-    t.swordThickness = 2 + extend * 1.5;
-    t.bodyTopX = dir * extend * 12;
-    t.headX = dir * extend * 14;
+    t.swordBY = -38 + extend * 12; // More upward flourish
+    t.swordThickness = 2.5 + extend * 2.0;
+    t.bodyTopX = dir * extend * 15;
+    t.headX = dir * extend * 18;
+    t.bodyBotX = -dir * extend * 5;
     return true;
   }
   

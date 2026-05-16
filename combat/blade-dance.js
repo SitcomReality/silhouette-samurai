@@ -1,8 +1,9 @@
 export class BladeDanceSystem {
   constructor() {
-    this.inputWindow = 0.167; // ~10 frames at 60fps
-    this.repeatWindow = 0.167;
-    this.cooldown = 0.5;
+    // Increased windows to make the "beat" more deliberate and reactable
+    this.inputWindow = 0.45; // ~27 frames at 60fps
+    this.repeatWindow = 0.35;
+    this.cooldown = 0.4;
   }
 
   canInitiate(player) {

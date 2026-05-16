@@ -32,7 +32,9 @@ export function updatePlayerAttacks(controller, dt) {
     if (p.bladeDanceState && frameData.isInRecovery(currentFrame)) {
       const recoveryProgress = (currentFrame - (frameData.startup + frameData.active)) / frameData.recovery;
       
-      if (recoveryProgress < 0.7 && p.bladeDanceInputWindow === 0) {
+      // Delay the window opening until later in the recovery (e.g., after 35% progress)
+      // This forces the "beat" to be distinct from the hit impact.
+      if (recoveryProgress > 0.35 && recoveryProgress < 0.85 && p.bladeDanceInputWindow === 0) {
         if (p.bladeDanceState === 'linker' && p.bladeDanceCanRepeatLinker) {
           p.bladeDanceInputWindow = controller.bladeDance.repeatWindow;
         } else {
