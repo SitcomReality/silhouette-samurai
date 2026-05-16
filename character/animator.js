@@ -67,23 +67,20 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       
     } else if (attackType === 'thrust') {
       // Forward light "Uppercut" arc (starts low-forward, swings up to horizontal)
-      // Raise starting blade so it doesn't dig into the ground visually,
-      // and make the blade finish slightly higher and more forward.
       const easedProgress = easeOutCubic(attackProgress);
-      const startAngle = Math.PI * 0.28; // gentler, slightly more upward start
+      const startAngle = Math.PI * 0.35; // Low diagonal
       const currentAngle = startAngle - (easedProgress * startAngle); // Swings to 0 (horizontal)
-      const swordLen = 78;
+      const swordLen = 70;
       
-      // Start the blade a bit higher at the hip/chest region
-      t.swordAX = dir * 6; t.swordAY = -30;
+      t.swordAX = dir * 5; t.swordAY = -20;
       t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
-      t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen - easedProgress * 6; // lift at finish
-      t.swordThickness = 2.5 + (1 - easedProgress) * 1.8;
+      t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
+      t.swordThickness = 3 + (1 - easedProgress) * 2;
 
-      // Stronger body lunge that ends near the visual swoosh
-      t.bodyTopX = dir * (18 * easedProgress + 6 * (easedProgress * easedProgress));
-      t.headX = dir * 22 * easedProgress;
-      t.bodyBotX = -dir * 6 * easedProgress;
+      // Body lunges with the swing
+      t.bodyTopX = dir * 15 * easedProgress;
+      t.headX = dir * 20 * easedProgress;
+      t.bodyBotX = -dir * 5 * easedProgress;
     } else if (attackType === 'up_slash') {
       // Overhead arc with sharp snap
       const easedProgress = attackProgress < 0.3 ? easeInCubic(attackProgress / 0.3) * 0.3 :
