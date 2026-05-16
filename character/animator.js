@@ -57,7 +57,9 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       t.swordAX = dir * 5; t.swordAY = -35;
       t.swordBX = t.swordAX + dir * extend * swordLen;
       t.swordBY = -35 + extend * 8; // slight downward trajectory
-      t.swordThickness = 4 + extend * 3;
+      
+      // Thinner blade silhouette for the neutral light attack
+      t.swordThickness = 2 + extend * 1.5;
       
       // Slight body pull
       t.bodyTopX = dir * extend * 10;

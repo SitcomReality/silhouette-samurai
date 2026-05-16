@@ -151,19 +151,19 @@ export function triggerAttack(controller, attackType) {
       maxLife: 0.32
     });
   } else if (attackType === 'slash') {
-    // Quick descending arc (Marth fair style)
+    // Quick descending arc (short, low swoosh to match light damage)
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
       x: p.x + dir * 18,
-      y: p.y - 35,
+      y: p.y - 30,
       facing: p.facing,
-      angle: Math.PI * 0.15,
-      radius: 55,
-      thickness: 22,
+      angle: Math.PI * 0.12,
+      radius: 40,
+      thickness: 12,
       color: '#ffffff',
       life: 0,
-      maxLife: 0.2
+      maxLife: 0.18
     });
   } else if (attackType === 'thrust') {
     // Uppercut arc swoosh for the new forward light attack

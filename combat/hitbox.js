@@ -46,9 +46,11 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let hitboxH = 50;
   
   if (attackType === 'slash') {
+    // Move the hurtbox up and a bit more forward to match the visual blade tip
     hitboxW = 55;
-    hitboxH = 30;
-    hitboxY = y - 35;
+    hitboxH = 28;
+    hitboxX = x + dir * (config.reach * 0.6);
+    hitboxY = y - 45;
   } else if (attackType === 'thrust') {
     hitboxW = 75;
     hitboxH = 30;
