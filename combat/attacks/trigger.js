@@ -161,11 +161,12 @@ export function triggerAttack(controller, attackType) {
       maxLife: 0.2
     });
   } else if (attackType === 'thrust') {
+    // Place the swoosh where the thrust completes (slightly forward and higher)
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
-      x: p.x,
-      y: p.y - 25,
+      x: p.x + (p.facing === 'right' ? 1 : -1) * 48,
+      y: p.y - 40,
       facing: p.facing,
       startAngle: Math.PI * 0.4,
       endAngle: -Math.PI * 0.15,
