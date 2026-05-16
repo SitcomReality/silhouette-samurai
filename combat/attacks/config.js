@@ -4,7 +4,7 @@ export const ATTACK_CONFIG = {
     endlag: 0.05,
     vx: 0,
     vy: 0,
-    reach: 55,
+    reach: 65,
     damage: 10,
     pushback: 4,
     launchVy: -2,
@@ -59,7 +59,7 @@ export const ATTACK_CONFIG = {
     endlag: 0.25,
     vx: 12,
     vy: 0,
-    reach: 80,
+    reach: 95, // extended reach for better tippers
     damage: 30,
     pushback: 12,
     launchVy: -6,

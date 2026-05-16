@@ -30,11 +30,11 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
     activeStart = 0.2;
     activeEnd = 0.7;
   } else if (attackType === 'down_thrust') {
-    activeStart = 0.2; // Fast fall is active immediately
+    activeStart = 0.25; // Hangtime ends at ~0.25 (0.15s of 0.6 duration)
     activeEnd = 1.0;
   } else if (attackType === 'heavy_slash') {
     activeStart = 0.3;
-    activeEnd = 0.7;
+    activeEnd = 0.5; // Snap happens 0.3 to 0.4
   }
   
   if (attackProgress < activeStart || attackProgress > activeEnd) return null;
@@ -46,36 +46,36 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let hitboxH = 50;
   
   if (attackType === 'slash') {
-    hitboxW = 55;
-    hitboxH = 30;
+    hitboxW = 65;
+    hitboxH = 40;
     hitboxY = y - 35;
   } else if (attackType === 'thrust') {
-    hitboxW = 75;
+    hitboxW = 85;
     hitboxH = 30;
     hitboxY = y - 25;
   } else if (attackType === 'rising_slash') {
-    hitboxW = 60;
-    hitboxH = 80;
-    hitboxX = x + dir * 30;
+    hitboxW = 70;
+    hitboxH = 90;
+    hitboxX = x + dir * 35;
     hitboxY = y - 50;
   } else if (attackType === 'up_slash') {
-    hitboxW = 60;
-    hitboxH = 70;
-    hitboxX = x + dir * 20;
+    hitboxW = 70;
+    hitboxH = 80;
+    hitboxX = x + dir * 25;
     hitboxY = y - 60;
   } else if (attackType === 'sweep') {
-    hitboxW = 75;
+    hitboxW = 80;
     hitboxH = 30;
     hitboxY = y - 15;
   } else if (attackType === 'down_thrust') {
-    hitboxW = 40;
-    hitboxH = 70;
+    hitboxW = 50;
+    hitboxH = 80;
     hitboxX = x;
     hitboxY = y + 10;
   } else if (attackType === 'heavy_slash') {
-    hitboxW = 80;
-    hitboxH = 60;
-    hitboxX = x + dir * 40;
+    hitboxW = 95;
+    hitboxH = 70;
+    hitboxX = x + dir * 45;
     hitboxY = y - 35;
   }
   

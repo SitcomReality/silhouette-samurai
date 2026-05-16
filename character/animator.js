@@ -10,10 +10,17 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   t.bulgeAX = 0; t.bulgeAY = -20; t.bulgeAR = 0;
   t.bulgeBX = 0; t.bulgeBY = -20; t.bulgeBR = 0;
   
-  // Default sword pos (sheathed/casual)
-  t.swordAX = -dir * 5; t.swordAY = -30;
-  t.swordBX = -dir * 25; t.swordBY = -45;
-  t.swordThickness = 3;
+  // Default sword pos (iaijutsu ready pose, diagonally behind back)
+  t.swordAX = -dir * 15; t.swordAY = -20;
+  t.swordBX = -dir * 45; t.swordBY = -50;
+  t.swordThickness = 4;
+
+  // Easing helpers
+  const easeInCubic = x => x * x * x;
+  const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
+  const easeInOutCubic = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const easeOutElastic = x => x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1;
+  const easeOutBack = x => { const c1 = 1.70158; const c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
 
   // Apply state modifiers
   if (state === 'dead') {
@@ -24,73 +31,99 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.bodyTopX = -dir * 15; t.bodyTopY = -30;
     t.headX = -dir * 25; t.headY = -40;
   } else if (state === 'attack') {
-    if (attackType === 'rising_slash') {
-      // Graceful rising crescent
-      const rise = attackProgress;
-      t.bodyBotY = -rise * 20;
-      t.bodyTopX = dir * 5; t.bodyTopY = -45 - rise * 20;
-      t.headX = dir * 10; t.headY = -60 - rise * 20;
-      const swingAngle = -Math.PI/2 + (rise * Math.PI);
-      t.swordAX = dir * 10; t.swordAY = -40 - rise * 20;
-      t.swordBX = t.swordAX + Math.cos(swingAngle) * 55 * dir;
-      t.swordBY = t.swordAY + Math.sin(swingAngle) * 55;
+    if (attackType === 'down_thrust') {
+      const freezeThreshold = 0.25;
+      if (attackProgress < freezeThreshold) {
+        const tuck = easeOutCubic(attackProgress / freezeThreshold);
+        t.bodyBotY = -25 * tuck;
+        t.bodyTopX = 0; t.bodyTopY = -25 - 10 * tuck;
+        t.headX = 0; t.headY = -40 - 10 * tuck;
+        
+        t.swordAX = 0; t.swordAY = -20;
+        t.swordBX = -dir * 20; t.swordBY = -50;
+      } else {
+        const fall = easeInCubic((attackProgress - freezeThreshold) / (1 - freezeThreshold));
+        t.bodyTopX = 0; t.bodyTopY = -45;
+        t.headX = 0; t.headY = -60;
+        t.bodyBotY = -10;
+        
+        t.swordAX = 0; t.swordAY = -10;
+        t.swordBX = 0; t.swordBY = 40 + fall * 10;
+        t.swordThickness = 6;
+      }
+    } else if (attackType === 'heavy_slash') {
+      if (attackProgress < 0.3) {
+        const windup = easeOutCubic(attackProgress / 0.3);
+        t.bodyTopX = -dir * 20 * windup;
+        t.headX = -dir * 25 * windup;
+        const angle = Math.PI * 0.9;
+        t.swordAX = -dir * 15; t.swordAY = -20;
+        t.swordBX = t.swordAX + Math.cos(angle) * 60 * dir;
+        t.swordBY = t.swordAY + Math.sin(angle) * 60;
+        t.swordThickness = 7;
+      } else if (attackProgress < 0.4) {
+        const snap = (attackProgress - 0.3) / 0.1;
+        t.bodyTopX = dir * 15 * snap;
+        t.headX = dir * 20 * snap;
+        const angle = Math.PI * 0.9 - (snap * Math.PI * 1.6);
+        t.swordAX = dir * 10; t.swordAY = -30;
+        t.swordBX = t.swordAX + Math.cos(angle) * 75 * dir;
+        t.swordBY = t.swordAY + Math.sin(angle) * 75;
+        t.swordThickness = 8;
+      } else {
+        const follow = easeOutCubic((attackProgress - 0.4) / 0.6);
+        t.bodyTopX = dir * 15 + dir * 15 * follow;
+        t.headX = dir * 20 + dir * 15 * follow;
+        t.bodyBotX = dir * 10 * follow;
+        const angle = -Math.PI * 0.7 - (follow * 0.2);
+        t.swordAX = dir * 20; t.swordAY = -20;
+        t.swordBX = t.swordAX + Math.cos(angle) * 75 * dir;
+        t.swordBY = t.swordAY + Math.sin(angle) * 75;
+        t.swordThickness = 5;
+      }
+    } else if (attackType === 'rising_slash') {
+      const p = easeOutBack(attackProgress);
+      t.bodyBotY = -p * 20;
+      t.bodyTopX = dir * 10; t.bodyTopY = -45 - p * 20;
+      t.headX = dir * 15; t.headY = -60 - p * 20;
+      
+      const angle = -Math.PI/2 + (p * Math.PI * 1.1);
+      t.swordAX = dir * 10; t.swordAY = -40 - p * 20;
+      t.swordBX = t.swordAX + Math.cos(angle) * 65 * dir;
+      t.swordBY = t.swordAY + Math.sin(angle) * 65;
     } else if (attackType === 'slash') {
-      // Quick horizontal slice
-      const slice = attackProgress; // 0 to 1
-      t.bodyTopX = dir * 10;
-      t.headX = dir * 12;
-      const angle = Math.PI * 0.8 - (slice * Math.PI * 1.6); // Front to back slice
+      const p = easeOutBack(attackProgress);
+      t.bodyTopX = dir * 15 * p;
+      t.headX = dir * 20 * p;
+      const angle = Math.PI * 0.8 - (p * Math.PI * 1.5);
       t.swordAX = dir * 15; t.swordAY = -35;
-      t.swordBX = t.swordAX + Math.cos(angle) * 45 * dir;
-      t.swordBY = t.swordAY + Math.sin(angle) * 45;
-    } else if (attackType === 'thrust') {
-      // Marth-style forward stab
-      const thrust = Math.sin(attackProgress * Math.PI);
-      t.bodyBotX = -dir * 15; // Back leg braced
-      t.bodyTopX = dir * 25; t.bodyTopY = -25; // Leaning in
-      t.headX = dir * 35; t.headY = -35;
-      t.swordAX = dir * 25; t.swordAY = -25;
-      t.swordBX = t.swordAX + dir * (40 + thrust * 30);
-      t.swordBY = -25;
-    } else if (attackType === 'up_slash') {
-      // Overhead arc
-      const arc = attackProgress;
-      t.bodyTopX = dir * 10; t.bodyTopY = -35;
-      t.headX = dir * 15; t.headY = -45;
-      const angle = -Math.PI * 0.2 - (arc * Math.PI); 
-      t.swordAX = dir * 10; t.swordAY = -45;
-      t.swordBX = t.swordAX + Math.cos(angle) * 50 * dir;
-      t.swordBY = t.swordAY + Math.sin(angle) * 50;
-    } else if (attackType === 'sweep') {
-      // Low crouching slash
-      t.bodyBotX = -dir * 10; 
-      t.bodyTopX = dir * 15; t.bodyTopY = -15;
-      t.headX = dir * 20; t.headY = -25;
-      const slice = attackProgress;
-      const angle = Math.PI * 0.2 - (slice * Math.PI * 0.4); // Low horizontal sweep
-      t.swordAX = dir * 15; t.swordAY = -10;
       t.swordBX = t.swordAX + Math.cos(angle) * 55 * dir;
       t.swordBY = t.swordAY + Math.sin(angle) * 55;
-    } else if (attackType === 'down_thrust') {
-      // Plunging stab downwards
-      t.bodyTopX = 0; t.bodyTopY = -40;
-      t.headX = 0; t.headY = -55;
-      t.bodyBotY = -15; // Legs tucked
-      t.swordAX = 0; t.swordAY = -20;
-      t.swordBX = 0; t.swordBY = 30; // Pointing straight down
-      t.swordThickness = 5;
-    } else if (attackType === 'heavy_slash') {
-      // Roy-style charged horizontal heavy swing
-      const windup = attackProgress < 0.3 ? attackProgress / 0.3 : 1;
-      const swing = attackProgress >= 0.3 ? (attackProgress - 0.3) / 0.7 : 0;
-      t.bodyTopX = dir * (-10 + swing * 30);
-      t.headX = dir * (-15 + swing * 35);
-      
-      const angle = windup < 1 ? Math.PI * 0.8 : Math.PI * 0.8 - (swing * Math.PI * 1.5);
-      t.swordAX = dir * (10 + swing * 15); t.swordAY = -30;
+    } else if (attackType === 'thrust') {
+      const p = easeOutElastic(attackProgress);
+      t.bodyBotX = -dir * 15; 
+      t.bodyTopX = dir * 30 * p; t.bodyTopY = -25;
+      t.headX = dir * 40 * p; t.headY = -35;
+      t.swordAX = dir * 25 * p; t.swordAY = -25;
+      t.swordBX = t.swordAX + dir * (50 + p * 35);
+      t.swordBY = -25;
+    } else if (attackType === 'up_slash') {
+      const p = easeOutCubic(attackProgress);
+      t.bodyTopX = dir * 10; t.bodyTopY = -35;
+      t.headX = dir * 15; t.headY = -45;
+      const angle = -Math.PI * 0.1 - (p * Math.PI * 1.2); 
+      t.swordAX = dir * 10; t.swordAY = -45;
       t.swordBX = t.swordAX + Math.cos(angle) * 60 * dir;
       t.swordBY = t.swordAY + Math.sin(angle) * 60;
-      t.swordThickness = 6;
+    } else if (attackType === 'sweep') {
+      const p = easeOutBack(attackProgress);
+      t.bodyBotX = -dir * 10; 
+      t.bodyTopX = dir * 20 * p; t.bodyTopY = -15;
+      t.headX = dir * 25 * p; t.headY = -25;
+      const angle = Math.PI * 0.3 - (p * Math.PI * 0.6);
+      t.swordAX = dir * 15; t.swordAY = -10;
+      t.swordBX = t.swordAX + Math.cos(angle) * 65 * dir;
+      t.swordBY = t.swordAY + Math.sin(angle) * 65;
     }
   } else if (!isGrounded) {
     // Dynamic jump/fall poses
@@ -151,15 +184,21 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.bulgeAX = dir * stride * 15; t.bulgeAY = -10; t.bulgeAR = 8;
     t.bulgeBX = -dir * stride * 15; t.bulgeBY = -10; t.bulgeBR = 8;
     
-    // Ninja run: Sword trails behind
-    t.swordAX = -dir * 10; t.swordAY = -25 - bob;
-    t.swordBX = -dir * 35; t.swordBY = -15 - bob;
+    // Naruto/Ninja run: Sword trails horizontally behind
+    t.swordAX = -dir * 15; t.swordAY = -25 - bob;
+    t.swordBX = -dir * 50; t.swordBY = -25 - bob;
   } else {
     // Idle
     const bob = Math.sin(stateTime * 3) * 2;
     t.headY = -55 + bob;
     t.bodyTopY = -35 + bob * 0.5;
     t.headX = Math.sin(stateTime * 2) * 1.5;
+    
+    // Slight breathing motion on the sword
+    t.swordAX += Math.cos(stateTime * 3) * 1;
+    t.swordBX += Math.cos(stateTime * 3) * 2;
+    t.swordAY += bob * 0.5;
+    t.swordBY += bob * 1.5;
   }
 
   // Apply scale

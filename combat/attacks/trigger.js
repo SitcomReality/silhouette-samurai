@@ -52,9 +52,9 @@ export function triggerAttack(controller, attackType) {
       controller.audioEngine.onSlide();
     }
   } else if (attackType === 'down_thrust') {
-    // Immediate downward spike
+    // Hang-time freeze is handled in update.js
     p.vx = 0;
-    p.vy = config.vy;
+    p.vy = 0;
     p.isGrounded = false;
   } else {
     if (attackType === 'up_slash') {
@@ -95,7 +95,10 @@ export function triggerAttack(controller, attackType) {
   }
   
   // Sword trails for most attacks, except maybe thrust
-  if (attackType !== 'slash' && attackType !== 'thrust') {
+  if (attackType !== 'thrust') {
+    let delay = 0;
+    if (attackType === 'heavy_slash') delay = config.duration * 0.3;
+    
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
@@ -104,10 +107,10 @@ export function triggerAttack(controller, attackType) {
       facing: p.facing,
       angle: angle,
       radius: config.reach || 60,
-      thickness: 25,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.25
+      thickness: attackType === 'heavy_slash' ? 45 : 30,
+      color: attackType === 'heavy_slash' ? '#f43f5e' : '#06b6d4',
+      life: -delay,
+      maxLife: attackType === 'heavy_slash' ? 0.3 : 0.25
     });
   }
   
