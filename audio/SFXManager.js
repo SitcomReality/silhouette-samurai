@@ -29,69 +29,101 @@ export class SFXManager {
 
   playHit(damage, combo, rhythmSync = true) {
     if (!this.loaded) return;
-    
+
     const when = rhythmSync ? this.beatClock.snapToNext16th(this.ctx, 50) : this.ctx.currentTime;
     const isHeavy = damage > 20;
-    
-    const osc = this.ctx.createOscillator();
-    osc.type = isHeavy ? 'square' : 'sine';
-    osc.frequency.setValueAtTime(isHeavy ? 120 : 180, when);
-    osc.frequency.exponentialRampToValueAtTime(30, when + 0.1);
-    
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(isHeavy ? 0.6 : 0.4, when);
-    gain.gain.exponentialRampToValueAtTime(0.01, when + 0.15);
-    
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    
+
+    // Short impact transient (keeps previous attack feel)
+    const transientOsc = this.ctx.createOscillator();
+    transientOsc.type = isHeavy ? 'square' : 'sine';
+    transientOsc.frequency.setValueAtTime(isHeavy ? 120 : 180, when);
+    transientOsc.frequency.exponentialRampToValueAtTime(30, when + 0.09);
+
+    const transientGain = this.ctx.createGain();
+    transientGain.gain.setValueAtTime(isHeavy ? 0.55 : 0.35, when);
+    transientGain.gain.exponentialRampToValueAtTime(0.01, when + 0.14);
+
+    transientOsc.connect(transientGain);
+    transientGain.connect(this.masterGain);
+
+    // Noise body for impact
     const noise = this.ctx.createBufferSource();
     const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
     }
     noise.buffer = buffer;
-    
+
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = isHeavy ? 'bandpass' : 'highpass';
-    noiseFilter.frequency.value = isHeavy ? 800 : 2500;
+    noiseFilter.frequency.value = isHeavy ? 900 : 2600;
     noiseFilter.Q.value = 1;
-    
+
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(isHeavy ? 0.5 : 0.3, when);
-    noiseGain.gain.linearRampToValueAtTime(0, when + 0.1);
-    
+    noiseGain.gain.setValueAtTime(isHeavy ? 0.45 : 0.28, when);
+    noiseGain.gain.linearRampToValueAtTime(0, when + 0.12);
+
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
     noiseGain.connect(this.masterGain);
-    
-    // Melody: cycle through scale and rotate octaves instead of clamping to top note
-    const scale = [60, 63, 65, 67, 70, 72, 75, 77, 79, 82, 84];
-    const idx = combo % scale.length; // cycle through scale
-    const octaveGroup = Math.floor(combo / scale.length); // increases as combo grows
-    // rotate octaves in a small repeating pattern to keep melody breathable
-    const octaveShift = (octaveGroup % 3) * 12; // 0, +12, +24 semitone rotations
-    const note = scale[idx] + octaveShift;
-    const freq = 440 * Math.pow(2, (note - 69) / 12);
-    
-    const ring = this.ctx.createOscillator();
-    ring.type = 'triangle';
-    // small glide to smooth transitions for rapid combos
-    ring.frequency.setValueAtTime(freq * 0.98, when);
-    ring.frequency.exponentialRampToValueAtTime(freq, when + 0.03);
-    const ringGain = this.ctx.createGain();
-    ringGain.gain.setValueAtTime(0.15, when);
-    ringGain.gain.exponentialRampToValueAtTime(0.01, when + 0.3);
-    
-    ring.connect(ringGain);
-    ringGain.connect(this.masterGain);
-    
-    osc.start(when);
-    osc.stop(when + 0.15);
+
+    // Harmonic, music-aware chordal voice:
+    // Use an F-minor friendly palette and minor triad voicings so hits blend with background.
+    // Base root MIDI for palette: F2 (41) is used in MusicManager; build triads around that.
+    const basePalette = [41, 44, 46, 48, 51, 53, 56]; // F minor-ish tones (F, Ab, Bb, C, Eb, F, G#...)
+    // Choose a root index that slowly rotates with combo to maintain variety but remain related to base palette
+    const rootIdx = combo % basePalette.length;
+    const rootMidi = basePalette[rootIdx];
+
+    // Minor triad intervals (0, +3, +7 semitones)
+    const triad = [0, 3, 7];
+    // Invert and octave-shift pattern to keep upper register readable but harmonized
+    const inversion = combo % 3; // 0 = root, 1 = 1st inversion, 2 = 2nd
+    const octaveShift = (Math.floor(combo / 8) % 3) * 12; // slowly rotates octaves 0,+12,+24
+
+    // Create up to three slightly-detuned oscillators for a warm chord
+    const chordVoices = [];
+    for (let i = 0; i < 3; i++) {
+      const interval = triad[(i + inversion) % triad.length];
+      const midi = rootMidi + interval + octaveShift + (i === 0 ? 0 : (i === 1 ? 12 : -12)); // spread voicing
+      const freq = 440 * Math.pow(2, (midi - 69) / 12);
+
+      const osc = this.ctx.createOscillator();
+      osc.type = i === 0 ? 'sawtooth' : (i === 1 ? 'triangle' : 'sine');
+      // slight detune for richness
+      osc.frequency.setValueAtTime(freq * (1 + (i - 1) * 0.003), when);
+
+      const g = this.ctx.createGain();
+      // voice volumes: main mid, supporting bright, low supportive
+      const baseVol = i === 0 ? 0.12 : (i === 1 ? 0.08 : 0.06);
+      g.gain.setValueAtTime(baseVol, when);
+      g.gain.exponentialRampToValueAtTime(0.001, when + (i === 1 ? 0.35 : 0.28));
+
+      // small lowpass per voice for cohesion
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.setValueAtTime(i === 1 ? 3000 : 1800, when);
+      f.frequency.exponentialRampToValueAtTime(200 + (i * 50), when + 0.3);
+
+      osc.connect(f);
+      f.connect(g);
+      g.connect(this.masterGain);
+
+      chordVoices.push({ osc, g });
+    }
+
+    // Start all sources
+    transientOsc.start(when);
+    transientOsc.stop(when + 0.15);
     noise.start(when);
-    ring.start(when);
-    ring.stop(when + 0.3);
+    // stop noise shortly after
+    noise.stop(when + 0.12);
+
+    chordVoices.forEach(v => {
+      v.osc.start(when);
+      v.osc.stop(when + 0.36);
+    });
   }
 
   playSlam(rhythmSync = true) {
