@@ -129,6 +129,11 @@ export class GameController {
     if (['Digit2', '2', 'KeyK'].includes(code)) {
       this.player.isBlocking = false;
       this.player.blockStartTime = 0;
+      // If we were in the block state, return to idle (but don't cancel attacks or death)
+      if (this.player.state === 'block' && this.player.state !== 'attack' && this.player.state !== 'dead') {
+        this.player.state = 'idle';
+        this.player.stateTime = 0;
+      }
     }
   }
 
@@ -167,6 +172,11 @@ export class GameController {
       if (!blockPressed && blockWasPressed) {
         this.player.isBlocking = false;
         this.player.blockStartTime = 0;
+        // Ensure we exit the blocking pose when the gamepad button is released
+        if (this.player.state === 'block' && this.player.state !== 'attack' && this.player.state !== 'dead') {
+          this.player.state = 'idle';
+          this.player.stateTime = 0;
+        }
       }
       if (blockPressed) this.gamepadKeys['KeyK'] = true;
 
