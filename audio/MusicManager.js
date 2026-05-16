@@ -94,7 +94,18 @@ export class MusicManager {
     while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
       this.playStep(this.currentStep, this.nextNoteTime);
       this.nextNoteTime += 15 / this.bpm;
+      // advance step counter
       this.currentStep = (this.currentStep + 1) % 32;
+
+      // If we've wrapped to step 0, count a bar and maybe change section.
+      if (this.currentStep === 0) {
+        this.barsInCurrentSection++;
+        if (this.barsInCurrentSection >= 4) { // Every 4 bars (2 pattern loops), consider switching
+          this.barsInCurrentSection = 0;
+          // Natural progression or random variation
+          this.sectionIndex = (this.sectionIndex + (Math.random() > 0.7 ? 1 : 0)) % 3;
+        }
+      }
     }
     this.timerID = setTimeout(() => this.schedule(), 25);
   }
@@ -102,15 +113,7 @@ export class MusicManager {
   playStep(step, time) {
     const s = this.sectionIndex;
     
-    // Manage section transition
-    if (step === 0 && this.currentStep === 31) {
-      this.barsInCurrentSection++;
-      if (this.barsInCurrentSection >= 4) { // Every 4 bars (2 pattern loops), consider switching
-        this.barsInCurrentSection = 0;
-        // Natural progression or random variation
-        this.sectionIndex = (this.sectionIndex + (Math.random() > 0.7 ? 1 : 0)) % 3;
-      }
-    }
+
 
     // Dynamic pattern selection
     const kick = this.patterns.kick[s][step];
