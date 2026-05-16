@@ -1,6 +1,35 @@
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
   for (const fx of controller.visualFx) {
-    if (fx.type === 'swoosh') {
+    if (fx.type === 'thrust') {
+      const scX = (fx.x - controller.cameraX) + viewWidth / 2;
+      const scY = fx.y + camYOffset;
+      const progress = fx.life / fx.maxLife;
+      const alpha = 1 - progress;
+
+      ctx.save();
+      ctx.translate(scX, scY);
+      ctx.rotate(fx.angle);
+      
+      const length = fx.length * (1 - progress * 0.5);
+      const width = fx.width * (1 - progress);
+
+      const grad = ctx.createLinearGradient(0, 0, -length, 0);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(1, 'transparent');
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-length, -width / 2);
+      ctx.lineTo(-length, width / 2);
+      ctx.closePath();
+
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = grad;
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 15;
+      ctx.fill();
+      ctx.restore();
+    } else if (fx.type === 'swoosh') {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
       const scY = fx.y + camYOffset;
       

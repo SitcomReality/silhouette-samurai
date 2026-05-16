@@ -68,21 +68,24 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       t.bulgeAR = 16;
     }
   } else if (!isGrounded) {
-    // More dramatic lunge while rising, softer hang pose near apex
-    if (vy < -6) {
-      // Rising surge pose
-      t.bodyBotY = -18;
-      t.bodyTopX = dir * 18;
-      t.bodyTopY = -55;
-      t.headX = dir * 30; t.headY = -80;
-      t.bulgeAX = dir * 36; t.bulgeAY = -38; t.bulgeAR = 18;
-      t.bodyThickness = 14;
+    // Dynamic jump/fall poses
+    if (vy < 0) {
+      // Surging Upward: Leading with chest, limbs trailing
+      const surge = Math.min(Math.abs(vy) * 0.05, 1.0);
+      t.bodyTopY = -45;
+      t.bodyTopX = dir * 15 * surge;
+      t.headY = -65;
+      t.headX = dir * 25 * surge;
+      t.bodyBotY = 5;
+      t.bodyBotX = -dir * 10 * surge;
+      t.bulgeAX = -dir * 20; t.bulgeAY = 0; t.bulgeAR = 10;
     } else {
-      // Hang-time gentle float pose
-      t.bodyBotY = -8;
-      t.bodyTopX = dir * 8; t.bodyTopY = -42;
-      t.headX = dir * 12; t.headY = -62;
-      t.bulgeAX = dir * 12; t.bulgeAY = -22; t.bulgeAR = 10;
+      // Falling/Hang-time: Slightly tucked or preparing for impact
+      const tilt = Math.min(vy * 0.05, 0.5);
+      t.bodyTopX = dir * tilt * 10;
+      t.headX = dir * tilt * 15;
+      t.bodyBotY = -10;
+      t.bodyThickness = 14;
     }
   } else if (isSliding || isCrouching) {
     if (isSliding) {
