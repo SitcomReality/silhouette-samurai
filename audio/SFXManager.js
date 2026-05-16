@@ -66,13 +66,20 @@ export class SFXManager {
     noiseFilter.connect(noiseGain);
     noiseGain.connect(this.masterGain);
     
+    // Melody: cycle through scale and rotate octaves instead of clamping to top note
     const scale = [60, 63, 65, 67, 70, 72, 75, 77, 79, 82, 84];
-    const note = scale[Math.min(combo, scale.length - 1)];
+    const idx = combo % scale.length; // cycle through scale
+    const octaveGroup = Math.floor(combo / scale.length); // increases as combo grows
+    // rotate octaves in a small repeating pattern to keep melody breathable
+    const octaveShift = (octaveGroup % 3) * 12; // 0, +12, +24 semitone rotations
+    const note = scale[idx] + octaveShift;
     const freq = 440 * Math.pow(2, (note - 69) / 12);
     
     const ring = this.ctx.createOscillator();
     ring.type = 'triangle';
-    ring.frequency.value = freq;
+    // small glide to smooth transitions for rapid combos
+    ring.frequency.setValueAtTime(freq * 0.98, when);
+    ring.frequency.exponentialRampToValueAtTime(freq, when + 0.03);
     const ringGain = this.ctx.createGain();
     ringGain.gain.setValueAtTime(0.15, when);
     ringGain.gain.exponentialRampToValueAtTime(0.01, when + 0.3);
