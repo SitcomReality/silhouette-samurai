@@ -6,6 +6,7 @@ export function createCharacter(x, y) {
     headX: 0, headY: -55, headR: 13,
     bulgeAX: 0, bulgeAY: -20, bulgeAR: 0,
     bulgeBX: 0, bulgeBY: -20, bulgeBR: 0,
+    swordAX: 0, swordAY: -35, swordBX: 0, swordBY: -35, swordThickness: 4,
   };
   
   return {
@@ -20,6 +21,7 @@ export function createCharacter(x, y) {
       head: { x, y: y - 55, r: 13 },
       bulgeA: { x, y: y - 20, r: 0 },
       bulgeB: { x, y: y - 20, r: 0 },
+      sword: { ax: x, ay: y - 35, bx: x, by: y - 35, thickness: 4 },
     }
   };
 }

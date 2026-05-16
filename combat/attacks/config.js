@@ -1,79 +1,79 @@
 export const ATTACK_CONFIG = {
-  jab: {
+  slash: {
     duration: 0.25,
     endlag: 0.05,
     vx: 0,
     vy: 0,
-    reach: 45,
+    reach: 55,
     damage: 10,
-    pushback: 3,
-    launchVy: -1,
+    pushback: 4,
+    launchVy: -2,
     resetComboOnMiss: false
   },
-  lunge: {
+  thrust: {
     duration: 0.35,
     endlag: 0.15,
-    vx: 18,
+    vx: 22,
     vy: 0,
-    reach: 80,
-    damage: 20,
+    reach: 85,
+    damage: 18,
     pushback: 8,
     launchVy: -3,
     resetComboOnMiss: false
   },
-  uppercut: {
+  rising_slash: {
     duration: 0.4,
     endlag: 0.2,
-    vx: 12,
-    vy: -2,
-    reach: 60,
-    damage: 25,
+    vx: 10,
+    vy: -4,
+    reach: 70,
+    damage: 22,
     pushback: 4,
-    launchVy: -12,
+    launchVy: -14,
     resetComboOnMiss: true
   },
-  air_thrust: {
+  up_slash: {
     duration: 0.35,
     endlag: 0.15,
-    vx: 14,
-    vy: -10,
-    reach: 65,
-    damage: 25,
-    pushback: 8,
-    launchVy: -6,
+    vx: 8,
+    vy: -8,
+    reach: 70,
+    damage: 20,
+    pushback: 6,
+    launchVy: -10,
     resetComboOnMiss: false
   },
-  slide: {
+  sweep: {
     duration: 0.4,
     endlag: 0.15,
-    vx: 14,
+    vx: 16,
     vy: 0,
     reach: 80,
     damage: 15,
-    pushback: 6,
-    launchVy: -8,
+    pushback: 5,
+    launchVy: -12, // Pops them up for combos
     resetComboOnMiss: false
   },
-  roundhouse: {
-    duration: 0.4,
+  heavy_slash: {
+    duration: 0.45,
     endlag: 0.25,
-    vx: 8,
-    vy: -4,
-    reach: 70,
+    vx: 12,
+    vy: 0,
+    reach: 80,
     damage: 30,
-    pushback: 10,
+    pushback: 12,
     launchVy: -6,
     resetComboOnMiss: true
   },
-  slam: {
-    duration: 0.65,
+  down_thrust: {
+    duration: 0.6,
     endlag: 0.3,
-    vx: 6,
-    vy: -13,
-    reach: 90,
-    damage: 45,
-    pushback: 12,
-    launchVy: -8,
+    vx: 0,
+    vy: 20, // Fast fall downwards!
+    reach: 70,
+    damage: 40,
+    pushback: 10,
+    launchVy: -10, // bounces them up off ground
     resetComboOnMiss: true
   }
 };

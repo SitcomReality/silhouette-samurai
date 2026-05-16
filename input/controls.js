@@ -12,20 +12,23 @@ export function determineAttack(controller) {
 
   if (btn2) {
     if (!p.isGrounded) {
-      return 'slam';
+      if (down) return 'down_thrust';
+      return 'heavy_slash';
     } else {
-      if (down) return 'slide';
-      if (up) return 'uppercut';
-      return 'roundhouse';
+      if (down) return 'sweep';
+      if (up) return 'rising_slash';
+      return 'heavy_slash';
     }
   }
   
   if (btn1) {
     if (!p.isGrounded) {
-      return 'air_thrust';
+      if (up) return 'up_slash';
+      return 'slash';
     } else {
-      if (forwardKey && !down) return 'lunge';
-      return 'jab';
+      if (up) return 'up_slash';
+      if (forwardKey && !down) return 'thrust';
+      return 'slash';
     }
   }
   

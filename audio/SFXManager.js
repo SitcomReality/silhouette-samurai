@@ -132,7 +132,7 @@ export class SFXManager {
 
   playAttackSwoosh(attackType) {
     if (!this.loaded) return;
-    const isHeavy = ['slam', 'uppercut', 'roundhouse'].includes(attackType);
+    const isHeavy = ['down_thrust', 'rising_slash', 'heavy_slash'].includes(attackType);
     
     const noise = this.ctx.createBufferSource();
     const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.2, this.ctx.sampleRate);

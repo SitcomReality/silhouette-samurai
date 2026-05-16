@@ -67,10 +67,10 @@ export function resolveAttackHits(controller) {
     }
     controller.stats.score += 10 * p.combo;
     
-    controller.hitstop = p.attackType === 'slam' ? 6 : 3;
-    controller.screenShake = p.attackType === 'slam' ? 18 : 8;
+    controller.hitstop = p.attackType === 'down_thrust' ? 6 : 3;
+    controller.screenShake = p.attackType === 'down_thrust' ? 18 : 8;
     
-    if (p.attackType === 'slam') {
+    if (p.attackType === 'down_thrust') {
       const sw = {
         id: `sw_${controller.waveId++}`,
         x: p.x + dir * 40,

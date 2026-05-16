@@ -32,7 +32,7 @@ export function updateEngine(controller, dt) {
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   
   // Determine if player is sliding (has slide state from attack or high speed + down)
-  const isSliding = (p.isSliding && p.state === 'attack' && p.attackType === 'slide') || 
+  const isSliding = (p.isSliding && p.state === 'attack' && p.attackType === 'sweep') || 
                     (down && p.isGrounded && Math.abs(p.vx) > 5 && p.state !== 'attack');
   
   p.isCrouching = down && p.isGrounded && !isSliding && p.state !== 'attack';
@@ -190,16 +190,18 @@ export function updateEngine(controller, dt) {
   } else if (p.state === 'attack') {
     p.attackTimer -= dt;
     
-    if (p.attackType === 'jab' || p.attackType === 'slide') {
+    if (p.attackType === 'slash' || p.attackType === 'sweep') {
       let friction = 0.90;
       if (!p.isGrounded) friction = 0.98;
-      else if (p.attackType === 'slide') friction = 0.995; // Extremely low drag for slide attack
+      else if (p.attackType === 'sweep') friction = 0.995; // Extremely low drag for sweep/slide
       p.vx *= friction;
       
-      // Allow slight steering during jab
+      // Allow slight steering during light slash
       const accel = 15 * dt;
-      if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) p.vx -= accel;
-      if (controller.keys['KeyD'] || controller.keys['ArrowRight']) p.vx += accel;
+      if (p.attackType === 'slash') {
+        if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) p.vx -= accel;
+        if (controller.keys['KeyD'] || controller.keys['ArrowRight']) p.vx += accel;
+      }
       
       if (p.jumpBuffer > 0 && !down && p.isGrounded) {
         p.vy = -14;
@@ -260,10 +262,10 @@ export function updateEngine(controller, dt) {
       canAttack = true;
     } else if (p.state === 'attack') {
       const currentConfig = ATTACK_CONFIG[p.attackType];
-      const isJabCancel = p.attackType === 'jab' && p.attackTimer < currentConfig.duration * 0.6 && bufferedType === 'jab';
+      const isSlashCancel = p.attackType === 'slash' && p.attackTimer < currentConfig.duration * 0.6 && bufferedType === 'slash';
       const isEndlagCancel = p.attackTimer <= 0 && p.endlagTimer > 0;
       const isHitCancel = p.attackHitConfirmed && p.attackTimer < currentConfig.duration * 0.6;
-      if (isJabCancel || isEndlagCancel || isHitCancel) canAttack = true;
+      if (isSlashCancel || isEndlagCancel || isHitCancel) canAttack = true;
     }
     
     if (canAttack && bufferedType) {

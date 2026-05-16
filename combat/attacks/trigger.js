@@ -21,12 +21,11 @@ export function triggerAttack(controller, attackType) {
   const right = controller.keys['KeyD'] || controller.keys['ArrowRight'];
   const horizontalHeld = left || right;
   
-  if (attackType === 'jab') {
-    // jab doesn't override current inertia
-  } else if (attackType === 'uppercut') {
-    // Uppercut costs air power when airborne, less when grounded
+  if (attackType === 'slash') {
+    // slash doesn't override current inertia heavily
+  } else if (attackType === 'rising_slash') {
     const powerCost = p.isGrounded ? 10 : 25;
-    if (!p.isGrounded && p.aerialPower < powerCost) return; // Not enough power
+    if (!p.isGrounded && p.aerialPower < powerCost) return;
     
     if (!p.isGrounded) p.aerialPower -= powerCost;
     
@@ -35,30 +34,30 @@ export function triggerAttack(controller, attackType) {
     p.vy = config.vy * powerScale;
     p.exponentialLaunch = true;
     p.isGrounded = false;
-  } else if (attackType === 'slide') {
-    // Slide uses momentum or creates it
+  } else if (attackType === 'sweep') {
     const minSlideSpeed = 8;
     const currentSpeed = Math.abs(p.vx);
     
     if (currentSpeed < minSlideSpeed) {
-      // Not moving fast enough - use slide power to boost
       const powerBoost = (p.slidePower / 100) * config.vx;
       p.vx = dir * Math.max(minSlideSpeed, powerBoost);
       p.slidePower = Math.max(0, p.slidePower - 30);
     } else {
-      // Already moving - maintain/enhance momentum
       const sign = Math.sign(p.vx);
       p.vx = sign * Math.max(currentSpeed, minSlideSpeed);
     }
     p.isSliding = true;
     
-    // Audio feedback
     if (controller.audioEngine) {
       controller.audioEngine.onSlide();
     }
+  } else if (attackType === 'down_thrust') {
+    // Immediate downward spike
+    p.vx = 0;
+    p.vy = config.vy;
+    p.isGrounded = false;
   } else {
-    if (attackType === 'air_thrust') {
-      // Air thrust costs power
+    if (attackType === 'up_slash') {
       const powerCost = 20;
       if (p.aerialPower < powerCost) return;
       
@@ -76,27 +75,27 @@ export function triggerAttack(controller, attackType) {
   
   let angle = 0;
   let fxX = p.x + dir * 20;
-  let fxY = p.y - 45;
+  let fxY = p.y - 35;
 
-  if (attackType === 'uppercut' || attackType === 'slam') {
-    if (attackType === 'uppercut' && !horizontalHeld) {
-      angle = -Math.PI / 2;
-      fxX = p.x;
-      fxY = p.y - 70;
-    } else {
-      angle = -Math.PI / 4 * dir;
-    }
-  } else if (attackType === 'air_thrust') {
-    if (!horizontalHeld) {
-      angle = -Math.PI / 2;
-      fxX = p.x;
-      fxY = p.y - 70;
-    } else {
-      angle = -Math.PI / 6 * dir;
-    }
+  if (attackType === 'rising_slash') {
+    angle = -Math.PI / 2 * dir;
+    fxX = p.x + dir * 10;
+    fxY = p.y - 60;
+  } else if (attackType === 'down_thrust') {
+    angle = Math.PI / 2; // Straight down!
+    fxX = p.x;
+    fxY = p.y;
+  } else if (attackType === 'up_slash') {
+    angle = -Math.PI / 4 * dir;
+    fxX = p.x + dir * 15;
+    fxY = p.y - 50;
+  } else if (attackType === 'heavy_slash') {
+    angle = 0;
+    fxX = p.x + dir * 30;
   }
   
-  if (attackType !== 'jab') {
+  // Sword trails for most attacks, except maybe thrust
+  if (attackType !== 'slash' && attackType !== 'thrust') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',

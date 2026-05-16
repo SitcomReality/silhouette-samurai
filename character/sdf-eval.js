@@ -16,5 +16,11 @@ export function evalCharacterSDF(char, px, py, blendK = 16) {
     d = smin(d, sdCircle(px, py, w.bulgeB.x, w.bulgeB.y, w.bulgeB.r), blendK);
   }
   
+  if (w.sword && w.sword.thickness > 0.1) {
+    // Harder blend for the sword to make it look distinct but still attached
+    const swordD = sdCapsule(px, py, w.sword.ax, w.sword.ay, w.sword.bx, w.sword.by, w.sword.thickness);
+    d = smin(d, swordD, blendK * 0.4);
+  }
+  
   return d;
 }

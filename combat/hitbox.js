@@ -14,70 +14,69 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
   let activeStart = 0.2;
   let activeEnd = 0.8;
   
-  if (attackType === 'jab') {
+  if (attackType === 'slash') {
     activeStart = 0.1;
-    activeEnd = 0.6;
-  } else if (attackType === 'lunge') {
+    activeEnd = 0.5;
+  } else if (attackType === 'thrust') {
     activeStart = 0.3;
     activeEnd = 0.8;
-  } else if (attackType === 'uppercut') {
+  } else if (attackType === 'rising_slash') {
     activeStart = 0.2;
     activeEnd = 0.8;
-  } else if (attackType === 'air_thrust') {
+  } else if (attackType === 'up_slash') {
     activeStart = 0.2;
-    activeEnd = 0.8;
-  } else if (attackType === 'slide') {
+    activeEnd = 0.7;
+  } else if (attackType === 'sweep') {
     activeStart = 0.2;
-    activeEnd = 0.85;
-  } else if (attackType === 'slam') {
-    activeStart = 0.6;
+    activeEnd = 0.7;
+  } else if (attackType === 'down_thrust') {
+    activeStart = 0.2; // Fast fall is active immediately
     activeEnd = 1.0;
-  } else if (attackType === 'roundhouse') {
-    activeStart = 0.4;
-    activeEnd = 0.8;
+  } else if (attackType === 'heavy_slash') {
+    activeStart = 0.3;
+    activeEnd = 0.7;
   }
   
   if (attackProgress < activeStart || attackProgress > activeEnd) return null;
   
   // Calculate hitbox position based on attack type
   let hitboxX = x + dir * config.reach * 0.5;
-  let hitboxY = y - 50;
+  let hitboxY = y - 40;
   let hitboxW = config.reach;
   let hitboxH = 50;
   
-  if (attackType === 'jab') {
-    hitboxW = 40;
+  if (attackType === 'slash') {
+    hitboxW = 55;
     hitboxH = 30;
-    hitboxY = y - 40;
-  } else if (attackType === 'lunge') {
-    hitboxW = 60;
-    hitboxH = 40;
     hitboxY = y - 35;
-  } else if (attackType === 'uppercut') {
-    hitboxW = 50;
-    hitboxH = 80;
-    hitboxX = x + dir * 20;
-    hitboxY = y - 60;
-  } else if (attackType === 'air_thrust') {
+  } else if (attackType === 'thrust') {
+    hitboxW = 75;
+    hitboxH = 30;
+    hitboxY = y - 25;
+  } else if (attackType === 'rising_slash') {
     hitboxW = 60;
-    hitboxH = 60;
+    hitboxH = 80;
     hitboxX = x + dir * 30;
     hitboxY = y - 50;
-  } else if (attackType === 'slide') {
-    hitboxW = 90;
-    hitboxH = 35;
-    hitboxY = y - 25;
-  } else if (attackType === 'slam') {
-    hitboxW = 70;
+  } else if (attackType === 'up_slash') {
+    hitboxW = 60;
+    hitboxH = 70;
+    hitboxX = x + dir * 20;
+    hitboxY = y - 60;
+  } else if (attackType === 'sweep') {
+    hitboxW = 75;
+    hitboxH = 30;
+    hitboxY = y - 15;
+  } else if (attackType === 'down_thrust') {
+    hitboxW = 40;
+    hitboxH = 70;
+    hitboxX = x;
+    hitboxY = y + 10;
+  } else if (attackType === 'heavy_slash') {
+    hitboxW = 80;
     hitboxH = 60;
-    hitboxY = y - 30;
-  } else if (attackType === 'roundhouse') {
-    const angle = attackProgress * Math.PI * 1.8;
-    const reach = 60;
-    hitboxX = x + Math.cos(angle - Math.PI / 2) * reach * dir;
-    hitboxY = y - 60 + Math.sin(angle - Math.PI / 2) * reach;
-    hitboxW = 50;
-    hitboxH = 50;
+    hitboxX = x + dir * 40;
+    hitboxY = y - 35;
   }
   
   return {
