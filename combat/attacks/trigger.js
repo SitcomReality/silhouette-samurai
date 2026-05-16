@@ -171,12 +171,15 @@ export function triggerAttack(controller, attackType) {
       x: p.x,
       y: p.y - 35,
       facing: p.facing,
-      startAngle: -Math.PI * 0.3,
-      endAngle: Math.PI * 0.1,
-      radius: 55,
-      thickness: 20,
+      // Use a compact heavy-style arc: more horizontal flash, slightly squashed,
+      // but scaled down in radius and thickness so it reads like a light swipe.
+      startAngle: Math.PI * 0.9,
+      endAngle: -Math.PI * 0.1,
+      radius: 62,
+      thickness: 30,
+      squashY: 0.28,
       life: 0,
-      maxLife: 0.2
+      maxLife: 0.22
     });
   } else if (attackType === 'thrust') {
     // Place the swoosh where the thrust completes (slightly forward and higher)
