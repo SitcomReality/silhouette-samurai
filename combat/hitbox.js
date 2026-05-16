@@ -52,9 +52,11 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
     hitboxX = x + dir * (config.reach * 0.6);
     hitboxY = y - 45;
   } else if (attackType === 'thrust') {
-    hitboxW = 75;
-    hitboxH = 30;
-    hitboxY = y - 25;
+    hitboxW = 85;
+    hitboxH = 36;
+    // Move hurtbox up and more forward to match sword tip during the thrust
+    hitboxX = x + dir * (config.reach * 0.6);
+    hitboxY = y - 35;
   } else if (attackType === 'rising_slash') {
     hitboxW = 60;
     hitboxH = 80;

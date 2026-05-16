@@ -499,6 +499,10 @@ export function updateEngine(controller, dt) {
   for (let i = controller.visualFx.length - 1; i >= 0; i--) {
     const fx = controller.visualFx[i];
     fx.life += dt;
+    if (fx.entity) {
+      fx.x = fx.entity.x + fx.offsetX;
+      fx.y = fx.entity.y + fx.offsetY;
+    }
     if (fx.life >= fx.maxLife) {
       controller.visualFx.splice(i, 1);
     }

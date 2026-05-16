@@ -79,6 +79,9 @@ export function triggerAttack(controller, attackType) {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
+      entity: p,
+      offsetX: 0,
+      offsetY: -30,
       x: p.x,
       y: p.y - 30,
       facing: p.facing,
@@ -93,6 +96,9 @@ export function triggerAttack(controller, attackType) {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'streak',
+      entity: p,
+      offsetX: 0,
+      offsetY: -20,
       x: p.x,
       y: p.y - 20,
       facing: p.facing,
@@ -106,6 +112,9 @@ export function triggerAttack(controller, attackType) {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
+      entity: p,
+      offsetX: 0,
+      offsetY: -30,
       x: p.x,
       y: p.y - 30,
       facing: p.facing,
@@ -120,6 +129,9 @@ export function triggerAttack(controller, attackType) {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
+      entity: p,
+      offsetX: 0,
+      offsetY: -35,
       x: p.x,
       y: p.y - 35,
       facing: p.facing,
@@ -135,6 +147,9 @@ export function triggerAttack(controller, attackType) {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
+      entity: p,
+      offsetX: 0,
+      offsetY: -15,
       x: p.x,
       y: p.y - 15,
       facing: p.facing,
@@ -150,6 +165,9 @@ export function triggerAttack(controller, attackType) {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
+      entity: p,
+      offsetX: 0,
+      offsetY: -35,
       x: p.x,
       y: p.y - 35,
       facing: p.facing,
@@ -161,11 +179,16 @@ export function triggerAttack(controller, attackType) {
       maxLife: 0.2
     });
   } else if (attackType === 'thrust') {
+    // Place the swoosh where the thrust completes (slightly forward and higher)
+    const offX = (p.facing === 'right' ? 1 : -1) * 48;
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'arc_swoosh',
-      x: p.x,
-      y: p.y - 25,
+      entity: p,
+      offsetX: offX,
+      offsetY: -40,
+      x: p.x + offX,
+      y: p.y - 40,
       facing: p.facing,
       startAngle: Math.PI * 0.4,
       endAngle: -Math.PI * 0.15,
