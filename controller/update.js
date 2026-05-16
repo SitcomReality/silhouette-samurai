@@ -1,44 +1,48 @@
-import { animateCharacter } from '../character/animator.js';
-import { updatePlayer } from './update/player-logic.js';
-import { updateEntities } from './update/entity-logic.js';
-import { updatePhysics } from './update/physics-logic.js';
-import { updateWorld } from './update/world-logic.js';
-import { updateEffects } from './update/effects-logic.js';
+import { textSDFManager } from '../sdf/text-sdf.js';
+import { updatePlayerTimersAndRegen } from './systems/player/state.js';
+import { updatePlayerPhysics } from './systems/player/physics.js';
+import { integratePlayerPhysics } from './systems/player/integration.js';
+import { updatePlayerAttacks } from './systems/combat/attacks.js';
+import { updateClashes } from './systems/combat/clashes.js';
+import { updateEntities } from './systems/entities/update.js';
+import { updateSpawner } from './systems/entities/spawner.js';
+import { updateCollisions } from './systems/entities/collision.js';
+import { updateFX } from './systems/fx/update.js';
+import { updateCamera } from './systems/camera/update.js';
+import { updateAnimations } from './systems/animation/update.js';
 
 export function updateEngine(controller, dt) {
-  // 1. Early return for Hitstop
   if (controller.hitstop > 0) {
     controller.hitstop--;
     return;
   }
 
-  // 2. Run World Logic (Camera, Spawning, Intro)
-  updateWorld(controller, dt);
-
-  // 3. Update Player (Timers, Inputs, States)
-  const isSliding = updatePlayer(controller, dt);
-
-  // 4. Update Entities (Enemies, Physics, States)
-  updateEntities(controller, dt);
-
-  // 5. Global Physics & Collisions (Shared physics, Clashes)
-  updatePhysics(controller, dt);
-
-  // 6. Character Animation Loop
-  const p = controller.player;
-  const progress = p.state === 'attack' && p.attackFrameData
-    ? p.attackFrameTime / p.attackFrameData.getDuration()
-    : 0;
-  
-  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0);
-
-  for (const ent of controller.entities) {
-    if (ent.state !== 'dead' && ent.type !== 'crate' && ent.character) {
-      const scale = ent.scale || 1.0;
-      animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt, false, scale);
-    }
+  if (!controller.introLayoutsGenerated) {
+    controller.introLayouts = controller.introTexts.map(it => textSDFManager.getTextLayout(
+      it.text,
+      it.x,
+      controller.baseGroundY - 20,
+      1.0
+    ));
+    controller.introLayoutsGenerated = true;
   }
 
-  // 7. Update Visual/Audio Effects (Particles, FX, Combo reset)
-  updateEffects(controller, dt);
+  if (controller.screenShake > 0) {
+    controller.screenShake = Math.max(0, controller.screenShake - dt * 30);
+  }
+
+  updatePlayerTimersAndRegen(controller, dt);
+  updatePlayerPhysics(controller, dt);
+  updatePlayerAttacks(controller, dt);
+  integratePlayerPhysics(controller, dt);
+  
+  updateCamera(controller);
+  updateSpawner(controller);
+  
+  updateEntities(controller, dt);
+  updateClashes(controller);
+  updateCollisions(controller);
+  
+  updateAnimations(controller, dt);
+  updateFX(controller, dt);
 }
