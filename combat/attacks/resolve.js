@@ -57,19 +57,6 @@ export function resolveAttackHits(controller) {
       
       spawnHitParticles(controller, ent, dir, hitbox);
       spawnFloatingText(controller, ent, p, hitbox);
-      
-      // Impact Visual FX
-      controller.visualFx.push({
-        id: `impact_${controller.fxId++}`,
-        type: 'impact',
-        x: ent.x,
-        y: ent.y - 50,
-        radius: hitbox.damage > 20 ? 50 : 30,
-        spikes: hitbox.damage > 20 ? 12 : 6,
-        rotation: Math.random() * Math.PI,
-        life: 0,
-        maxLife: 0.2
-      });
     }
   }
   

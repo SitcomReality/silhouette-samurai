@@ -78,83 +78,101 @@ export function triggerAttack(controller, attackType) {
   if (attackType === 'rising_slash') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x + dir * 10, y: p.y - 50,
+      type: 'arc_swoosh',
+      x: p.x,
+      y: p.y - 30,
       facing: p.facing,
-      angle: -Math.PI / 2.5 * dir,
-      startAngle: -Math.PI * 0.4,
-      endAngle: Math.PI * 0.5,
-      radius: 80, thickness: 45,
-      color: '#ffffff', life: 0, maxLife: 0.35
+      startAngle: Math.PI * 0.7,
+      endAngle: -Math.PI * 0.3,
+      radius: 70,
+      thickness: 45,
+      life: 0,
+      maxLife: 0.3
     });
   } else if (attackType === 'down_thrust') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'thrust',
-      x: p.x, y: p.y - 40,
-      angle: Math.PI / 2,
-      length: 160, width: 40, lineCount: 5,
-      color: '#ffffff', life: 0, maxLife: 0.3
+      type: 'streak',
+      x: p.x,
+      y: p.y - 20,
+      facing: p.facing,
+      angle: Math.PI / 2, // Straight down
+      length: 150,
+      width: 35,
+      life: 0,
+      maxLife: 0.25
     });
   } else if (attackType === 'up_slash') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x + dir * 15, y: p.y - 55,
+      type: 'arc_swoosh',
+      x: p.x,
+      y: p.y - 30,
       facing: p.facing,
-      angle: -Math.PI / 3 * dir,
-      startAngle: -Math.PI * 0.6,
-      endAngle: Math.PI * 0.3,
-      radius: 75, thickness: 35,
-      color: '#ffffff', life: 0, maxLife: 0.3
+      startAngle: -Math.PI * 0.1,
+      endAngle: -Math.PI * 0.9,
+      radius: 65,
+      thickness: 35,
+      life: 0,
+      maxLife: 0.28
     });
   } else if (attackType === 'heavy_slash') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x + dir * 25, y: p.y - 35,
+      type: 'arc_swoosh',
+      x: p.x,
+      y: p.y - 35,
       facing: p.facing,
-      angle: 0,
-      startAngle: -Math.PI * 0.1,
-      endAngle: Math.PI * 0.1,
-      radius: 120, thickness: 60,
-      color: '#ffffff', life: 0, maxLife: 0.4
+      startAngle: Math.PI * 0.9,
+      endAngle: -Math.PI * 0.1,
+      radius: 90,
+      thickness: 60,
+      squashY: 0.3,
+      life: 0,
+      maxLife: 0.4
     });
   } else if (attackType === 'sweep') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x + dir * 20, y: p.y - 15,
+      type: 'arc_swoosh',
+      x: p.x,
+      y: p.y - 15,
       facing: p.facing,
-      angle: Math.PI * 0.05 * dir,
-      startAngle: -Math.PI * 0.3,
-      endAngle: Math.PI * 0.3,
-      radius: 90, thickness: 35,
-      color: '#ffffff', life: 0, maxLife: 0.35
+      startAngle: Math.PI * 0.8,
+      endAngle: -Math.PI * 0.1,
+      radius: 80,
+      thickness: 30,
+      squashY: 0.4,
+      life: 0,
+      maxLife: 0.35
     });
   } else if (attackType === 'slash') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x + dir * 18, y: p.y - 30,
+      type: 'arc_swoosh',
+      x: p.x,
+      y: p.y - 35,
       facing: p.facing,
-      angle: Math.PI * 0.1 * dir,
-      startAngle: -Math.PI * 0.15,
-      endAngle: Math.PI * 0.15,
-      radius: 60, thickness: 20,
-      color: '#ffffff', life: 0, maxLife: 0.2
+      startAngle: -Math.PI * 0.3,
+      endAngle: Math.PI * 0.1,
+      radius: 55,
+      thickness: 20,
+      life: 0,
+      maxLife: 0.2
     });
   } else if (attackType === 'thrust') {
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x + dir * 15, y: p.y - 30,
+      type: 'arc_swoosh',
+      x: p.x,
+      y: p.y - 25,
       facing: p.facing,
-      angle: Math.PI * 0.15 * dir,
-      startAngle: -Math.PI * 0.3,
-      endAngle: Math.PI * 0.2,
-      radius: 80, thickness: 40,
-      color: '#ffffff', life: 0, maxLife: 0.28
+      startAngle: Math.PI * 0.4,
+      endAngle: -Math.PI * 0.15,
+      radius: 75,
+      thickness: 25,
+      life: 0,
+      maxLife: 0.25
     });
   }
   
