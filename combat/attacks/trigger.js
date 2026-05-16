@@ -166,7 +166,20 @@ export function triggerAttack(controller, attackType) {
       maxLife: 0.2
     });
   } else if (attackType === 'thrust') {
-    // No swoosh for thrust - it's a straight stab
+    // Uppercut arc swoosh for the new forward light attack
+    controller.visualFx.push({
+      id: `fx_${controller.fxId++}`,
+      type: 'swoosh',
+      x: p.x + dir * 15,
+      y: p.y - 30,
+      facing: p.facing,
+      angle: Math.PI * 0.15 * dir, // Tilted slightly to match arc
+      radius: 70,
+      thickness: 30,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.25
+    });
   }
   
   if (controller.audioEngine) {

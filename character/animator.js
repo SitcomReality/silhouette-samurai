@@ -51,39 +51,34 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       t.bodyBotX = -dir * easedProgress * 8;
       
     } else if (attackType === 'slash') {
-      // Quick horizontal slice with overshoot
-      const easedProgress = easeInOutCubic(attackProgress);
-      const overshoot = Math.sin(attackProgress * Math.PI) * 0.08;
+      // Mostly horizontal quick slice that emerges and retracts
+      const extend = Math.sin(attackProgress * Math.PI); // Pulse out and back
+      const swordLen = 65;
+      t.swordAX = dir * 5; t.swordAY = -35;
+      t.swordBX = t.swordAX + dir * extend * swordLen;
+      t.swordBY = -35 + extend * 8; // slight downward trajectory
+      t.swordThickness = 4 + extend * 3;
       
-      // Sword tip arcs horizontally 70° descending (Marth fair style)
-      const arcAngle = Math.PI * 0.35 - ((easedProgress + overshoot) * Math.PI * 0.7);
-      const swordLen = 50;
-      t.swordBX = dir * (20 + easedProgress * 30) + dir * Math.cos(arcAngle) * swordLen * 0.5;
-      t.swordBY = -35 + Math.sin(arcAngle) * swordLen * 0.5;
-      t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
-      t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
-      
-      // Body pulled by sword
-      t.bodyTopX = dir * (8 + easedProgress * 12);
-      t.headX = dir * (10 + easedProgress * 15);
+      // Slight body pull
+      t.bodyTopX = dir * extend * 10;
+      t.headX = dir * extend * 12;
       
     } else if (attackType === 'thrust') {
-      // Linear thrust with anticipation pullback
-      const anticipation = attackProgress < 0.25 ? -attackProgress * 0.4 : -0.1;
-      const thrust = attackProgress < 0.25 ? 0 : easeOutCubic((attackProgress - 0.25) / 0.75);
+      // Forward light "Uppercut" arc (starts low-forward, swings up to horizontal)
+      const easedProgress = easeOutCubic(attackProgress);
+      const startAngle = Math.PI * 0.35; // Low diagonal
+      const currentAngle = startAngle - (easedProgress * startAngle); // Swings to 0 (horizontal)
+      const swordLen = 70;
       
-      // Sword tip extends straight forward
-      const extension = anticipation * 20 + thrust * 50;
-      t.swordBX = dir * (25 + extension);
-      t.swordBY = -25;
-      t.swordAX = t.swordBX - dir * 55;
-      t.swordAY = -25;
-      
-      // Body braced and pulled forward by thrust
-      t.bodyBotX = -dir * (15 - anticipation * 10);
-      t.bodyTopX = dir * (15 + thrust * 20); t.bodyTopY = -25;
-      t.headX = dir * (25 + thrust * 15); t.headY = -35;
-      
+      t.swordAX = dir * 5; t.swordAY = -20;
+      t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
+      t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
+      t.swordThickness = 3 + (1 - easedProgress) * 2;
+
+      // Body lunges with the swing
+      t.bodyTopX = dir * 15 * easedProgress;
+      t.headX = dir * 20 * easedProgress;
+      t.bodyBotX = -dir * 5 * easedProgress;
     } else if (attackType === 'up_slash') {
       // Overhead arc with sharp snap
       const easedProgress = attackProgress < 0.3 ? easeInCubic(attackProgress / 0.3) * 0.3 :
@@ -183,33 +178,36 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       }
     }
   } else if (!isGrounded) {
-    // Dynamic jump/fall poses
+    // Dynamic jump/fall poses - Sword kept behind back as per request
+    const restSwordAX = -dir * 8;
+    const restSwordAY = -25;
+    const restSwordBX = -dir * 35;
+    const restSwordBY = -50;
+
     if (vy < 0) {
-      // Graceful anime leap: sword leads upward
+      // Graceful anime leap
       const surge = Math.min(Math.abs(vy) * 0.05, 1.0);
       t.bodyTopY = -40;
       t.bodyTopX = dir * 5 * surge;
       t.headY = -60;
       t.headX = dir * 10 * surge;
       t.bodyBotY = -5;
-      t.bodyBotX = -dir * 15 * surge; // Legs trail backwards gracefully
+      t.bodyBotX = -dir * 15 * surge;
       t.bodyThickness = 10;
       
-      // Sword points diagonally up/forward
-      t.swordAX = dir * 10; t.swordAY = -30;
-      t.swordBX = dir * 30; t.swordBY = -60;
+      t.swordAX = restSwordAX; t.swordAY = restSwordAY;
+      t.swordBX = restSwordBX; t.swordBY = restSwordBY;
     } else {
-      // Falling/Hang-time: Floating down, cape/sword fluttering
+      // Falling/Hang-time
       const tilt = Math.min(vy * 0.05, 0.5);
       t.bodyTopX = dir * tilt * 5;
       t.headX = dir * tilt * 8;
-      t.bodyBotY = -15; // Tucked legs
+      t.bodyBotY = -15;
       t.bodyBotX = 0;
       t.bodyThickness = 12;
       
-      // Sword held out to the side for balance
-      t.swordAX = -dir * 10; t.swordAY = -30;
-      t.swordBX = -dir * 35; t.swordBY = -20;
+      t.swordAX = restSwordAX; t.swordAY = restSwordAY;
+      t.swordBX = restSwordBX; t.swordBY = restSwordBY;
     }
   } else if (isSliding || isCrouching) {
     if (isSliding) {
@@ -241,9 +239,9 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.bulgeAX = dir * stride * 15; t.bulgeAY = -10; t.bulgeAR = 8;
     t.bulgeBX = -dir * stride * 15; t.bulgeBY = -10; t.bulgeBR = 8;
     
-    // Ninja run: Sword trails behind
-    t.swordAX = -dir * 10; t.swordAY = -25 - bob;
-    t.swordBX = -dir * 35; t.swordBY = -15 - bob;
+    // Ninja run: Sword trails closer to body and is longer
+    t.swordAX = -dir * 5; t.swordAY = -25 - bob;
+    t.swordBX = -dir * 48; t.swordBY = -18 - bob;
   } else {
     // Idle
     const bob = Math.sin(stateTime * 3) * 2;
