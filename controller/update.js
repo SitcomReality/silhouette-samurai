@@ -397,7 +397,8 @@ export function updateEngine(controller, dt) {
   const progress = p.state === 'attack' && p.attackTimer > 0 
     ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
     : 0;
-  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding);
+  // Pass player scale into animator so the player draws ~50% larger
+  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0);
 
   for (const ent of controller.entities) {
     if (ent.state !== 'dead' && ent.type !== 'crate' && ent.character) {

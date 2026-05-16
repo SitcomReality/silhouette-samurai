@@ -59,6 +59,8 @@ export class GameController {
       attackHitConfirmed: false,
       combo: 0,
       character: createCharacter(0, this.baseGroundY),
+      // Increase player visual scale ~50% so characters appear larger relative to crates/text
+      scale: 1.5,
       slidePower: 100,
       aerialPower: 100,
       slideTime: 0,
