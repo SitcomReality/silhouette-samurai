@@ -76,109 +76,85 @@ export function triggerAttack(controller, attackType) {
   
   // Create attack-specific visual effects
   if (attackType === 'rising_slash') {
-    // Wide arcing swoosh
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: p.x + dir * 10,
-      y: p.y - 50,
+      x: p.x + dir * 10, y: p.y - 50,
       facing: p.facing,
       angle: -Math.PI / 2.5 * dir,
-      radius: 70,
-      thickness: 35,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.3
+      startAngle: -Math.PI * 0.4,
+      endAngle: Math.PI * 0.5,
+      radius: 80, thickness: 45,
+      color: '#ffffff', life: 0, maxLife: 0.35
     });
   } else if (attackType === 'down_thrust') {
-    // Narrow vertical trail
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
-      type: 'swoosh',
-      x: p.x,
-      y: p.y - 20,
-      facing: p.facing,
+      type: 'thrust',
+      x: p.x, y: p.y - 40,
       angle: Math.PI / 2,
-      radius: 50,
-      thickness: 18,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.25
+      length: 160, width: 40, lineCount: 5,
+      color: '#ffffff', life: 0, maxLife: 0.3
     });
   } else if (attackType === 'up_slash') {
-    // Overhead arc
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: p.x + dir * 15,
-      y: p.y - 55,
+      x: p.x + dir * 15, y: p.y - 55,
       facing: p.facing,
       angle: -Math.PI / 3 * dir,
-      radius: 65,
-      thickness: 30,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.28
+      startAngle: -Math.PI * 0.6,
+      endAngle: Math.PI * 0.3,
+      radius: 75, thickness: 35,
+      color: '#ffffff', life: 0, maxLife: 0.3
     });
   } else if (attackType === 'heavy_slash') {
-    // Massive horizontal flash
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: p.x + dir * 25,
-      y: p.y - 30,
+      x: p.x + dir * 25, y: p.y - 35,
       facing: p.facing,
       angle: 0,
-      radius: 85,
-      thickness: 45,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.35
+      startAngle: -Math.PI * 0.1,
+      endAngle: Math.PI * 0.1,
+      radius: 120, thickness: 60,
+      color: '#ffffff', life: 0, maxLife: 0.4
     });
   } else if (attackType === 'sweep') {
-    // Wide low horizontal arc
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: p.x + dir * 20,
-      y: p.y - 15,
+      x: p.x + dir * 20, y: p.y - 15,
       facing: p.facing,
-      angle: Math.PI * 0.1,
-      radius: 75,
-      thickness: 28,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.32
+      angle: Math.PI * 0.05 * dir,
+      startAngle: -Math.PI * 0.3,
+      endAngle: Math.PI * 0.3,
+      radius: 90, thickness: 35,
+      color: '#ffffff', life: 0, maxLife: 0.35
     });
   } else if (attackType === 'slash') {
-    // Quick descending arc (short, low swoosh to match light damage)
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: p.x + dir * 18,
-      y: p.y - 30,
+      x: p.x + dir * 18, y: p.y - 30,
       facing: p.facing,
-      angle: Math.PI * 0.12,
-      radius: 40,
-      thickness: 12,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.18
+      angle: Math.PI * 0.1 * dir,
+      startAngle: -Math.PI * 0.15,
+      endAngle: Math.PI * 0.15,
+      radius: 60, thickness: 20,
+      color: '#ffffff', life: 0, maxLife: 0.2
     });
   } else if (attackType === 'thrust') {
-    // Uppercut arc swoosh for the new forward light attack
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: p.x + dir * 15,
-      y: p.y - 30,
+      x: p.x + dir * 15, y: p.y - 30,
       facing: p.facing,
-      angle: Math.PI * 0.15 * dir, // Tilted slightly to match arc
-      radius: 70,
-      thickness: 30,
-      color: '#ffffff',
-      life: 0,
-      maxLife: 0.25
+      angle: Math.PI * 0.15 * dir,
+      startAngle: -Math.PI * 0.3,
+      endAngle: Math.PI * 0.2,
+      radius: 80, thickness: 40,
+      color: '#ffffff', life: 0, maxLife: 0.28
     });
   }
   

@@ -140,7 +140,7 @@ export function updateEngine(controller, dt) {
         p.state = 'run';
         p.jumpBuffer = 0;
         
-        // Straight thrust FX
+        // Improved Speed-Line Jump FX
         const jumpAngle = Math.atan2(p.vy, p.vx);
         controller.visualFx.push({
           id: `fx_jump_${controller.fxId++}`,
@@ -148,10 +148,12 @@ export function updateEngine(controller, dt) {
           x: p.x,
           y: p.y - 20,
           angle: jumpAngle,
-          length: 120,
-          width: 40,
+          length: 150,
+          width: 45,
+          lineCount: 4,
+          color: '#ffffff',
           life: 0,
-          maxLife: 0.3
+          maxLife: 0.35
         });
 
         if (controller.audioEngine) {
