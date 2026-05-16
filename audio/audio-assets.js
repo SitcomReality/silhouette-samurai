@@ -1,8 +1,8 @@
 // Audio asset definitions
 export const MUSIC_STEMS = {
-  ambient: 'ambient-pad.mp3',
-  action: 'action-drums.mp3',
-  ballet: 'ballet-lead.mp3'
+  base: 'ambient-pad.mp3',   // Peaceful melody/strings
+  action: 'action-drums.mp3', // Percussion & Arps
+  ballet: 'ballet-lead.mp3'   // High-energy lead
 };
 
 export const SFX = {
