@@ -70,6 +70,7 @@ export class GameController {
       isSliding: false,
       jumpBuffer: 0,
       attackBuffer: null,
+      hangTime: 0, // short float/hang timer after jump
     };
 
     spawnCratesSquareWave(this, 2500, 4);

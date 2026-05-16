@@ -68,10 +68,22 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
       t.bulgeAR = 16;
     }
   } else if (!isGrounded) {
-    const tilt = Math.min(Math.max(vy * 0.05, -0.5), 0.5);
-    t.bodyTopX = dir * tilt * 15;
-    t.headX = dir * tilt * 25;
-    t.bodyBotY = -10;
+    // More dramatic lunge while rising, softer hang pose near apex
+    if (vy < -6) {
+      // Rising surge pose
+      t.bodyBotY = -18;
+      t.bodyTopX = dir * 18;
+      t.bodyTopY = -55;
+      t.headX = dir * 30; t.headY = -80;
+      t.bulgeAX = dir * 36; t.bulgeAY = -38; t.bulgeAR = 18;
+      t.bodyThickness = 14;
+    } else {
+      // Hang-time gentle float pose
+      t.bodyBotY = -8;
+      t.bodyTopX = dir * 8; t.bodyTopY = -42;
+      t.headX = dir * 12; t.headY = -62;
+      t.bulgeAX = dir * 12; t.bulgeAY = -22; t.bulgeAR = 10;
+    }
   } else if (isSliding || isCrouching) {
     if (isSliding) {
       // Active slide pose - leaning back
