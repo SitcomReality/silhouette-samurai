@@ -68,50 +68,33 @@ export class SFXManager {
     noiseFilter.connect(noiseGain);
     noiseGain.connect(this.masterGain);
 
-    // Harmonic, music-aware chordal voice:
-    // Use an F-minor friendly palette and minor triad voicings so hits blend with background.
-    // Base root MIDI for palette: F2 (41) is used in MusicManager; build triads around that.
-    const basePalette = [41, 44, 46, 48, 51, 53, 56]; // F minor-ish tones (F, Ab, Bb, C, Eb, F, G#...)
-    // Choose a root index that slowly rotates with combo to maintain variety but remain related to base palette
-    const rootIdx = combo % basePalette.length;
-    const rootMidi = basePalette[rootIdx];
+    // Refined music-aware response:
+    // Instead of a chord, we play a beat-synced high-pitched 'sparkle' 
+    // using an F-minor pentatonic scale to ensure it harmonizes perfectly.
+    const pentatonic = [65, 68, 70, 72, 75, 77, 80, 82, 84, 87]; 
+    const noteMidi = pentatonic[combo % pentatonic.length];
+    const freq = 440 * Math.pow(2, (noteMidi - 69) / 12);
 
-    // Minor triad intervals (0, +3, +7 semitones)
-    const triad = [0, 3, 7];
-    // Invert and octave-shift pattern to keep upper register readable but harmonized
-    const inversion = combo % 3; // 0 = root, 1 = 1st inversion, 2 = 2nd
-    const octaveShift = (Math.floor(combo / 8) % 3) * 12; // slowly rotates octaves 0,+12,+24
+    const sparkleOsc = this.ctx.createOscillator();
+    sparkleOsc.type = 'sine';
+    sparkleOsc.frequency.setValueAtTime(freq, when);
+    // Add a tiny pitch sweep for 'juice'
+    sparkleOsc.frequency.exponentialRampToValueAtTime(freq * 1.05, when + 0.1);
 
-    // Create up to three slightly-detuned oscillators for a warm chord
-    const chordVoices = [];
-    for (let i = 0; i < 3; i++) {
-      const interval = triad[(i + inversion) % triad.length];
-      const midi = rootMidi + interval + octaveShift + (i === 0 ? 0 : (i === 1 ? 12 : -12)); // spread voicing
-      const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const sparkleGain = this.ctx.createGain();
+    sparkleGain.gain.setValueAtTime(0.15, when);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.001, when + 0.4);
 
-      const osc = this.ctx.createOscillator();
-      osc.type = i === 0 ? 'sawtooth' : (i === 1 ? 'triangle' : 'sine');
-      // slight detune for richness
-      osc.frequency.setValueAtTime(freq * (1 + (i - 1) * 0.003), when);
+    const sparkleFilter = this.ctx.createBiquadFilter();
+    sparkleFilter.type = 'highpass';
+    sparkleFilter.frequency.value = 1000;
 
-      const g = this.ctx.createGain();
-      // voice volumes: main mid, supporting bright, low supportive
-      const baseVol = i === 0 ? 0.12 : (i === 1 ? 0.08 : 0.06);
-      g.gain.setValueAtTime(baseVol, when);
-      g.gain.exponentialRampToValueAtTime(0.001, when + (i === 1 ? 0.35 : 0.28));
+    sparkleOsc.connect(sparkleFilter);
+    sparkleFilter.connect(sparkleGain);
+    sparkleGain.connect(this.masterGain);
 
-      // small lowpass per voice for cohesion
-      const f = this.ctx.createBiquadFilter();
-      f.type = 'lowpass';
-      f.frequency.setValueAtTime(i === 1 ? 3000 : 1800, when);
-      f.frequency.exponentialRampToValueAtTime(200 + (i * 50), when + 0.3);
-
-      osc.connect(f);
-      f.connect(g);
-      g.connect(this.masterGain);
-
-      chordVoices.push({ osc, g });
-    }
+    sparkleOsc.start(when);
+    sparkleOsc.stop(when + 0.45);
 
     // Start all sources
     transientOsc.start(when);
@@ -120,10 +103,7 @@ export class SFXManager {
     // stop noise shortly after
     noise.stop(when + 0.12);
 
-    chordVoices.forEach(v => {
-      v.osc.start(when);
-      v.osc.stop(when + 0.36);
-    });
+
   }
 
   playSlam(rhythmSync = true) {
