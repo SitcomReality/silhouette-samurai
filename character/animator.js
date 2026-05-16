@@ -1,26 +1,24 @@
+// Easing functions for attack animations
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeInCubic(t) { return t * t * t; }
+function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
 export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0) {
   const dir = facing === 'right' ? 1 : -1;
   const t = char.target;
 
-  // Default / Idle state relative to character pos (0,0)
+  // Default / Idle state - iaijutsu ready pose
   t.bodyBotX = 0; t.bodyBotY = 0;
-  t.bodyTopX = 0; t.bodyTopY = -35;
+  t.bodyTopX = -dir * 3; t.bodyTopY = -35;
   t.bodyThickness = 12;
-  t.headX = 0; t.headY = -55; t.headR = 13;
+  t.headX = -dir * 5; t.headY = -55; t.headR = 13;
   t.bulgeAX = 0; t.bulgeAY = -20; t.bulgeAR = 0;
   t.bulgeBX = 0; t.bulgeBY = -20; t.bulgeBR = 0;
   
-  // Default sword pos (iaijutsu ready pose, diagonally behind back)
-  t.swordAX = -dir * 15; t.swordAY = -20;
-  t.swordBX = -dir * 45; t.swordBY = -50;
-  t.swordThickness = 4;
-
-  // Easing helpers
-  const easeInCubic = x => x * x * x;
-  const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
-  const easeInOutCubic = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-  const easeOutElastic = x => x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1;
-  const easeOutBack = x => { const c1 = 1.70158; const c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+  // Idle: sword resting diagonally behind back (iaijutsu ready)
+  t.swordAX = -dir * 8; t.swordAY = -25;
+  t.swordBX = -dir * 35; t.swordBY = -50;
+  t.swordThickness = 3;
 
   // Apply state modifiers
   if (state === 'dead') {
@@ -31,99 +29,158 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.bodyTopX = -dir * 15; t.bodyTopY = -30;
     t.headX = -dir * 25; t.headY = -40;
   } else if (state === 'attack') {
-    if (attackType === 'down_thrust') {
-      const freezeThreshold = 0.25;
-      if (attackProgress < freezeThreshold) {
-        const tuck = easeOutCubic(attackProgress / freezeThreshold);
-        t.bodyBotY = -25 * tuck;
-        t.bodyTopX = 0; t.bodyTopY = -25 - 10 * tuck;
-        t.headX = 0; t.headY = -40 - 10 * tuck;
-        
-        t.swordAX = 0; t.swordAY = -20;
-        t.swordBX = -dir * 20; t.swordBY = -50;
-      } else {
-        const fall = easeInCubic((attackProgress - freezeThreshold) / (1 - freezeThreshold));
-        t.bodyTopX = 0; t.bodyTopY = -45;
-        t.headX = 0; t.headY = -60;
-        t.bodyBotY = -10;
-        
-        t.swordAX = 0; t.swordAY = -10;
-        t.swordBX = 0; t.swordBY = 40 + fall * 10;
-        t.swordThickness = 6;
-      }
-    } else if (attackType === 'heavy_slash') {
-      if (attackProgress < 0.3) {
-        const windup = easeOutCubic(attackProgress / 0.3);
-        t.bodyTopX = -dir * 20 * windup;
-        t.headX = -dir * 25 * windup;
-        const angle = Math.PI * 0.9;
-        t.swordAX = -dir * 15; t.swordAY = -20;
-        t.swordBX = t.swordAX + Math.cos(angle) * 60 * dir;
-        t.swordBY = t.swordAY + Math.sin(angle) * 60;
-        t.swordThickness = 7;
-      } else if (attackProgress < 0.4) {
-        const snap = (attackProgress - 0.3) / 0.1;
-        t.bodyTopX = dir * 15 * snap;
-        t.headX = dir * 20 * snap;
-        const angle = Math.PI * 0.9 - (snap * Math.PI * 1.6);
-        t.swordAX = dir * 10; t.swordAY = -30;
-        t.swordBX = t.swordAX + Math.cos(angle) * 75 * dir;
-        t.swordBY = t.swordAY + Math.sin(angle) * 75;
-        t.swordThickness = 8;
-      } else {
-        const follow = easeOutCubic((attackProgress - 0.4) / 0.6);
-        t.bodyTopX = dir * 15 + dir * 15 * follow;
-        t.headX = dir * 20 + dir * 15 * follow;
-        t.bodyBotX = dir * 10 * follow;
-        const angle = -Math.PI * 0.7 - (follow * 0.2);
-        t.swordAX = dir * 20; t.swordAY = -20;
-        t.swordBX = t.swordAX + Math.cos(angle) * 75 * dir;
-        t.swordBY = t.swordAY + Math.sin(angle) * 75;
-        t.swordThickness = 5;
-      }
-    } else if (attackType === 'rising_slash') {
-      const p = easeOutBack(attackProgress);
-      t.bodyBotY = -p * 20;
-      t.bodyTopX = dir * 10; t.bodyTopY = -45 - p * 20;
-      t.headX = dir * 15; t.headY = -60 - p * 20;
+    // SWORD-LED ANIMATION: Calculate sword tip position first, then pull body along
+    
+    if (attackType === 'rising_slash') {
+      // Rising crescent with anticipation
+      const easedProgress = attackProgress < 0.2 ? easeInCubic(attackProgress / 0.2) * 0.2 : 
+                            0.2 + easeOutCubic((attackProgress - 0.2) / 0.8) * 0.8;
       
-      const angle = -Math.PI/2 + (p * Math.PI * 1.1);
-      t.swordAX = dir * 10; t.swordAY = -40 - p * 20;
-      t.swordBX = t.swordAX + Math.cos(angle) * 65 * dir;
-      t.swordBY = t.swordAY + Math.sin(angle) * 65;
+      // Sword tip traces a rising arc from low-back to high-forward
+      const arcAngle = -Math.PI * 0.6 + (easedProgress * Math.PI * 1.2);
+      const swordLen = 55;
+      t.swordBX = dir * (Math.cos(arcAngle) * swordLen * 0.7 + easedProgress * 25);
+      t.swordBY = -30 + Math.sin(arcAngle) * swordLen - easedProgress * 30;
+      t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir * 0.7;
+      t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+      
+      // Body follows sword tip
+      t.bodyTopX = t.swordBX * 0.5; t.bodyTopY = t.swordBY + 10;
+      t.headX = t.swordBX * 0.6; t.headY = t.swordBY - 5;
+      t.bodyBotY = -easedProgress * 15;
+      t.bodyBotX = -dir * easedProgress * 8;
+      
     } else if (attackType === 'slash') {
-      const p = easeOutBack(attackProgress);
-      t.bodyTopX = dir * 15 * p;
-      t.headX = dir * 20 * p;
-      const angle = Math.PI * 0.8 - (p * Math.PI * 1.5);
-      t.swordAX = dir * 15; t.swordAY = -35;
-      t.swordBX = t.swordAX + Math.cos(angle) * 55 * dir;
-      t.swordBY = t.swordAY + Math.sin(angle) * 55;
+      // Quick horizontal slice with overshoot
+      const easedProgress = easeInOutCubic(attackProgress);
+      const overshoot = Math.sin(attackProgress * Math.PI) * 0.08;
+      
+      // Sword tip arcs horizontally 70° descending (Marth fair style)
+      const arcAngle = Math.PI * 0.35 - ((easedProgress + overshoot) * Math.PI * 0.7);
+      const swordLen = 50;
+      t.swordBX = dir * (20 + easedProgress * 30) + dir * Math.cos(arcAngle) * swordLen * 0.5;
+      t.swordBY = -35 + Math.sin(arcAngle) * swordLen * 0.5;
+      t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+      t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+      
+      // Body pulled by sword
+      t.bodyTopX = dir * (8 + easedProgress * 12);
+      t.headX = dir * (10 + easedProgress * 15);
+      
     } else if (attackType === 'thrust') {
-      const p = easeOutElastic(attackProgress);
-      t.bodyBotX = -dir * 15; 
-      t.bodyTopX = dir * 30 * p; t.bodyTopY = -25;
-      t.headX = dir * 40 * p; t.headY = -35;
-      t.swordAX = dir * 25 * p; t.swordAY = -25;
-      t.swordBX = t.swordAX + dir * (50 + p * 35);
+      // Linear thrust with anticipation pullback
+      const anticipation = attackProgress < 0.25 ? -attackProgress * 0.4 : -0.1;
+      const thrust = attackProgress < 0.25 ? 0 : easeOutCubic((attackProgress - 0.25) / 0.75);
+      
+      // Sword tip extends straight forward
+      const extension = anticipation * 20 + thrust * 50;
+      t.swordBX = dir * (25 + extension);
       t.swordBY = -25;
+      t.swordAX = t.swordBX - dir * 55;
+      t.swordAY = -25;
+      
+      // Body braced and pulled forward by thrust
+      t.bodyBotX = -dir * (15 - anticipation * 10);
+      t.bodyTopX = dir * (15 + thrust * 20); t.bodyTopY = -25;
+      t.headX = dir * (25 + thrust * 15); t.headY = -35;
+      
     } else if (attackType === 'up_slash') {
-      const p = easeOutCubic(attackProgress);
-      t.bodyTopX = dir * 10; t.bodyTopY = -35;
-      t.headX = dir * 15; t.headY = -45;
-      const angle = -Math.PI * 0.1 - (p * Math.PI * 1.2); 
-      t.swordAX = dir * 10; t.swordAY = -45;
-      t.swordBX = t.swordAX + Math.cos(angle) * 60 * dir;
-      t.swordBY = t.swordAY + Math.sin(angle) * 60;
+      // Overhead arc with sharp snap
+      const easedProgress = attackProgress < 0.3 ? easeInCubic(attackProgress / 0.3) * 0.3 :
+                            0.3 + easeOutCubic((attackProgress - 0.3) / 0.7) * 0.7;
+      
+      // Sword tip traces overhead arc
+      const arcAngle = -Math.PI * 0.15 - (easedProgress * Math.PI * 0.95);
+      const swordLen = 52;
+      t.swordBX = dir * 15 + Math.cos(arcAngle) * swordLen * dir * 0.6;
+      t.swordBY = -50 + Math.sin(arcAngle) * swordLen;
+      t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+      t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+      
+      // Body reaches up with sword
+      t.bodyTopX = dir * (8 + easedProgress * 8); t.bodyTopY = -35 - easedProgress * 5;
+      t.headX = dir * (12 + easedProgress * 10); t.headY = -45 - easedProgress * 8;
+      
     } else if (attackType === 'sweep') {
-      const p = easeOutBack(attackProgress);
-      t.bodyBotX = -dir * 10; 
-      t.bodyTopX = dir * 20 * p; t.bodyTopY = -15;
-      t.headX = dir * 25 * p; t.headY = -25;
-      const angle = Math.PI * 0.3 - (p * Math.PI * 0.6);
-      t.swordAX = dir * 15; t.swordAY = -10;
-      t.swordBX = t.swordAX + Math.cos(angle) * 65 * dir;
-      t.swordBY = t.swordAY + Math.sin(angle) * 65;
+      // Low sweeping arc
+      const easedProgress = easeInOutCubic(attackProgress);
+      
+      // Sword sweeps low in wide horizontal arc
+      const arcAngle = Math.PI * 0.15 - (easedProgress * Math.PI * 0.5);
+      const swordLen = 58;
+      t.swordBX = dir * (15 + easedProgress * 25) + Math.cos(arcAngle) * swordLen * dir * 0.5;
+      t.swordBY = -10 + Math.sin(arcAngle) * swordLen * 0.5;
+      t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+      t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+      
+      // Body low and following sweep
+      t.bodyBotX = -dir * 10;
+      t.bodyTopX = dir * (12 + easedProgress * 10); t.bodyTopY = -15;
+      t.headX = dir * (18 + easedProgress * 8); t.headY = -25;
+      
+    } else if (attackType === 'down_thrust') {
+      // Anticipation freeze (0-0.25) then violent plunge
+      if (attackProgress < 0.25) {
+        // Tucked anticipation pose
+        const tuck = easeInCubic(attackProgress / 0.25);
+        t.bodyTopX = 0; t.bodyTopY = -40 - tuck * 5;
+        t.headX = 0; t.headY = -55 - tuck * 5;
+        t.bodyBotY = -15 - tuck * 10; // Legs tucking up
+        t.swordAX = 0; t.swordAY = -30 - tuck * 15;
+        t.swordBX = 0; t.swordBY = -10 + tuck * 5; // Blade pulling up slightly
+        t.swordThickness = 4;
+      } else {
+        // Explosive downward extension
+        const plunge = easeInCubic((attackProgress - 0.25) / 0.75);
+        t.bodyTopX = 0; t.bodyTopY = -45 + plunge * 10;
+        t.headX = 0; t.headY = -60 + plunge * 10;
+        t.bodyBotY = -25 + plunge * 15; // Legs extending
+        t.swordAX = 0; t.swordAY = -45 + plunge * 30;
+        t.swordBX = 0; t.swordBY = -5 + plunge * 60; // Blade shoots down
+        t.swordThickness = 5 + plunge * 2;
+      }
+      
+    } else if (attackType === 'heavy_slash') {
+      // Three phases: Windup (0-0.3), Snap (0.3-0.4), Follow-through (0.4-1.0)
+      if (attackProgress < 0.3) {
+        // Windup: pull back
+        const windup = easeInCubic(attackProgress / 0.3);
+        const arcAngle = Math.PI * 0.9;
+        const swordLen = 60;
+        t.swordBX = -dir * (10 + windup * 15) + Math.cos(arcAngle) * swordLen * dir * 0.5;
+        t.swordBY = -40 + Math.sin(arcAngle) * swordLen * 0.5;
+        t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+        t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+        
+        t.bodyTopX = -dir * (10 + windup * 5);
+        t.headX = -dir * (15 + windup * 8);
+      } else if (attackProgress < 0.4) {
+        // Snap: explosive horizontal flash
+        const snap = (attackProgress - 0.3) / 0.1;
+        const arcAngle = Math.PI * 0.9 - (snap * Math.PI * 1.6);
+        const swordLen = 62;
+        t.swordBX = dir * (snap * 50) + Math.cos(arcAngle) * swordLen * dir * 0.5;
+        t.swordBY = -35 + Math.sin(arcAngle) * swordLen * 0.5;
+        t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+        t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+        
+        t.bodyTopX = dir * (snap * 25);
+        t.headX = dir * (snap * 30);
+        t.swordThickness = 6 + snap * 2;
+      } else {
+        // Follow-through: low lean
+        const follow = easeOutCubic((attackProgress - 0.4) / 0.6);
+        const arcAngle = -Math.PI * 0.7;
+        const swordLen = 60;
+        t.swordBX = dir * (40 + follow * 5) + Math.cos(arcAngle) * swordLen * dir * 0.5;
+        t.swordBY = -25 + Math.sin(arcAngle) * swordLen * 0.5;
+        t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+        t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+        
+        t.bodyTopX = dir * (25 - follow * 5); t.bodyTopY = -30 + follow * 5;
+        t.headX = dir * (30 - follow * 5); t.headY = -40 + follow * 5;
+        t.swordThickness = 8 - follow * 2;
+      }
     }
   } else if (!isGrounded) {
     // Dynamic jump/fall poses
@@ -184,21 +241,15 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     t.bulgeAX = dir * stride * 15; t.bulgeAY = -10; t.bulgeAR = 8;
     t.bulgeBX = -dir * stride * 15; t.bulgeBY = -10; t.bulgeBR = 8;
     
-    // Naruto/Ninja run: Sword trails horizontally behind
-    t.swordAX = -dir * 15; t.swordAY = -25 - bob;
-    t.swordBX = -dir * 50; t.swordBY = -25 - bob;
+    // Ninja run: Sword trails behind
+    t.swordAX = -dir * 10; t.swordAY = -25 - bob;
+    t.swordBX = -dir * 35; t.swordBY = -15 - bob;
   } else {
     // Idle
     const bob = Math.sin(stateTime * 3) * 2;
     t.headY = -55 + bob;
     t.bodyTopY = -35 + bob * 0.5;
     t.headX = Math.sin(stateTime * 2) * 1.5;
-    
-    // Slight breathing motion on the sword
-    t.swordAX += Math.cos(stateTime * 3) * 1;
-    t.swordBX += Math.cos(stateTime * 3) * 2;
-    t.swordAY += bob * 0.5;
-    t.swordBY += bob * 1.5;
   }
 
   // Apply scale

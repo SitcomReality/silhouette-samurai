@@ -12,7 +12,6 @@ export function resolveAttackHits(controller) {
   
   const dir = p.facing === 'right' ? 1 : -1;
   let hitOccurred = false;
-  let tipperOccurred = false;
   
   for (const ent of controller.entities) {
     if (ent.state === 'dead') continue;
@@ -21,20 +20,14 @@ export function resolveAttackHits(controller) {
       hitOccurred = true;
       p.attackHitConfirmed = true;
       
-      const dx = Math.abs(p.x - ent.x);
-      const isTipper = dx >= (ATTACK_CONFIG[p.attackType].reach * 0.65);
-      if (isTipper) tipperOccurred = true;
-      
-      const actualDamage = isTipper ? Math.floor(hitbox.damage * 1.5) : Math.floor(hitbox.damage * 0.7);
-      
-      ent.health -= actualDamage;
+      ent.health -= hitbox.damage;
       
       if (ent.isBoss) {
-        ent.vx = dir * hitbox.pushback * 0.4 * (isTipper ? 1.2 : 1.0);
-        ent.vy = hitbox.launchVy * 0.6 * (isTipper ? 1.2 : 1.0);
+        ent.vx = dir * hitbox.pushback * 0.4;
+        ent.vy = hitbox.launchVy * 0.6;
       } else {
-        ent.vx = dir * hitbox.pushback * (isTipper ? 1.2 : 1.0);
-        ent.vy = hitbox.launchVy * (isTipper ? 1.2 : 1.0);
+        ent.vx = dir * hitbox.pushback;
+        ent.vy = hitbox.launchVy;
       }
       ent.isGrounded = false;
       
@@ -59,23 +52,11 @@ export function resolveAttackHits(controller) {
       
       // Audio feedback
       if (controller.audioEngine) {
-        controller.audioEngine.onHit(actualDamage, p.combo);
+        controller.audioEngine.onHit(hitbox.damage, p.combo);
       }
       
-      spawnHitParticles(controller, ent, dir, hitbox, isTipper);
-      spawnFloatingText(controller, ent, p, actualDamage, isTipper);
-      
-      if (isTipper) {
-        controller.visualFx.push({
-          id: `fx_tipper_${controller.fxId++}`,
-          type: 'tipper_flash',
-          x: ent.x,
-          y: ent.y - (ent.scale || 1.0) * 50,
-          radius: 70,
-          life: 0,
-          maxLife: 0.25
-        });
-      }
+      spawnHitParticles(controller, ent, dir, hitbox);
+      spawnFloatingText(controller, ent, p, hitbox);
     }
   }
   
@@ -86,11 +67,8 @@ export function resolveAttackHits(controller) {
     }
     controller.stats.score += 10 * p.combo;
     
-    const baseHitstop = p.attackType === 'down_thrust' ? 6 : 3;
-    controller.hitstop = tipperOccurred ? Math.floor(baseHitstop * 1.5) : baseHitstop;
-    
-    const baseShake = p.attackType === 'down_thrust' ? 18 : 8;
-    controller.screenShake = tipperOccurred ? baseShake * 1.5 : baseShake;
+    controller.hitstop = p.attackType === 'down_thrust' ? 6 : 3;
+    controller.screenShake = p.attackType === 'down_thrust' ? 18 : 8;
     
     if (p.attackType === 'down_thrust') {
       const sw = {
@@ -159,13 +137,13 @@ function spawnDebris(controller, ent, dir, hitbox) {
   ent.health = -999;
 }
 
-function spawnHitParticles(controller, ent, dir, hitbox, isTipper) {
+function spawnHitParticles(controller, ent, dir, hitbox) {
   const scale = ent.scale || 1.0;
-  const pCount = (hitbox.damage > 40 || isTipper ? 6 : 3) * (ent.isBoss ? 2 : 1);
+  const pCount = (hitbox.damage > 40 ? 5 : 3) * (ent.isBoss ? 2 : 1);
   for (let i = 0; i < pCount; i++) {
     const angle = Math.random() * Math.PI - Math.PI / 2;
     const speed = 8 + Math.random() * 10;
-    const p = {
+    controller.particles.push({
       id: `p_${controller.particleId++}`,
       x: ent.x + (Math.random() - 0.5) * 10 * scale,
       y: ent.y - 50 * scale + (Math.random() - 0.5) * 20 * scale,
@@ -176,26 +154,20 @@ function spawnHitParticles(controller, ent, dir, hitbox, isTipper) {
       maxLife: 0.4 + Math.random() * 0.3,
       isGrounded: false,
       shape: Math.random() > 0.5 ? 'circle' : 'square'
-    };
-    if (isTipper) {
-      p.color = '#a855f7';
-      p.radius *= 1.5;
-      p.maxLife *= 1.2;
-    }
-    controller.particles.push(p);
+    });
   }
 }
 
-function spawnFloatingText(controller, ent, player, actualDamage, isTipper) {
+function spawnFloatingText(controller, ent, player, hitbox) {
   if (controller.floatingTexts.length >= 3) return;
   
   controller.floatingTexts.push({
     id: `t_${controller.textId++}`,
-    text: isTipper ? 'TIPPER!' : `${actualDamage}`,
+    text: hitbox.damage > 40 ? 'CRITICAL!' : `${hitbox.damage}`,
     x: ent.x + (Math.random() - 0.5) * 20,
     y: ent.y - 110,
-    color: isTipper ? '#a855f7' : (actualDamage > 40 ? '#ec4899' : '#38bdf8'),
+    color: hitbox.damage > 40 ? '#ec4899' : '#38bdf8',
     life: 0,
-    scale: (1 + Math.min(player.combo * 0.02, 0.4)) * (isTipper ? 1.5 : 1.0)
+    scale: 1 + Math.min(player.combo * 0.02, 0.4)
   });
 }

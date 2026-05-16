@@ -1,7 +1,5 @@
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
   for (const fx of controller.visualFx) {
-    if (fx.life < 0) continue;
-
     if (fx.type === 'thrust') {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
       const scY = fx.y + camYOffset;
@@ -35,9 +33,8 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
       const scY = fx.y + camYOffset;
       
-      const rawProgress = fx.life / fx.maxLife;
-      const progress = 1 - Math.pow(1 - rawProgress, 3);
-      const alpha = Math.max(0, 1 - Math.pow(rawProgress, 2));
+      const progress = fx.life / fx.maxLife;
+      const alpha = Math.max(0, 1 - Math.pow(progress, 1.5));
       
       ctx.save();
       ctx.translate(scX, scY);
@@ -48,70 +45,22 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       
       ctx.scale(fx.facing === 'right' ? 1 : -1, 1);
       
-      const grad = ctx.createRadialGradient(0, 0, fx.radius * 0.4, 0, 0, fx.radius * 1.2);
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.5, fx.color || '#38bdf8');
-      grad.addColorStop(1, '#a855f7');
-      
       ctx.beginPath();
-      const sweepBase = Math.PI * 1.2;
-      const currentAngle = -Math.PI * 0.6 + sweepBase * progress;
-      const tailAngle = -Math.PI * 0.6 + sweepBase * Math.max(0, progress - 0.4);
       
-      const currentRadius = fx.radius * (0.8 + progress * 0.4);
+      ctx.arc(0, 0, fx.radius * (0.5 + progress * 0.5), -Math.PI/2, Math.PI/2);
+      const innerRadius = (fx.radius - fx.thickness) * (0.5 + progress * 0.5);
+      const innerOffset = fx.thickness * progress * 2;
+      ctx.arc(innerOffset, 0, Math.max(0, innerRadius), Math.PI/2, -Math.PI/2, true);
       
-      ctx.arc(0, 0, currentRadius, tailAngle, currentAngle);
-      
-      const maxThickness = fx.thickness * (1 - rawProgress);
-      const innerRadiusLead = currentRadius - maxThickness;
-      
-      ctx.lineTo(Math.cos(currentAngle) * innerRadiusLead, Math.sin(currentAngle) * innerRadiusLead);
-      ctx.arc(0, 0, currentRadius, currentAngle, tailAngle, true);
-      
-      ctx.fillStyle = grad;
+      ctx.fillStyle = fx.color;
       ctx.globalAlpha = alpha;
-      ctx.shadowColor = fx.color || '#38bdf8';
-      ctx.shadowBlur = 15;
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(currentAngle) * currentRadius, Math.sin(currentAngle) * currentRadius);
-      ctx.lineTo(Math.cos(currentAngle) * innerRadiusLead, Math.sin(currentAngle) * innerRadiusLead);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4 * alpha;
-      ctx.stroke();
-      
-      ctx.restore();
-    } else if (fx.type === 'tipper_flash') {
-      const scX = (fx.x - controller.cameraX) + viewWidth / 2;
-      const scY = fx.y + camYOffset;
-      const progress = fx.life / fx.maxLife;
-      
-      ctx.save();
-      ctx.translate(scX, scY);
-      ctx.rotate(progress * Math.PI);
-      
-      const alpha = 1 - Math.pow(progress, 2);
-      ctx.globalAlpha = alpha;
-      
-      ctx.beginPath();
-      const r = fx.radius * (0.5 + progress * 0.5);
-      
-      for(let i=0; i<8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const dist = (i % 2 === 0) ? r : r * 0.3;
-        if (i === 0) ctx.moveTo(Math.cos(angle) * dist, Math.sin(angle) * dist);
-        else ctx.lineTo(Math.cos(angle) * dist, Math.sin(angle) * dist);
-      }
-      ctx.closePath();
-      
-      ctx.fillStyle = '#a855f7';
-      ctx.shadowColor = '#ffffff';
-      ctx.shadowBlur = 20;
+      ctx.shadowColor = fx.color;
+      ctx.shadowBlur = 10;
       ctx.fill();
       
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4 * alpha;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = alpha * 0.8;
       ctx.stroke();
       
       ctx.restore();

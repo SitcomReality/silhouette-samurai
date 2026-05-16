@@ -52,10 +52,11 @@ export function triggerAttack(controller, attackType) {
       controller.audioEngine.onSlide();
     }
   } else if (attackType === 'down_thrust') {
-    // Hang-time freeze is handled in update.js
+    // Freeze for anticipation, then spike down
     p.vx = 0;
-    p.vy = 0;
+    p.vy = 0; // Freeze initially
     p.isGrounded = false;
+    p.downThrustAnticipation = 0.15; // Will apply downward velocity after this delay
   } else {
     if (attackType === 'up_slash') {
       const powerCost = 20;
@@ -73,45 +74,99 @@ export function triggerAttack(controller, attackType) {
     }
   }
   
-  let angle = 0;
-  let fxX = p.x + dir * 20;
-  let fxY = p.y - 35;
-
+  // Create attack-specific visual effects
   if (attackType === 'rising_slash') {
-    angle = -Math.PI / 2 * dir;
-    fxX = p.x + dir * 10;
-    fxY = p.y - 60;
-  } else if (attackType === 'down_thrust') {
-    angle = Math.PI / 2; // Straight down!
-    fxX = p.x;
-    fxY = p.y;
-  } else if (attackType === 'up_slash') {
-    angle = -Math.PI / 4 * dir;
-    fxX = p.x + dir * 15;
-    fxY = p.y - 50;
-  } else if (attackType === 'heavy_slash') {
-    angle = 0;
-    fxX = p.x + dir * 30;
-  }
-  
-  // Sword trails for most attacks, except maybe thrust
-  if (attackType !== 'thrust') {
-    let delay = 0;
-    if (attackType === 'heavy_slash') delay = config.duration * 0.3;
-    
+    // Wide arcing swoosh
     controller.visualFx.push({
       id: `fx_${controller.fxId++}`,
       type: 'swoosh',
-      x: fxX,
-      y: fxY,
+      x: p.x + dir * 10,
+      y: p.y - 50,
       facing: p.facing,
-      angle: angle,
-      radius: config.reach || 60,
-      thickness: attackType === 'heavy_slash' ? 45 : 30,
-      color: attackType === 'heavy_slash' ? '#f43f5e' : '#06b6d4',
-      life: -delay,
-      maxLife: attackType === 'heavy_slash' ? 0.3 : 0.25
+      angle: -Math.PI / 2.5 * dir,
+      radius: 70,
+      thickness: 35,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.3
     });
+  } else if (attackType === 'down_thrust') {
+    // Narrow vertical trail
+    controller.visualFx.push({
+      id: `fx_${controller.fxId++}`,
+      type: 'swoosh',
+      x: p.x,
+      y: p.y - 20,
+      facing: p.facing,
+      angle: Math.PI / 2,
+      radius: 50,
+      thickness: 18,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.25
+    });
+  } else if (attackType === 'up_slash') {
+    // Overhead arc
+    controller.visualFx.push({
+      id: `fx_${controller.fxId++}`,
+      type: 'swoosh',
+      x: p.x + dir * 15,
+      y: p.y - 55,
+      facing: p.facing,
+      angle: -Math.PI / 3 * dir,
+      radius: 65,
+      thickness: 30,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.28
+    });
+  } else if (attackType === 'heavy_slash') {
+    // Massive horizontal flash
+    controller.visualFx.push({
+      id: `fx_${controller.fxId++}`,
+      type: 'swoosh',
+      x: p.x + dir * 25,
+      y: p.y - 30,
+      facing: p.facing,
+      angle: 0,
+      radius: 85,
+      thickness: 45,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.35
+    });
+  } else if (attackType === 'sweep') {
+    // Wide low horizontal arc
+    controller.visualFx.push({
+      id: `fx_${controller.fxId++}`,
+      type: 'swoosh',
+      x: p.x + dir * 20,
+      y: p.y - 15,
+      facing: p.facing,
+      angle: Math.PI * 0.1,
+      radius: 75,
+      thickness: 28,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.32
+    });
+  } else if (attackType === 'slash') {
+    // Quick descending arc (Marth fair style)
+    controller.visualFx.push({
+      id: `fx_${controller.fxId++}`,
+      type: 'swoosh',
+      x: p.x + dir * 18,
+      y: p.y - 35,
+      facing: p.facing,
+      angle: Math.PI * 0.15,
+      radius: 55,
+      thickness: 22,
+      color: '#ffffff',
+      life: 0,
+      maxLife: 0.2
+    });
+  } else if (attackType === 'thrust') {
+    // No swoosh for thrust - it's a straight stab
   }
   
   if (controller.audioEngine) {

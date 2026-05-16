@@ -188,6 +188,15 @@ export function updateEngine(controller, dt) {
       p.state = isMoving && Math.abs(p.vx) > 1 ? 'run' : 'idle';
     }
   } else if (p.state === 'attack') {
+    // Handle down_thrust anticipation freeze
+    if (p.downThrustAnticipation !== undefined && p.downThrustAnticipation > 0) {
+      p.downThrustAnticipation -= dt;
+      if (p.downThrustAnticipation <= 0) {
+        p.vy = 20; // Apply the downward spike after anticipation
+        p.downThrustAnticipation = undefined;
+      }
+    }
+    
     p.attackTimer -= dt;
     
     if (p.attackType === 'slash' || p.attackType === 'sweep') {
@@ -225,19 +234,6 @@ export function updateEngine(controller, dt) {
       const progress = 1 - p.attackTimer / config.duration;
       const verticalBoost = Math.pow(progress, 3) * -50;
       p.vy += verticalBoost * dt;
-    }
-    
-    if (p.attackType === 'down_thrust') {
-      const config = ATTACK_CONFIG[p.attackType];
-      const progress = 1 - p.attackTimer / config.duration;
-      // Hangtime for first 0.15s
-      const freezeRatio = 0.15 / config.duration;
-      if (progress < freezeRatio) {
-        p.vx = 0;
-        p.vy = 0;
-      } else if (progress >= freezeRatio && p.vy === 0) {
-        p.vy = config.vy; // Apply the spike!
-      }
     }
     
     resolveAttackHits(controller);
@@ -301,16 +297,6 @@ export function updateEngine(controller, dt) {
       p.vx *= 0.99; // Preserve horizontal momentum slightly more in hangtime
     } else if (p.vy < 0 && !jumpPressed && !p.exponentialLaunch) {
       gravity = 2.2; // Fast fall if jump is tapped and released
-    }
-
-    // Zero gravity during down_thrust hangtime
-    if (p.state === 'attack' && p.attackType === 'down_thrust') {
-      const config = ATTACK_CONFIG[p.attackType];
-      const progress = 1 - p.attackTimer / config.duration;
-      if (progress < (0.15 / config.duration)) {
-        gravity = 0;
-        p.vy = 0;
-      }
     }
     
     p.vy += gravity;
