@@ -91,26 +91,31 @@ export class MusicManager {
   }
 
   playStep(step, time) {
-    if (this.kickPattern[step]) this.playKick(time);
-    if (this.snarePattern[step]) this.playSnare(time);
-    if (this.hatPattern[step]) this.playHat(time);
+    // Percussion and grinding rhythm are routed to the 'action' layer,
+    // which is controlled by combo intensity (starts muted).
+    if (this.kickPattern[step]) this.playKick(time, 'action');
+    if (this.snarePattern[step]) this.playSnare(time, 'action');
+    if (this.hatPattern[step]) this.playHat(time, 'action');
 
+    // Bass stays on base to support the melody.
     if (this.bassPattern[step]) {
       this.playSynth(this.bassPattern[step], time, 'base', 'sawtooth', 0.12, 0.2);
     }
+    // Arpeggio / glitch textures follow the action layer (enter with combo).
     if (this.arpPattern[step]) {
       this.playSynth(this.arpPattern[step], time, 'action', 'square', 0.04, 0.1, true);
     }
+    // Move the melodic line to the base layer so it's the default background music.
     if (this.melodyPattern[step]) {
-      this.playSynth(this.melodyPattern[step], time, 'ballet', 'sine', 0.2, 0.4, false, true);
+      this.playSynth(this.melodyPattern[step], time, 'base', 'sine', 0.2, 0.4, false, true);
     }
   }
 
-  playKick(time) {
+  playKick(time, layer = 'base') {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.connect(gain);
-    gain.connect(this.gainNodes.base);
+    gain.connect(this.gainNodes[layer]);
     
     osc.frequency.setValueAtTime(150, time);
     osc.frequency.exponentialRampToValueAtTime(40, time + 0.1);
@@ -122,7 +127,7 @@ export class MusicManager {
     osc.stop(time + 0.3);
   }
 
-  playSnare(time) {
+  playSnare(time, layer = 'base') {
     const noise = this.ctx.createBufferSource();
     const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.2, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -141,7 +146,7 @@ export class MusicManager {
     
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.gainNodes.base);
+    gain.connect(this.gainNodes[layer]);
     
     const osc = this.ctx.createOscillator();
     osc.type = 'triangle';
@@ -153,14 +158,14 @@ export class MusicManager {
     oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
     
     osc.connect(oscGain);
-    oscGain.connect(this.gainNodes.base);
+    oscGain.connect(this.gainNodes[layer]);
     
     noise.start(time);
     osc.start(time);
     osc.stop(time + 0.2);
   }
 
-  playHat(time) {
+  playHat(time, layer = 'base') {
     const noise = this.ctx.createBufferSource();
     const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -177,7 +182,7 @@ export class MusicManager {
     
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.gainNodes.base);
+    gain.connect(this.gainNodes[layer]);
     
     noise.start(time);
   }
