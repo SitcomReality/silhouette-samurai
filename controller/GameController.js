@@ -3,6 +3,8 @@ import { triggerAttack } from '../combat/attacks/trigger.js';
 import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
 import { updateEngine } from './update.js';
 import { determineAttack } from '../input/controls.js';
+import { ParrySystem } from '../combat/parry.js';
+import { BladeDanceSystem } from '../combat/blade-dance.js';
 
 export class GameController {
   constructor() {
@@ -27,6 +29,10 @@ export class GameController {
     this.prevKeys = {};
     this.hitstop = 0;
     this.screenShake = 0;
+    
+    // Combat systems
+    this.parry = new ParrySystem();
+    this.bladeDance = new BladeDanceSystem();
     
     this.nextSpawnX = 3000;
     this.particleId = 0;
@@ -54,12 +60,12 @@ export class GameController {
       state: 'idle',
       stateTime: 0,
       attackType: 'none',
-      attackTimer: 0,
-      endlagTimer: 0,
+      attackFrameData: null,
+      attackFrameTime: 0,
       attackHitConfirmed: false,
+      attackHitEntities: new Set(),
       combo: 0,
       character: createCharacter(0, this.baseGroundY),
-      // Increase player visual scale ~50% so characters appear larger relative to crates/text
       scale: 1.5,
       slidePower: 100,
       aerialPower: 100,
@@ -70,6 +76,21 @@ export class GameController {
       isSliding: false,
       jumpBuffer: 0,
       attackBuffer: null,
+      isBlocking: false,
+      blockStartTime: 0,
+      canCounter: false,
+      counterWindow: 0,
+      counterBonusDamage: 1.0,
+      hitstunTimer: 0,
+      staggerTimer: 0,
+      tripTimer: 0,
+      bladeDanceState: null,
+      bladeDanceHitCount: 0,
+      bladeDanceLinkerCount: 0,
+      bladeDanceInputWindow: 0,
+      bladeDanceCanRepeatLinker: false,
+      bladeDanceCooldown: 0,
+      dodgeTimer: 0
     };
 
     spawnCratesSquareWave(this, 2500, 4);
@@ -86,12 +107,16 @@ export class GameController {
     this.keyboardKeys[key] = true;
 
     if (!wasPressed) {
-      let btn = 0;
-      if (['Digit1', '1', 'KeyJ'].includes(code)) btn = 1;
-      if (['Digit2', '2', 'KeyK'].includes(code)) btn = 2;
-      
-      if (btn > 0) {
-        this.player.attackBuffer = { btn, time: 0.2 };
+      // Attack button (J/1)
+      if (['Digit1', '1', 'KeyJ'].includes(code)) {
+        this.player.attackBuffer = { btn: 1, time: 0.2 };
+      }
+      // Block button (K/2) - now block instead of heavy attack
+      if (['Digit2', '2', 'KeyK'].includes(code)) {
+        if (this.player.state !== 'attack' && this.player.state !== 'dead') {
+          this.player.isBlocking = true;
+          this.player.blockStartTime = performance.now() / 1000;
+        }
       }
     }
   }
@@ -99,6 +124,12 @@ export class GameController {
   handleKeyUp(code, key) {
     this.keyboardKeys[code] = false;
     this.keyboardKeys[key] = false;
+    
+    // Release block
+    if (['Digit2', '2', 'KeyK'].includes(code)) {
+      this.player.isBlocking = false;
+      this.player.blockStartTime = 0;
+    }
   }
 
   pollGamepad() {
@@ -116,21 +147,28 @@ export class GameController {
       if (b[14]?.pressed || axes[0] < -0.5) this.gamepadKeys['KeyA'] = true;
       if (b[15]?.pressed || axes[0] > 0.5)  this.gamepadKeys['KeyD'] = true;
 
-      // Attack Buttons: A (0) or Y (3) -> Attack 1 (KeyJ)
-      const atk1Pressed = b[0]?.pressed || b[3]?.pressed;
-      const atk1WasPressed = this.prevGamepadButtons[0] || this.prevGamepadButtons[3];
-      if (atk1Pressed && !atk1WasPressed) {
+      // Attack Button: A (0) or Y (3) -> Attack (KeyJ)
+      const atkPressed = b[0]?.pressed || b[3]?.pressed;
+      const atkWasPressed = this.prevGamepadButtons[0] || this.prevGamepadButtons[3];
+      if (atkPressed && !atkWasPressed) {
         this.player.attackBuffer = { btn: 1, time: 0.2 };
       }
-      if (atk1Pressed) this.gamepadKeys['KeyJ'] = true;
+      if (atkPressed) this.gamepadKeys['KeyJ'] = true;
 
-      // Attack Buttons: B (1) or X (2) -> Attack 2 (KeyK)
-      const atk2Pressed = b[1]?.pressed || b[2]?.pressed;
-      const atk2WasPressed = this.prevGamepadButtons[1] || this.prevGamepadButtons[2];
-      if (atk2Pressed && !atk2WasPressed) {
-        this.player.attackBuffer = { btn: 2, time: 0.2 };
+      // Block Button: B (1) or X (2) -> Block (KeyK)
+      const blockPressed = b[1]?.pressed || b[2]?.pressed;
+      const blockWasPressed = this.prevGamepadButtons[1] || this.prevGamepadButtons[2];
+      if (blockPressed && !blockWasPressed) {
+        if (this.player.state !== 'attack' && this.player.state !== 'dead') {
+          this.player.isBlocking = true;
+          this.player.blockStartTime = performance.now() / 1000;
+        }
       }
-      if (atk2Pressed) this.gamepadKeys['KeyK'] = true;
+      if (!blockPressed && blockWasPressed) {
+        this.player.isBlocking = false;
+        this.player.blockStartTime = 0;
+      }
+      if (blockPressed) this.gamepadKeys['KeyK'] = true;
 
       // Store current button states for next frame transition checks
       for (let i = 0; i < 16; i++) {

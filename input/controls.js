@@ -1,36 +1,54 @@
 export function determineAttack(controller) {
   const p = controller.player;
   
-  const btn1 = controller.keys['Digit1'] || controller.keys['1'] || controller.keys['KeyJ']; // Light
-  const btn2 = controller.keys['Digit2'] || controller.keys['2'] || controller.keys['KeyK']; // Heavy
+  const btn1 = controller.keys['Digit1'] || controller.keys['1'] || controller.keys['KeyJ'];
   
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   const up = controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space'];
   const left = controller.keys['KeyA'] || controller.keys['ArrowLeft'];
   const right = controller.keys['KeyD'] || controller.keys['ArrowRight'];
-  const forwardKey = left || right;
+  const forward = (p.facing === 'right' && right) || (p.facing === 'left' && left);
+  
+  if (!btn1) return null;
+  
+  // Determine direction
+  let direction = 'neutral';
+  if (up) direction = 'up';
+  else if (down) direction = 'down';
+  else if (forward) direction = 'forward';
+  
+  // Check for Blade Dance initiation (forward attack while grounded)
+  if (direction === 'forward' && p.isGrounded && !p.bladeDanceState) {
+    if (controller.bladeDance && controller.bladeDance.canInitiate(p)) {
+      return 'dance_starter';
+    }
+  }
+  
+  // Aerial attacks
+  if (!p.isGrounded) {
+    if (direction === 'up') return 'air_up';
+    if (direction === 'down') return 'air_down';
+    if (direction === 'forward') return 'air_forward';
+    return 'air_neutral';
+  }
+  
+  // Grounded attacks
+  if (direction === 'up') return 'up';
+  if (direction === 'down') return 'down';
+  if (direction === 'forward') return 'forward';
+  return 'neutral';
+}
 
-  if (btn2) {
-    if (!p.isGrounded) {
-      if (down) return 'down_thrust';
-      return 'heavy_slash';
-    } else {
-      if (down) return 'sweep';
-      if (up) return 'rising_slash';
-      return 'heavy_slash';
-    }
-  }
+export function getDirectionInput(controller) {
+  const p = controller.player;
+  const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
+  const up = controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space'];
+  const left = controller.keys['KeyA'] || controller.keys['ArrowLeft'];
+  const right = controller.keys['KeyD'] || controller.keys['ArrowRight'];
+  const forward = (p.facing === 'right' && right) || (p.facing === 'left' && left);
   
-  if (btn1) {
-    if (!p.isGrounded) {
-      if (up) return 'up_slash';
-      return 'slash';
-    } else {
-      if (up) return 'up_slash';
-      if (forwardKey && !down) return 'thrust';
-      return 'slash';
-    }
-  }
-  
-  return null;
+  if (up) return 'up';
+  if (down) return 'down';
+  if (forward) return 'forward';
+  return 'neutral';
 }

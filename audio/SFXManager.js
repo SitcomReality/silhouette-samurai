@@ -251,6 +251,60 @@ export class SFXManager {
     osc.stop(this.ctx.currentTime + 0.5);
   }
 
+  playParry() {
+    if (!this.loaded) return;
+    
+    // Sharp metallic clang
+    const osc1 = this.ctx.createOscillator();
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(1200, this.ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.1);
+    
+    const osc2 = this.ctx.createOscillator();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(800, this.ctx.currentTime);
+    
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+    
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.masterGain);
+    
+    osc1.start();
+    osc2.start();
+    osc1.stop(this.ctx.currentTime + 0.15);
+    osc2.stop(this.ctx.currentTime + 0.15);
+  }
+
+  playClash() {
+    if (!this.loaded) return;
+    
+    // Sharp impact with reverb
+    const noise = this.ctx.createBufferSource();
+    const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.02));
+    }
+    noise.buffer = buffer;
+    
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 2000;
+    filter.Q.value = 3;
+    
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0.35;
+    
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+    
+    noise.start();
+  }
+
   // Helper to create impact sounds
   playImpact(frequency, duration, when, volume = 0.5) {
     const osc = this.ctx.createOscillator();

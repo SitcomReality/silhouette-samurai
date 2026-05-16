@@ -1,10 +1,10 @@
 import { animateCharacter } from '../character/animator.js';
 import { resolveAttackHits } from '../combat/attacks/resolve.js';
 import { textSDFManager } from '../sdf/text-sdf.js';
-import { ATTACK_CONFIG } from '../combat/attacks/config.js';
+import { ATTACK_FRAME_DATA } from '../combat/frame-data.js';
 import { spawnCratesSquareWave, spawnEnemy, spawnBoss } from './spawner.js';
 import { triggerAttack } from '../combat/attacks/trigger.js';
-import { determineAttack } from '../input/controls.js';
+import { determineAttack, getDirectionInput } from '../input/controls.js';
 
 export function updateEngine(controller, dt) {
   if (controller.hitstop > 0) {
@@ -28,6 +28,19 @@ export function updateEngine(controller, dt) {
 
   const p = controller.player;
   p.stateTime += dt;
+  
+  // Update timers
+  if (p.hitstunTimer > 0) p.hitstunTimer -= dt;
+  if (p.staggerTimer > 0) p.staggerTimer -= dt;
+  if (p.tripTimer > 0) p.tripTimer -= dt;
+  if (p.counterWindow > 0) p.counterWindow -= dt;
+  if (p.bladeDanceCooldown > 0) p.bladeDanceCooldown -= dt;
+  if (p.dodgeTimer > 0) p.dodgeTimer -= dt;
+  
+  // Update Blade Dance input window
+  if (p.bladeDanceState) {
+    controller.bladeDance.updateInputWindow(p, dt);
+  }
 
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   
@@ -95,7 +108,36 @@ export function updateEngine(controller, dt) {
     }
   }
 
-  if (p.state !== 'attack' && p.state !== 'dead') {
+  // Handle blocking state
+  if (p.isBlocking && p.state !== 'attack' && p.state !== 'dead') {
+    p.state = 'block';
+    p.vx *= 0.85; // Slow movement while blocking
+  }
+  
+  // Handle dodge state
+  if (p.state === 'dodge') {
+    if (p.dodgeTimer <= 0) {
+      p.state = 'idle';
+    } else {
+      p.vx *= 0.92;
+      return; // Skip normal movement during dodge
+    }
+  }
+  
+  // Handle stagger
+  if (p.staggerTimer > 0) {
+    p.state = 'stagger';
+    p.vx *= 0.85;
+    return;
+  }
+  
+  // Handle trip
+  if (p.tripTimer > 0) {
+    p.state = 'trip';
+    return;
+  }
+  
+  if (p.state !== 'attack' && p.state !== 'dead' && p.state !== 'block') {
     let isMoving = false;
     // Reduced horizontal control in air
     const accel = (p.isGrounded ? 45 : 12) * dt;
@@ -188,93 +230,92 @@ export function updateEngine(controller, dt) {
       p.state = isMoving && Math.abs(p.vx) > 1 ? 'run' : 'idle';
     }
   } else if (p.state === 'attack') {
-    // Handle down_thrust anticipation freeze
-    if (p.downThrustAnticipation !== undefined && p.downThrustAnticipation > 0) {
-      p.downThrustAnticipation -= dt;
-      if (p.downThrustAnticipation <= 0) {
-        p.vy = 20; // Apply the downward spike after anticipation
-        p.downThrustAnticipation = undefined;
-      }
+    // Frame-based attack progression
+    p.attackFrameTime += dt;
+    const currentFrame = Math.floor(p.attackFrameTime * 60);
+    const frameData = p.attackFrameData;
+    
+    if (!frameData) {
+      p.state = 'idle';
+      p.attackType = 'none';
+      return;
     }
     
-    p.attackTimer -= dt;
-    
-    if (p.attackType === 'slash' || p.attackType === 'sweep') {
-      let friction = 0.90;
-      if (!p.isGrounded) friction = 0.98;
-      else if (p.attackType === 'sweep') friction = 0.995; // Extremely low drag for sweep/slide
-      p.vx *= friction;
+    // Check if attack is complete
+    if (currentFrame >= frameData.totalFrames) {
+      // Attack complete
+      p.state = 'idle';
+      p.attackType = 'none';
+      p.attackFrameTime = 0;
+      p.attackFrameData = null;
+      p.attackHitEntities.clear();
       
-      // Allow slight steering during light slash
-      const accel = 15 * dt;
-      if (p.attackType === 'slash') {
-        if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) p.vx -= accel;
-        if (controller.keys['KeyD'] || controller.keys['ArrowRight']) p.vx += accel;
+      // End blade dance chain if no input
+      if (p.bladeDanceState && !controller.bladeDance.canAdvanceChain(p)) {
+        controller.bladeDance.endChain(p);
       }
+      return;
+    }
+    
+    // Open input window for blade dance during recovery
+    if (p.bladeDanceState && frameData.isInRecovery(currentFrame)) {
+      const recoveryProgress = (currentFrame - (frameData.startup + frameData.active)) / frameData.recovery;
       
-      if (p.jumpBuffer > 0 && !down && p.isGrounded) {
-        p.vy = -14;
-        p.isGrounded = false;
-        p.jumpBuffer = 0;
-      } else if (p.jumpBuffer > 0 && !down && !p.isGrounded && !p.doubleJumped && jumpJustPressed && p.aerialPower >= 20) {
-        const jumpPower = 0.5 + (p.aerialPower / 100) * 0.5;
-        p.vy = -12 * jumpPower;
-        p.aerialPower -= 20;
-        p.doubleJumped = true;
-        p.jumpBuffer = 0;
-      }
-    } else {
-      if (p.isGrounded) p.vx *= 0.96;
-      else p.vx *= 0.98;
-    }
-    
-    // Handle exponential launch trajectory for uppercut
-    if (p.exponentialLaunch && p.attackTimer > 0) {
-      const config = ATTACK_CONFIG[p.attackType];
-      const progress = 1 - p.attackTimer / config.duration;
-      const verticalBoost = Math.pow(progress, 3) * -50;
-      p.vy += verticalBoost * dt;
-    }
-    
-    resolveAttackHits(controller);
-    
-    if (p.attackTimer <= 0) {
-      p.exponentialLaunch = false;
-      if (p.endlagTimer > 0) {
-        p.endlagTimer -= dt;
-        p.vx *= 0.85;
-      } else {
-        const config = ATTACK_CONFIG[p.attackType];
-        if (!p.attackHitConfirmed && config.resetComboOnMiss) {
-          p.combo = Math.max(0, p.combo - 1);
+      // Open window at start of recovery
+      if (recoveryProgress < 0.7 && p.bladeDanceInputWindow === 0) {
+        if (p.bladeDanceState === 'linker' && p.bladeDanceCanRepeatLinker) {
+          p.bladeDanceInputWindow = controller.bladeDance.repeatWindow;
+        } else {
+          p.bladeDanceInputWindow = controller.bladeDance.inputWindow;
         }
-        p.state = 'idle';
-        p.attackType = 'none';
-        p.isSliding = false;
       }
     }
+    
+    // Apply friction during attack
+    const friction = p.isGrounded ? 0.93 : 0.97;
+    p.vx *= friction;
+    
+    // Resolve hits during active frames
+    resolveAttackHits(controller);
   }
 
+  // Handle attack input buffer
   if (p.attackBuffer && p.attackBuffer.time > 0) {
     p.attackBuffer.time -= dt;
     
     const oldJ = controller.keys['KeyJ'];
-    const oldK = controller.keys['KeyK'];
-    if (p.attackBuffer.btn === 1) controller.keys['KeyJ'] = true;
-    if (p.attackBuffer.btn === 2) controller.keys['KeyK'] = true;
+    controller.keys['KeyJ'] = true;
     const bufferedType = determineAttack(controller);
     controller.keys['KeyJ'] = oldJ;
-    controller.keys['KeyK'] = oldK;
 
     let canAttack = false;
-    if (p.state !== 'attack' && p.state !== 'dead') {
+    
+    // Check if we can attack from current state
+    if (p.state !== 'attack' && p.state !== 'dead' && p.state !== 'block' && p.state !== 'stagger') {
       canAttack = true;
-    } else if (p.state === 'attack') {
-      const currentConfig = ATTACK_CONFIG[p.attackType];
-      const isSlashCancel = p.attackType === 'slash' && p.attackTimer < currentConfig.duration * 0.6 && bufferedType === 'slash';
-      const isEndlagCancel = p.attackTimer <= 0 && p.endlagTimer > 0;
-      const isHitCancel = p.attackHitConfirmed && p.attackTimer < currentConfig.duration * 0.6;
-      if (isSlashCancel || isEndlagCancel || isHitCancel) canAttack = true;
+    } else if (p.state === 'attack' && p.attackFrameData) {
+      const currentFrame = Math.floor(p.attackFrameTime * 60);
+      
+      // Can attack if recovery is complete
+      if (p.attackFrameData.canCancel(currentFrame)) {
+        canAttack = true;
+      }
+      
+      // Blade Dance chain advancement
+      if (p.bladeDanceState && controller.bladeDance.canAdvanceChain(p)) {
+        const direction = getDirectionInput(controller);
+        const nextAttack = controller.bladeDance.advanceChain(p, direction);
+        if (nextAttack) {
+          triggerAttack(controller, nextAttack);
+          p.attackBuffer = null;
+          return;
+        }
+      }
+      
+      // Counter attack after successful parry
+      if (p.canCounter && p.counterWindow > 0) {
+        canAttack = true;
+      }
     }
     
     if (canAttack && bufferedType) {
@@ -395,6 +436,21 @@ export function updateEngine(controller, dt) {
     }
   }
 
+  // Check for clashes between attacking entities
+  const attackers = [];
+  if (p.state === 'attack' && p.attackFrameData) attackers.push(p);
+  for (const ent of controller.entities) {
+    if (ent.state === 'attack' && ent.attackFrameData) attackers.push(ent);
+  }
+  
+  for (let i = 0; i < attackers.length; i++) {
+    for (let j = i + 1; j < attackers.length; j++) {
+      if (controller.parry.checkClash(attackers[i], attackers[j], controller)) {
+        controller.parry.applyClash(attackers[i], attackers[j], controller);
+      }
+    }
+  }
+  
   // Character-to-character simple collision
   const chars = [p];
   for (const ent of controller.entities) {
@@ -440,14 +496,21 @@ export function updateEngine(controller, dt) {
   }
 
   // Animate player and entities after physics and collision
-  const progress = p.state === 'attack' && p.attackTimer > 0 
-    ? 1 - p.attackTimer / ATTACK_CONFIG[p.attackType].duration 
+  const progress = p.state === 'attack' && p.attackFrameData
+    ? p.attackFrameTime / p.attackFrameData.getDuration()
     : 0;
-  // Pass player scale into animator so the player draws ~50% larger
   animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0);
 
   for (const ent of controller.entities) {
     if (ent.state !== 'dead' && ent.type !== 'crate' && ent.character) {
+      // Update hitstun
+      if (ent.hitstunTimer > 0) {
+        ent.hitstunTimer -= dt;
+        if (ent.hitstunTimer <= 0 && ent.state === 'hit') {
+          ent.state = 'idle';
+        }
+      }
+      
       const scale = ent.scale || 1.0;
       animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt, false, scale);
     }

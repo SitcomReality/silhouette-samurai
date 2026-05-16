@@ -1,208 +1,94 @@
-import { ATTACK_CONFIG } from './config.js';
+import { ATTACK_FRAME_DATA } from '../frame-data.js';
 
 export function triggerAttack(controller, attackType) {
   const p = controller.player;
-  if (p.state === 'dead') return;
+  if (p.state === 'dead' || p.state === 'stagger') return;
   
-  const config = ATTACK_CONFIG[attackType];
-  if (!config) return;
-
-
+  const frameData = ATTACK_FRAME_DATA[attackType];
+  if (!frameData) return;
   
+  // Check ground requirement
+  if (frameData.groundOnly && !p.isGrounded) return;
+  
+  // Initialize attack state
   p.state = 'attack';
   p.stateTime = 0;
   p.attackType = attackType;
-  p.attackTimer = config.duration;
-  p.endlagTimer = config.endlag;
+  p.attackFrameData = frameData;
+  p.attackFrameTime = 0;
   p.attackHitConfirmed = false;
+  p.attackHitEntities = new Set(); // Track which entities we've hit
   
+  // Apply movement on startup
   const dir = p.facing === 'right' ? 1 : -1;
-  const left = controller.keys['KeyA'] || controller.keys['ArrowLeft'];
-  const right = controller.keys['KeyD'] || controller.keys['ArrowRight'];
-  const horizontalHeld = left || right;
-  
-  if (attackType === 'slash') {
-    // slash doesn't override current inertia heavily
-  } else if (attackType === 'rising_slash') {
-    const powerCost = p.isGrounded ? 10 : 25;
-    if (!p.isGrounded && p.aerialPower < powerCost) return;
-    
-    if (!p.isGrounded) p.aerialPower -= powerCost;
-    
-    const powerScale = p.isGrounded ? 1.0 : 0.5 + (p.aerialPower / 100) * 0.5;
-    p.vx = horizontalHeld ? dir * config.vx * powerScale : 0;
-    p.vy = config.vy * powerScale;
-    p.exponentialLaunch = true;
-    p.isGrounded = false;
-  } else if (attackType === 'sweep') {
-    const minSlideSpeed = 8;
-    const currentSpeed = Math.abs(p.vx);
-    
-    if (currentSpeed < minSlideSpeed) {
-      const powerBoost = (p.slidePower / 100) * config.vx;
-      p.vx = dir * Math.max(minSlideSpeed, powerBoost);
-      p.slidePower = Math.max(0, p.slidePower - 30);
-    } else {
-      const sign = Math.sign(p.vx);
-      p.vx = sign * Math.max(currentSpeed, minSlideSpeed);
-    }
-    p.isSliding = true;
-    
-    if (controller.audioEngine) {
-      controller.audioEngine.onSlide();
-    }
-  } else if (attackType === 'down_thrust') {
-    // Freeze for anticipation, then spike down
-    p.vx = 0;
-    p.vy = 0; // Freeze initially
-    p.isGrounded = false;
-    p.downThrustAnticipation = 0.15; // Will apply downward velocity after this delay
-  } else {
-    if (attackType === 'up_slash') {
-      const powerCost = 20;
-      if (p.aerialPower < powerCost) return;
-      
-      p.aerialPower -= powerCost;
-      const powerScale = 0.6 + (p.aerialPower / 100) * 0.4;
-      p.vx = horizontalHeld ? dir * config.vx * powerScale : 0;
-    } else {
-      p.vx = dir * config.vx;
-    }
-    p.vy = config.vy;
-    if (config.vy !== 0) {
+  if (frameData.movement) {
+    p.vx = dir * frameData.movement.vx;
+    p.vy = frameData.movement.vy;
+    if (frameData.movement.vy !== 0) {
       p.isGrounded = false;
     }
   }
   
-  // Create attack-specific visual effects
-  if (attackType === 'rising_slash') {
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'arc_swoosh',
-      entity: p,
-      offsetX: 0,
-      offsetY: -30,
-      x: p.x,
-      y: p.y - 30,
-      facing: p.facing,
-      startAngle: Math.PI * 0.7,
-      endAngle: -Math.PI * 0.3,
-      radius: 70,
-      thickness: 45,
-      life: 0,
-      maxLife: 0.3
-    });
-  } else if (attackType === 'down_thrust') {
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'streak',
-      entity: p,
-      offsetX: 0,
-      offsetY: -20,
-      x: p.x,
-      y: p.y - 20,
-      facing: p.facing,
-      angle: Math.PI / 2, // Straight down
-      length: 150,
-      width: 35,
-      life: 0,
-      maxLife: 0.25
-    });
-  } else if (attackType === 'up_slash') {
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'arc_swoosh',
-      entity: p,
-      offsetX: 0,
-      offsetY: -30,
-      x: p.x,
-      y: p.y - 30,
-      facing: p.facing,
-      startAngle: -Math.PI * 0.1,
-      endAngle: -Math.PI * 0.9,
-      radius: 65,
-      thickness: 35,
-      life: 0,
-      maxLife: 0.28
-    });
-  } else if (attackType === 'heavy_slash') {
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'arc_swoosh',
-      entity: p,
-      offsetX: 0,
-      offsetY: -35,
-      x: p.x,
-      y: p.y - 35,
-      facing: p.facing,
-      startAngle: Math.PI * 0.9,
-      endAngle: -Math.PI * 0.1,
-      radius: 90,
-      thickness: 60,
-      squashY: 0.3,
-      life: 0,
-      maxLife: 0.4
-    });
-  } else if (attackType === 'sweep') {
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'arc_swoosh',
-      entity: p,
-      offsetX: 0,
-      offsetY: -15,
-      x: p.x,
-      y: p.y - 15,
-      facing: p.facing,
-      startAngle: Math.PI * 0.8,
-      endAngle: -Math.PI * 0.1,
-      radius: 80,
-      thickness: 30,
-      squashY: 0.4,
-      life: 0,
-      maxLife: 0.35
-    });
-  } else if (attackType === 'slash') {
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'arc_swoosh',
-      entity: p,
-      offsetX: 0,
-      offsetY: -35,
-      x: p.x,
-      y: p.y - 35,
-      facing: p.facing,
-      // Use a compact heavy-style arc: more horizontal flash, slightly squashed,
-      // but scaled down in radius and thickness so it reads like a light swipe.
-      startAngle: Math.PI * 0.9,
-      endAngle: -Math.PI * 0.1,
-      radius: 62,
-      thickness: 30,
-      squashY: 0.28,
-      life: 0,
-      maxLife: 0.22
-    });
-  } else if (attackType === 'thrust') {
-    // Place the swoosh where the thrust completes (slightly forward and higher)
-    const offX = (p.facing === 'right' ? 1 : -1) * 48;
-    controller.visualFx.push({
-      id: `fx_${controller.fxId++}`,
-      type: 'arc_swoosh',
-      entity: p,
-      offsetX: offX,
-      offsetY: -40,
-      x: p.x + offX,
-      y: p.y - 40,
-      facing: p.facing,
-      startAngle: Math.PI * 0.4,
-      endAngle: -Math.PI * 0.15,
-      radius: 75,
-      thickness: 25,
-      life: 0,
-      maxLife: 0.25
-    });
+  // Blade Dance specific logic
+  if (attackType === 'dance_starter') {
+    controller.bladeDance.initiate(p);
   }
+  
+  // Create attack-specific visual effects (simplified for now)
+  createAttackSwoosh(controller, p, attackType);
   
   if (controller.audioEngine) {
     controller.audioEngine.onAttackSwoosh(attackType);
   }
+}
+
+function createAttackSwoosh(controller, p, attackType) {
+  const swooshes = {
+    neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 62, thickness: 30, squashY: 0.28, maxLife: 0.22 },
+    forward: { type: 'arc_swoosh', offsetX: 48, offsetY: -40, startAngle: Math.PI * 0.4, endAngle: -Math.PI * 0.15, radius: 75, thickness: 25, maxLife: 0.25 },
+    up: { type: 'arc_swoosh', offsetX: 0, offsetY: -30, startAngle: -Math.PI * 0.1, endAngle: -Math.PI * 0.9, radius: 65, thickness: 35, maxLife: 0.28 },
+    down: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: Math.PI * 0.8, endAngle: -Math.PI * 0.1, radius: 80, thickness: 30, squashY: 0.4, maxLife: 0.35 },
+    air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 58, thickness: 28, squashY: 0.28, maxLife: 0.22 },
+    air_forward: { type: 'arc_swoosh', offsetX: 40, offsetY: -35, startAngle: Math.PI * 0.5, endAngle: -Math.PI * 0.2, radius: 70, thickness: 30, maxLife: 0.3 },
+    air_up: { type: 'arc_swoosh', offsetX: 0, offsetY: -40, startAngle: -Math.PI * 0.2, endAngle: -Math.PI * 0.95, radius: 60, thickness: 32, maxLife: 0.3 },
+    air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: Math.PI / 2, length: 150, width: 35, maxLife: 0.25 },
+    dance_starter: { type: 'arc_swoosh', offsetX: 48, offsetY: -38, startAngle: Math.PI * 0.4, endAngle: -Math.PI * 0.15, radius: 75, thickness: 28, maxLife: 0.25 },
+    dance_linker_neutral: { type: 'arc_swoosh', offsetX: 35, offsetY: -38, startAngle: Math.PI * 0.5, endAngle: -Math.PI * 0.1, radius: 65, thickness: 25, maxLife: 0.22 },
+    dance_linker_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -45, startAngle: -Math.PI * 0.15, endAngle: -Math.PI * 0.85, radius: 60, thickness: 28, maxLife: 0.24 },
+    dance_linker_down: { type: 'arc_swoosh', offsetX: 35, offsetY: -15, startAngle: Math.PI * 0.75, endAngle: -Math.PI * 0.15, radius: 70, thickness: 26, squashY: 0.4, maxLife: 0.26 },
+    dance_finisher_neutral: { type: 'arc_swoosh', offsetX: 42, offsetY: -40, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 90, thickness: 60, squashY: 0.3, maxLife: 0.4 },
+    dance_finisher_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -60, startAngle: -Math.PI * 0.1, endAngle: -Math.PI * 1.0, radius: 85, thickness: 50, maxLife: 0.38 },
+    dance_finisher_down: { type: 'streak', offsetX: 0, offsetY: -30, angle: Math.PI / 2, length: 180, width: 45, maxLife: 0.35 }
+  };
+  
+  const config = swooshes[attackType];
+  if (!config) return;
+  
+  const dir = p.facing === 'right' ? 1 : -1;
+  const fx = {
+    id: `fx_${controller.fxId++}`,
+    type: config.type,
+    entity: p,
+    offsetX: dir * config.offsetX,
+    offsetY: config.offsetY,
+    x: p.x + dir * config.offsetX,
+    y: p.y + config.offsetY,
+    facing: p.facing,
+    life: 0,
+    maxLife: config.maxLife
+  };
+  
+  if (config.type === 'arc_swoosh') {
+    fx.startAngle = config.startAngle;
+    fx.endAngle = config.endAngle;
+    fx.radius = config.radius;
+    fx.thickness = config.thickness;
+    fx.squashY = config.squashY || 1.0;
+  } else if (config.type === 'streak') {
+    fx.angle = config.angle;
+    fx.length = config.length;
+    fx.width = config.width;
+  }
+  
+  controller.visualFx.push(fx);
 }

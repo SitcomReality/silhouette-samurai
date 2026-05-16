@@ -71,7 +71,42 @@ export class UIOverlay {
     
     const btnAtk2 = document.getElementById('btn-atk-2');
     if (btnAtk2) {
-      btnAtk2.addEventListener('click', () => handleSimulatedKeyPress('KeyK'));
+      // Block button - hold/release simulation
+      let blockHeld = false;
+      btnAtk2.addEventListener('mousedown', () => {
+        if (!blockHeld) {
+          this.controller.handleKeyDown('KeyK', 'K');
+          blockHeld = true;
+        }
+      });
+      btnAtk2.addEventListener('mouseup', () => {
+        if (blockHeld) {
+          this.controller.handleKeyUp('KeyK', 'K');
+          blockHeld = false;
+        }
+      });
+      btnAtk2.addEventListener('mouseleave', () => {
+        if (blockHeld) {
+          this.controller.handleKeyUp('KeyK', 'K');
+          blockHeld = false;
+        }
+      });
+      
+      // Touch events
+      btnAtk2.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!blockHeld) {
+          this.controller.handleKeyDown('KeyK', 'K');
+          blockHeld = true;
+        }
+      });
+      btnAtk2.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (blockHeld) {
+          this.controller.handleKeyUp('KeyK', 'K');
+          blockHeld = false;
+        }
+      });
     }
   }
   

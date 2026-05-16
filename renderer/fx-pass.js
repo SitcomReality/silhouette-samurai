@@ -1,6 +1,47 @@
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
   for (const fx of controller.visualFx) {
-    if (fx.type === 'streak') {
+    if (fx.type === 'parry_flash') {
+      const scX = (fx.x - controller.cameraX) + viewWidth / 2;
+      const scY = fx.y + camYOffset;
+      const p = fx.life / fx.maxLife;
+      const alpha = 1 - p;
+      const size = 40 + p * 20;
+      
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 30;
+      
+      ctx.beginPath();
+      ctx.arc(scX, scY, size, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+    } else if (fx.type === 'clash_spark') {
+      const scX = (fx.x - controller.cameraX) + viewWidth / 2;
+      const scY = fx.y + camYOffset;
+      const p = fx.life / fx.maxLife;
+      const alpha = 1 - p;
+      
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#ffff00';
+      ctx.shadowBlur = 20;
+      
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const len = 30 + p * 20;
+        ctx.beginPath();
+        ctx.moveTo(scX, scY);
+        ctx.lineTo(scX + Math.cos(angle) * len, scY + Math.sin(angle) * len);
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    } else if (fx.type === 'streak') {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
       const scY = fx.y + camYOffset;
       const p = fx.life / fx.maxLife;
