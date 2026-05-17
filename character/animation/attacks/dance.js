@@ -1,4 +1,4 @@
-import { ATTACK_FRAME_DATA } from '../../combat/frame-data.js';
+import { ATTACK_FRAME_DATA } from '../../../combat/frame-data.js';
 import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
 
 export function applyBladeDancePose(t, dir, attackType, attackProgress) {
