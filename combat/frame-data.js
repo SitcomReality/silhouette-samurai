@@ -49,14 +49,14 @@ export const ATTACK_FRAME_DATA = {
   }),
 
   forward: new AttackFrameData('forward', {
-    startup: 4,      // slightly quicker windup
-    active: 6,       // a focused, slightly longer active window to land the punch
-    recovery: 10,
-    damage: 16,      // punchier damage
-    knockback: { x: 8, y: -2 },
-    hitstun: 0.32,
-    movement: { vx: 24, vy: 0 }, // stronger forward lunge to sell momentum
-    range: { width: 85, height: 44, offsetX: 50, offsetY: -38 } // extended reach to match longer-tipped visuals
+    startup: 6,
+    active: 4,
+    recovery: 12,
+    damage: 16,
+    knockback: { x: 9, y: -2 },
+    hitstun: 0.35,
+    movement: { vx: 26, vy: 0 },
+    range: { width: 95, height: 40, offsetX: 55, offsetY: -35 }
   }),
 
   up: new AttackFrameData('up', {
@@ -137,25 +137,25 @@ export const ATTACK_FRAME_DATA = {
 
   // Blade Dance chain attacks - Snappier starts, rhythmic recoveries
   dance_starter: new AttackFrameData('dance_starter', {
-    startup: 5,
-    active: 6,
+    startup: 4,
+    active: 5,
     recovery: 20,
-    damage: 15,
-    knockback: { x: 6, y: -1 },
-    hitstun: 0.4,
-    movement: { vx: 25, vy: 0 },
-    range: { width: 80, height: 40, offsetX: 45, offsetY: -38 }
+    damage: 18,
+    knockback: { x: 8, y: -1 },
+    hitstun: 0.45,
+    movement: { vx: 30, vy: 0 },
+    range: { width: 95, height: 45, offsetX: 50, offsetY: -38 }
   }),
 
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {
-    startup: 8,
+    startup: 6,
     active: 4,
     recovery: 24,
-    damage: 10,
-    knockback: { x: 4, y: -1 },
-    hitstun: 0.3,
-    movement: { vx: 12, vy: 0 },
-    range: { width: 65, height: 35, offsetX: 35, offsetY: -38 }
+    damage: 12,
+    knockback: { x: 6, y: -2 },
+    hitstun: 0.35,
+    movement: { vx: 18, vy: 0 },
+    range: { width: 85, height: 40, offsetX: 40, offsetY: -38 }
   }),
 
   dance_linker_up: new AttackFrameData('dance_linker_up', {

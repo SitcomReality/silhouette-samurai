@@ -2,46 +2,38 @@ import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
 
 export function applyBladeDancePose(t, dir, attackType, attackProgress) {
   if (attackType === 'dance_starter') {
-    const easedProgress = easeOutCubic(attackProgress);
-    const startAngle = Math.PI * 0.45; // Wider start for more drama
-    const currentAngle = startAngle - (easedProgress * (startAngle + 0.1));
-    const swordLen = 82;
-    t.swordAX = dir * 8; t.swordAY = -35;
+    const easedProgress = Math.pow(attackProgress, 0.4);
+    const startAngle = Math.PI * 0.6; // High windup
+    const endAngle = -Math.PI * 0.2;
+    const currentAngle = startAngle + easedProgress * (endAngle - startAngle);
+    const swordLen = 90;
+    
+    t.swordAX = dir * -5; t.swordAY = -40;
     t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
-    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen - easedProgress * 10;
-    t.swordThickness = 3 + (1 - easedProgress) * 2.5;
-    t.bodyTopX = dir * (22 * easedProgress + 10 * (easedProgress * easedProgress));
-    t.headX = dir * 28 * easedProgress;
-    t.bodyBotX = -dir * 12 * easedProgress;
+    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
+    t.swordThickness = 4;
+    
+    t.bodyTopX = dir * 15 * easedProgress;
+    t.headX = dir * 20 * easedProgress;
+    t.bodyBotX = -dir * 8 * easedProgress;
     return true;
   }
   
   if (attackType === 'dance_linker_neutral') {
-    // Make linker feel like a deliberate snap rather than a tiny poke:
-    // quick, high-contrast motion: short coil then a sharp forward thrust that visibly extends the blade tip.
-    const wind = Math.min(attackProgress / 0.28, 1.0);
-    const snap = attackProgress < 0.28 ? 0 : (attackProgress - 0.28) / 0.72;
-    const windEase = easeInCubic(wind);
-    const snapEase = easeOutCubic(snap);
+    // Swift circular flurry instead of a poke
+    const snap = Math.pow(attackProgress, 0.35);
+    const startAngle = Math.PI * 0.5;
+    const currentAngle = startAngle - (snap * Math.PI * 0.9);
+    const swordLen = 85; 
 
-    const swordLen = 84; // slightly longer for visible tip travel
-    const baseAX = dir * 8;
-    const baseAY = -38;
-
-    // Sword base lifts during windup and then jerks forward on snap
-    t.swordAX = baseAX + dir * (-3 * windEase);
-    t.swordAY = baseAY - windEase * 6;
-    t.swordBX = t.swordAX + dir * (Math.max(0.2, snapEase) * swordLen);
-    t.swordBY = t.swordAY + snapEase * 16 - windEase * 6;
-
-    // Thicken blade sharply at impact
-    t.swordThickness = 2.0 + snapEase * 4.0;
-
-    // Torso/neck movement kept compact: small coil, then short recoil on snap to sell weight transfer
-    t.bodyTopX = dir * (6 * windEase + 12 * snapEase);
-    t.headX = dir * (8 * windEase + 14 * snapEase);
-    t.bodyBotX = -dir * (6 * windEase + 2 * snapEase);
-
+    t.swordAX = dir * 5; t.swordAY = -35;
+    t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
+    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
+    
+    t.bodyTopX = dir * 12 * snap;
+    t.headX = dir * 18 * snap;
+    t.bodyBotX = -dir * 8 * snap;
+    t.swordThickness = 3.5;
     return true;
   }
   

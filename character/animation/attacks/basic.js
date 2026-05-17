@@ -2,51 +2,46 @@ import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
 
 export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
   if (attackType === 'neutral' || attackType === 'air_neutral' || attackType === 'slash') {
-    const extend = Math.sin(attackProgress * Math.PI);
-    const swordLen = 65;
-    t.swordAX = dir * 5; t.swordAY = -35;
-    t.swordBX = t.swordAX + dir * extend * swordLen;
-    t.swordBY = -35 + extend * 8;
-    t.swordThickness = 2 + extend * 1.5;
-    t.bodyTopX = dir * extend * 10;
-    t.headX = dir * extend * 12;
+    // Quick diagonal slash
+    const snap = Math.pow(attackProgress, 0.4); // fast snap
+    const arcAngle = (Math.PI * 0.4) - (snap * Math.PI * 0.8);
+    const swordLen = 75; // Lengthened
+    
+    t.swordAX = dir * -5; t.swordAY = -30;
+    t.swordBX = t.swordAX + Math.cos(arcAngle) * swordLen * dir;
+    t.swordBY = t.swordAY + Math.sin(arcAngle) * swordLen;
+    t.swordThickness = 3 + (1 - snap) * 2;
+    
+    t.bodyTopX = dir * 8 * snap;
+    t.headX = dir * 12 * snap;
+    t.bodyBotX = -dir * 5 * snap;
     return true;
   }
   
   if (attackType === 'forward' || attackType === 'air_forward' || attackType === 'thrust') {
-    // Make the forward strike feel punchy: compact windup, fast snap, extended tip reach at impact.
-    // Use a two-phase easing: quick windup (strong body coil) then a sharp follow-through that extends the blade tip.
-    const windupT = Math.min(attackProgress / 0.35, 1.0);
-    const followT = attackProgress < 0.35 ? 0 : (attackProgress - 0.35) / 0.65;
-    const windupEase = easeInCubic(windupT);
-    const snapEase = easeOutCubic(followT);
-
-    // Shorter, tighter body lean during windup, avoid overleaning during follow-through.
-    t.bodyTopX = dir * (8 * windupEase + 20 * snapEase * 0.6);
-    t.bodyTopY = -35 - 4 * windupEase;
-    t.headX = dir * (6 * windupEase + 18 * snapEase * 0.6);
-    t.headY = -50 - 3 * windupEase;
-    t.bodyBotX = -dir * (4 * windupEase);
-
-    // Sword: longer tip extension on snap, thicker at impact, visually stretching the blade reach
-    const baseSwordAX = dir * 6;
-    const baseSwordAY = -30;
-    const swordLen = 100; // increase tip reach so the final frame looks long
-    // Angle: small arc leaning forward; during snap, tip thrusts further out and slightly upward for impact silhouette
-    const startAngle = Math.PI * 0.22;
-    const angleDuring = startAngle - snapEase * (startAngle + 0.05);
-    const tipExtend = 1.0 + snapEase * 0.55; // extra reach factor on snap
-
-    t.swordAX = baseSwordAX;
-    t.swordAY = baseSwordAY - windupEase * 2;
-    t.swordBX = t.swordAX + Math.cos(angleDuring) * swordLen * dir * tipExtend;
-    t.swordBY = t.swordAY + Math.sin(angleDuring) * swordLen - snapEase * 8;
-
-    // Emphasize thickness at moment of impact (snapEase high), thinner during windup
-    t.swordThickness = 2.0 + Math.max(0.5, snapEase) * 4.5;
-
-    // Subtle chest/torso compression on snap to transmit force
-    t.bodyTopY -= snapEase * 4;
+    // Committed horizontal lunging strike
+    const snap = Math.pow(attackProgress, 0.3); // Aggressive snap to target
+    const swordLen = 95; // Significant length increase
+    
+    // Windup vs Release
+    if (attackProgress < 0.2) {
+      const wind = attackProgress / 0.2;
+      t.bodyTopX = -dir * 10 * wind;
+      t.swordAX = -dir * 15; t.swordAY = -35;
+      t.swordBX = -dir * 30; t.swordBY = -35;
+    } else {
+      const strike = (attackProgress - 0.2) / 0.8;
+      const easedStrike = easeOutCubic(strike);
+      
+      t.bodyTopX = dir * 15 * easedStrike; // Less extreme lean, more "bracing"
+      t.headX = dir * 20 * easedStrike;
+      t.bodyBotX = -dir * 10 * easedStrike;
+      
+      t.swordAX = dir * 10; t.swordAY = -35;
+      t.swordBX = t.swordAX + dir * swordLen * Math.min(1.1, easedStrike * 1.2); 
+      t.swordBY = -35;
+      t.swordThickness = 4;
+    }
     return true;
   }
   
