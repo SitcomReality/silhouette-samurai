@@ -61,4 +61,29 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
   ctx.stroke();
   
   ctx.shadowBlur = 0;
+
+  // Draw orange glow for enemies
+  const enemies = controller.entities.filter(e => e.state !== 'dead' && e.type === 'enemy');
+  if (enemies.length > 0) {
+    const enemySegments = extractSDFSegments(
+      viewWidth, viewHeight, controller.cameraX, camYOffset, controller.baseGroundY,
+      enemies, [], controller.shockwaves, 4.0, 20, controller
+    );
+
+    ctx.beginPath();
+    for (let i = 0; i < enemySegments.length; i++) {
+      const seg = enemySegments[i];
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(seg.x2, seg.y2);
+    }
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#ff6600';
+    ctx.shadowColor = '#ff6600';
+    ctx.shadowBlur = 20;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
 }

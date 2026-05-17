@@ -121,6 +121,17 @@ export function resolveAttackHits(controller) {
       controller.hitstop = Math.max(controller.hitstop, frameData.launch ? 5 : 3);
       controller.screenShake = Math.max(controller.screenShake, damage > 20 ? 12 : 6);
       
+      // Damage spark at hit point
+      controller.visualFx.push({
+        id: `fx_spark_${controller.fxId++}`,
+        type: 'damage_spark',
+        x: hitbox.x,
+        y: hitbox.y,
+        rotation: Math.random() * Math.PI * 2,
+        life: 0,
+        maxLife: 0.15
+      });
+      
       spawnHitParticles(controller, ent, dir, damage);
       spawnFloatingText(controller, ent, p, damage);
       
@@ -174,31 +185,57 @@ function spawnDebris(controller, ent, dir, damage) {
   if (ent.type === 'crate') return;
   
   const scale = ent.scale || 1.0;
-  const hx = ent.character.world ? ent.character.world.head.x : ent.x;
-  const hy = ent.character.world ? ent.character.world.head.y : ent.y - 70 * scale;
-  const parts = [
-    { r: 13 * scale, x: hx, y: hy },
-    { r: 10 * scale, x: ent.x, y: ent.y - 70 * scale },
-    { r: 8 * scale, x: ent.x - 10 * scale, y: ent.y - 60 * scale },
-    { r: 8 * scale, x: ent.x + 10 * scale, y: ent.y - 60 * scale }
-  ];
+  const sliceY = ent.y - 40 * scale; // Slice horizontally through torso
   
-  for (const part of parts) {
+  // Top half (head + upper body) - gets knocked back
+  const topHalf = {
+    id: `debris_top_${controller.particleId++}`,
+    x: ent.x,
+    y: sliceY - 20 * scale,
+    vx: dir * damage * 0.4,
+    vy: -Math.abs(damage) * 0.35 - 4,
+    radius: 18 * scale,
+    life: 0,
+    maxLife: 2.0,
+    isGrounded: false,
+    shape: 'circle',
+    vAngle: dir * 0.1
+  };
+  
+  // Bottom half (legs) - falls straight down
+  const bottomHalf = {
+    id: `debris_bottom_${controller.particleId++}`,
+    x: ent.x,
+    y: sliceY + 15 * scale,
+    vx: dir * damage * 0.1,
+    vy: -2,
+    radius: 15 * scale,
+    life: 0,
+    maxLife: 2.0,
+    isGrounded: false,
+    shape: 'circle'
+  };
+  
+  controller.particles.push(topHalf, bottomHalf);
+  
+  // Add a few small blood particles for effect
+  for (let i = 0; i < 3; i++) {
     const ang = Math.random() * Math.PI * 2;
-    const spd = 6 + Math.random() * 10;
+    const spd = 4 + Math.random() * 6;
     controller.particles.push({
-      id: `debris_${controller.particleId++}`,
-      x: part.x,
-      y: part.y,
-      vx: dir * damage * 0.3 + Math.cos(ang) * spd * 0.4,
-      vy: -Math.abs(damage) * 0.3 + Math.sin(ang) * spd * 0.4 - 2,
-      radius: part.r,
+      id: `debris_particle_${controller.particleId++}`,
+      x: ent.x + (Math.random() - 0.5) * 10 * scale,
+      y: sliceY,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd - 2,
+      radius: (3 + Math.random() * 4) * scale,
       life: 0,
-      maxLife: 1.5 + Math.random() * 0.5,
+      maxLife: 1.0,
       isGrounded: false,
       shape: 'circle'
     });
   }
+  
   ent.health = -999;
 }
 

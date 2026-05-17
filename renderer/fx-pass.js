@@ -132,6 +132,30 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       }
       
       ctx.restore();
+    } else if (fx.type === 'damage_spark') {
+      const scX = (fx.x - controller.cameraX) + viewWidth / 2;
+      const scY = fx.y + camYOffset;
+      const p = fx.life / fx.maxLife;
+      const alpha = 1 - p;
+      
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#ffff00';
+      ctx.shadowBlur = 25;
+      
+      // Draw 6 spikes radiating from center
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + (fx.rotation || 0);
+        const len = (20 + p * 15) * (1 + Math.sin(p * Math.PI) * 0.3);
+        ctx.beginPath();
+        ctx.moveTo(scX, scY);
+        ctx.lineTo(scX + Math.cos(angle) * len, scY + Math.sin(angle) * len);
+        ctx.stroke();
+      }
+      
+      ctx.restore();
     }
   }
 }

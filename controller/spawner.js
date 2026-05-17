@@ -1,7 +1,7 @@
 import { createCharacter } from '../character/representation.js';
 
 export function spawnEnemy(controller, x, difficulty = 1) {
-  const hp = 60 * difficulty;
+  const hp = 20;
   controller.entities.push({
     id: `enemy_${Math.random()}`,
     type: 'enemy',
