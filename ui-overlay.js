@@ -166,6 +166,17 @@ export class UIOverlay {
       this.physicsData = module.PHYSICS_DATA;
       this.bladeDanceData = module.BLADE_DANCE_DATA;
       
+      // Create deep baseline copies so we can export only changed values later
+      this._tunerBaseline = {
+        physics: JSON.parse(JSON.stringify(this.physicsData)),
+        bladeDance: JSON.parse(JSON.stringify(this.bladeDanceData)),
+        attacks: {}
+      };
+      for (const [k, v] of Object.entries(this.attackData)) {
+        // serialize instance properties
+        this._tunerBaseline.attacks[k] = JSON.parse(JSON.stringify(v));
+      }
+
       Object.keys(this.attackData).forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
@@ -187,26 +198,54 @@ export class UIOverlay {
       });
       
       document.getElementById('btn-export-tuner').onclick = () => {
-        const exportData = {
-          PHYSICS_DATA: this.physicsData,
-          BLADE_DANCE_DATA: this.bladeDanceData,
-          ATTACK_FRAME_DATA: {}
-        };
-        for (const [key, data] of Object.entries(this.attackData)) {
-          exportData.ATTACK_FRAME_DATA[key] = {
-            startup: data.startup,
-            active: data.active,
-            recovery: data.recovery,
-            damage: data.damage,
-            hitstun: data.hitstun,
-            knockback: data.knockback,
-            range: data.range,
-            movement: data.movement,
-            anim: data.anim
-          };
+        const baseline = this._tunerBaseline;
+        const exportData = { PHYSICS_DATA: {}, BLADE_DANCE_DATA: {}, ATTACK_FRAME_DATA: {} };
+
+        // Physics diffs
+        for (const [k, v] of Object.entries(this.physicsData)) {
+          if (baseline.physics[k] !== v) exportData.PHYSICS_DATA[k] = v;
         }
-        navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
-          .then(() => alert("Combat configuration copied to clipboard!"))
+
+        // Blade dance diffs
+        for (const [k, v] of Object.entries(this.bladeDanceData)) {
+          if (baseline.bladeDance[k] !== v) exportData.BLADE_DANCE_DATA[k] = v;
+        }
+
+        // Attacks diffs
+        for (const [key, data] of Object.entries(this.attackData)) {
+          const base = baseline.attacks[key] || {};
+          const out = {};
+
+          // Simple scalar fields
+          ['startup','active','recovery','damage','hitstun','launch','groundOnly','trip','spike'].forEach(f => {
+            if ((base[f] === undefined && data[f] !== undefined) || base[f] !== data[f]) out[f] = data[f];
+          });
+
+          // knockback
+          if (JSON.stringify(base.knockback || {}) !== JSON.stringify(data.knockback || {})) out.knockback = data.knockback;
+
+          // range
+          if (JSON.stringify(base.range || {}) !== JSON.stringify(data.range || {})) out.range = data.range;
+
+          // movement
+          if (JSON.stringify(base.movement || {}) !== JSON.stringify(data.movement || {})) out.movement = data.movement;
+
+          // anim
+          if (JSON.stringify(base.anim || {}) !== JSON.stringify(data.anim || {})) out.anim = data.anim;
+
+          if (Object.keys(out).length > 0) {
+            exportData.ATTACK_FRAME_DATA[key] = out;
+          }
+        }
+
+        // Clean up empty sections (don't include if no changes)
+        if (Object.keys(exportData.PHYSICS_DATA).length === 0) delete exportData.PHYSICS_DATA;
+        if (Object.keys(exportData.BLADE_DANCE_DATA).length === 0) delete exportData.BLADE_DANCE_DATA;
+        if (Object.keys(exportData.ATTACK_FRAME_DATA).length === 0) delete exportData.ATTACK_FRAME_DATA;
+
+        const payload = JSON.stringify(exportData, null, 2);
+        navigator.clipboard.writeText(payload)
+          .then(() => alert("Changed combat parameters copied to clipboard!"))
           .catch(err => alert("Failed to copy: " + err));
       };
 
