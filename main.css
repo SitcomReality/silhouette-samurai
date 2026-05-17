@@ -190,7 +190,7 @@ body, html {
   position: absolute;
   bottom: 120%;
   left: 0;
-  width: 18rem;
+  width: 22rem;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid #334155;
@@ -199,7 +199,7 @@ body, html {
   flex-direction: column;
   pointer-events: auto;
   z-index: 100;
-  max-height: 60vh;
+  max-height: 75vh;
 }
 .tuner-header {
   padding: 0.75rem;
@@ -214,16 +214,34 @@ body, html {
 .tuner-header button {
   background: none; border: none; color: #64748b; cursor: pointer; font-size: 1rem;
 }
+.tuner-nav { display: flex; border-bottom: 1px solid #334155; }
+.tuner-tab {
+  flex: 1; padding: 0.5rem; background: transparent; border: none; color: #94a3b8; 
+  font-size: 0.7rem; font-weight: 700; cursor: pointer; text-transform: uppercase;
+  transition: color 0.1s, background 0.1s;
+}
+.tuner-tab:hover { color: white; background: rgba(255,255,255,0.02); }
+.tuner-tab.active {
+  color: white; border-bottom: 2px solid var(--theme-color); background: rgba(255,255,255,0.05);
+}
+.tuner-panel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .tuner-content {
   padding: 1rem;
   overflow-y: auto;
   font-size: 0.75rem;
+  flex: 1;
 }
 .tuner-section { margin-bottom: 1rem; }
+.tuner-section-header {
+  font-size: 0.7rem; font-weight: 800; color: var(--theme-color);
+  margin: 1rem 0 0.5rem 0; text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25rem;
+}
 .tuner-control { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
 .tuner-control label { color: #94a3b8; font-weight: 600; }
 .tuner-control input[type="range"] { accent-color: var(--theme-color); }
 .tuner-val { color: white; font-weight: 700; float: right; }
+.tuner-footer { padding: 0.75rem; border-top: 1px solid #334155; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }

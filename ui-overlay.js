@@ -117,21 +117,55 @@ export class UIOverlay {
   
   initTuner() {
     const btnToggle = document.getElementById('btn-toggle-tuner');
+    
+    this.tunerEl.innerHTML = `
+      <div class="tuner-header">
+        <span>Combat & Ability Tuner</span>
+        <button id="btn-close-tuner">✕</button>
+      </div>
+      <div class="tuner-nav">
+        <button class="tuner-tab active" data-tab="attacks">Attacks</button>
+        <button class="tuner-tab" data-tab="physics">Physics</button>
+        <button class="tuner-tab" data-tab="bladedance">Dance</button>
+      </div>
+      <div class="tuner-content">
+        <div id="tuner-attacks" class="tuner-panel">
+          <div class="tuner-section">
+            <label style="color:#94a3b8;font-weight:600;display:block;margin-bottom:4px;">Select Attack:</label>
+            <select id="tuner-attack-select" style="width:100%;background:#0f172a;color:white;border:1px solid #334155;padding:4px;border-radius:4px;"></select>
+          </div>
+          <div id="tuner-controls-attacks" class="tuner-controls"></div>
+        </div>
+        <div id="tuner-physics" class="tuner-panel hidden">
+          <div id="tuner-controls-physics" class="tuner-controls"></div>
+        </div>
+        <div id="tuner-bladedance" class="tuner-panel hidden">
+          <div id="tuner-controls-bladedance" class="tuner-controls"></div>
+        </div>
+      </div>
+      <div class="tuner-footer">
+        <button id="btn-export-tuner" class="btn-action" style="width: 100%; height: 2.5rem; font-size: 0.75rem; background: #0f172a;">📤 Export to Clipboard</button>
+      </div>
+    `;
+
     const btnClose = document.getElementById('btn-close-tuner');
+    this.tunerSelect = document.getElementById('tuner-attack-select');
     
     btnToggle.onclick = () => {
       this.tunerEl.classList.toggle('hidden');
       this.controller.tunerActive = !this.tunerEl.classList.contains('hidden');
-      this.refreshTuner();
+      if (this.controller.tunerActive) this.refreshAttacksTuner();
     };
     btnClose.onclick = () => {
       this.tunerEl.classList.add('hidden');
       this.controller.tunerActive = false;
     };
 
-    // Lazy load frame data modules
     import('./combat/frame-data.js').then(module => {
       this.attackData = module.ATTACK_FRAME_DATA;
+      this.physicsData = module.PHYSICS_DATA;
+      this.bladeDanceData = module.BLADE_DANCE_DATA;
+      
       Object.keys(this.attackData).forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
@@ -139,68 +173,154 @@ export class UIOverlay {
         this.tunerSelect.appendChild(opt);
       });
       
-      this.tunerSelect.onchange = () => this.refreshTuner();
+      this.tunerSelect.onchange = () => this.refreshAttacksTuner();
+      
+      document.querySelectorAll('.tuner-tab').forEach(tab => {
+        tab.onclick = (e) => {
+          document.querySelectorAll('.tuner-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tuner-panel').forEach(p => p.classList.add('hidden'));
+          
+          e.target.classList.add('active');
+          const targetId = `tuner-${e.target.dataset.tab}`;
+          document.getElementById(targetId).classList.remove('hidden');
+        };
+      });
+      
+      document.getElementById('btn-export-tuner').onclick = () => {
+        const exportData = {
+          PHYSICS_DATA: this.physicsData,
+          BLADE_DANCE_DATA: this.bladeDanceData,
+          ATTACK_FRAME_DATA: {}
+        };
+        for (const [key, data] of Object.entries(this.attackData)) {
+          exportData.ATTACK_FRAME_DATA[key] = {
+            startup: data.startup,
+            active: data.active,
+            recovery: data.recovery,
+            damage: data.damage,
+            hitstun: data.hitstun,
+            knockback: data.knockback,
+            range: data.range,
+            movement: data.movement,
+            anim: data.anim
+          };
+        }
+        navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
+          .then(() => alert("Combat configuration copied to clipboard!"))
+          .catch(err => alert("Failed to copy: " + err));
+      };
+
+      this.refreshAttacksTuner();
+      this.refreshPhysicsTuner();
+      this.refreshBladeDanceTuner();
     });
   }
 
-  refreshTuner() {
+  createSectionHeader(container, title) {
+    const el = document.createElement('div');
+    el.className = 'tuner-section-header';
+    el.textContent = title;
+    container.appendChild(el);
+  }
+
+  createSlider(container, label, obj, key, min, max, step, onChange = null) {
+    const div = document.createElement('div');
+    div.className = 'tuner-control';
+    const val = obj[key] !== undefined ? obj[key] : 0;
+    div.innerHTML = `
+      <label>${label} <span class="tuner-val">${val}</span></label>
+      <input type="range" min="${min}" max="${max}" step="${step}" value="${val}">
+    `;
+    const input = div.querySelector('input');
+    const valDisplay = div.querySelector('.tuner-val');
+    input.oninput = (e) => {
+      const newVal = parseFloat(e.target.value);
+      obj[key] = newVal;
+      valDisplay.textContent = newVal;
+      if (onChange) onChange(newVal);
+    };
+    container.appendChild(div);
+  }
+
+  refreshAttacksTuner() {
     if (!this.attackData || !this.tunerSelect.value) return;
     const key = this.tunerSelect.value;
     const data = this.attackData[key];
+    const container = document.getElementById('tuner-controls-attacks');
+    container.innerHTML = '';
     
-    this.tunerControls.innerHTML = '';
+    this.createSectionHeader(container, 'Frame Data');
+    this.createSlider(container, 'Startup', data, 'startup', 0, 60, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
+    this.createSlider(container, 'Active', data, 'active', 1, 60, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
+    this.createSlider(container, 'Recovery', data, 'recovery', 0, 120, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
     
-    const fields = [
-      { name: 'startup', label: 'Startup (Frames)', min: 0, max: 60 },
-      { name: 'active', label: 'Active (Frames)', min: 1, max: 60 },
-      { name: 'recovery', label: 'Recovery (Frames)', min: 0, max: 120 },
-      { name: 'damage', label: 'Damage', min: 0, max: 100 },
-      { name: 'hitstun', label: 'Hitstun (Sec)', min: 0, max: 2, step: 0.05 },
-    ];
+    this.createSectionHeader(container, 'Combat');
+    this.createSlider(container, 'Damage', data, 'damage', 0, 100, 1);
+    this.createSlider(container, 'Hitstun (sec)', data, 'hitstun', 0, 2, 0.05);
+    if (!data.knockback) data.knockback = { x: 0, y: 0 };
+    this.createSlider(container, 'Knockback X', data.knockback, 'x', -20, 40, 1);
+    this.createSlider(container, 'Knockback Y', data.knockback, 'y', -40, 40, 1);
+    
+    this.createSectionHeader(container, 'Hitbox Area');
+    if (!data.range) data.range = { width: 50, height: 40, offsetX: 25, offsetY: -40 };
+    this.createSlider(container, 'Width', data.range, 'width', 10, 200, 1);
+    this.createSlider(container, 'Height', data.range, 'height', 10, 200, 1);
+    this.createSlider(container, 'Offset X', data.range, 'offsetX', -100, 100, 1);
+    this.createSlider(container, 'Offset Y', data.range, 'offsetY', -150, 50, 1);
+    
+    this.createSectionHeader(container, 'Movement');
+    if (!data.movement) data.movement = { vx: 0, vy: 0 };
+    this.createSlider(container, 'Velocity X', data.movement, 'vx', -30, 80, 1);
+    this.createSlider(container, 'Velocity Y', data.movement, 'vy', -40, 40, 1);
+    
+    this.createSectionHeader(container, 'Animation Setup');
+    if (!data.anim) data.anim = {};
+    this.createSlider(container, 'Sword Length', data.anim, 'swordLen', 20, 150, 1);
+    this.createSlider(container, 'Start Angle (x PI)', data.anim, 'startAngle', -2, 2, 0.05);
+    this.createSlider(container, 'End Angle (x PI)', data.anim, 'endAngle', -2, 2, 0.05);
+    this.createSlider(container, 'Sword Thickness', data.anim, 'swordThickness', 1, 15, 0.5);
+    this.createSlider(container, 'Body Lean X', data.anim, 'bodyTopX', -60, 60, 1);
+    this.createSlider(container, 'Head Lean X', data.anim, 'headX', -60, 60, 1);
+    this.createSlider(container, 'Body Top Y', data.anim, 'bodyTopY', -80, 20, 1);
+    this.createSlider(container, 'Head Y', data.anim, 'headY', -100, 20, 1);
+    this.createSlider(container, 'Body Bot X', data.anim, 'bodyBotX', -40, 40, 1);
+    this.createSlider(container, 'Body Bot Y', data.anim, 'bodyBotY', -40, 40, 1);
+  }
 
-    fields.forEach(field => {
-      const container = document.createElement('div');
-      container.className = 'tuner-control';
-      
-      const val = data[field.name];
-      container.innerHTML = `
-        <label>${field.label} <span class="tuner-val">${val}</span></label>
-        <input type="range" min="${field.min}" max="${field.max}" step="${field.step || 1}" value="${val}">
-      `;
-      
-      const input = container.querySelector('input');
-      const valDisplay = container.querySelector('.tuner-val');
-      
-      input.oninput = (e) => {
-        const newVal = parseFloat(e.target.value);
-        data[field.name] = newVal;
-        valDisplay.textContent = newVal;
-        // Re-calculate total frames if needed
-        if (['startup', 'active', 'recovery'].includes(field.name)) {
-          data.totalFrames = data.startup + data.active + data.recovery;
-        }
-      };
-      
-      this.tunerControls.appendChild(container);
-    });
+  refreshPhysicsTuner() {
+    const container = document.getElementById('tuner-controls-physics');
+    container.innerHTML = '';
+    const d = this.physicsData;
+    
+    this.createSectionHeader(container, 'Gravity');
+    this.createSlider(container, 'Upward Gravity', d, 'gravity_up', 0.1, 3.0, 0.05);
+    this.createSlider(container, 'Downward Gravity', d, 'gravity_down', 0.5, 5.0, 0.1);
+    this.createSlider(container, 'Apex Gravity (Float)', d, 'gravity_apex', 0.05, 1.5, 0.01);
+    
+    this.createSectionHeader(container, 'Jumping');
+    this.createSlider(container, 'Ground Jump Power', d, 'jump_ground_power', 5, 40, 1);
+    this.createSlider(container, 'Air Jump Base', d, 'jump_air_base', 5, 30, 1);
+    this.createSlider(container, 'Air Jump Mult Min', d, 'jump_air_mult_min', 0.1, 2.0, 0.1);
+    this.createSlider(container, 'Air Jump Mult Max', d, 'jump_air_mult_max', 0.1, 2.0, 0.1);
+    
+    this.createSectionHeader(container, 'Locomotion');
+    this.createSlider(container, 'Ground Accel', d, 'accel_ground', 10, 100, 1);
+    this.createSlider(container, 'Air Accel', d, 'accel_air', 1, 50, 1);
+    this.createSlider(container, 'Ground Friction', d, 'friction_ground', 0.8, 0.999, 0.001);
+    this.createSlider(container, 'Air Friction', d, 'friction_air', 0.9, 1.0, 0.001);
+    this.createSlider(container, 'Slide Friction', d, 'friction_slide', 0.9, 1.0, 0.001);
+    this.createSlider(container, 'Crouch Friction', d, 'friction_crouch', 0.5, 0.99, 0.01);
+  }
 
-    // Special handling for nested movement
-    if (data.movement) {
-      const mContainer = document.createElement('div');
-      mContainer.className = 'tuner-control';
-      mContainer.innerHTML = `
-        <label>Lunge Velocity X <span class="tuner-val">${data.movement.vx}</span></label>
-        <input type="range" min="0" max="60" step="1" value="${data.movement.vx}">
-      `;
-      const mInput = mContainer.querySelector('input');
-      const mVal = mContainer.querySelector('.tuner-val');
-      mInput.oninput = (e) => {
-        const newVal = parseInt(e.target.value);
-        data.movement.vx = newVal;
-        mVal.textContent = newVal;
-      };
-      this.tunerControls.appendChild(mContainer);
-    }
+  refreshBladeDanceTuner() {
+    const container = document.getElementById('tuner-controls-bladedance');
+    container.innerHTML = '';
+    const d = this.bladeDanceData;
+    
+    this.createSectionHeader(container, 'Dance Timing');
+    this.createSlider(container, 'Input Window (Sec)', d, 'inputWindow', 0.1, 1.5, 0.05);
+    this.createSlider(container, 'Repeat Window (Sec)', d, 'repeatWindow', 0.1, 1.5, 0.05);
+    this.createSlider(container, 'Cooldown (Sec)', d, 'cooldown', 0.1, 3.0, 0.05);
   }
 
   update() {

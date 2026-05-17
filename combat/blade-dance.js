@@ -1,10 +1,11 @@
+import { BLADE_DANCE_DATA } from './frame-data.js';
+
 export class BladeDanceSystem {
-  constructor() {
-    // Increased windows to make the "beat" more deliberate and reactable
-    this.inputWindow = 0.45; // ~27 frames at 60fps
-    this.repeatWindow = 0.35;
-    this.cooldown = 0.4;
-  }
+  constructor() {}
+
+  get inputWindow() { return BLADE_DANCE_DATA.inputWindow; }
+  get repeatWindow() { return BLADE_DANCE_DATA.repeatWindow; }
+  get cooldown() { return BLADE_DANCE_DATA.cooldown; }
 
   canInitiate(player) {
     if (!player.isGrounded) return false;

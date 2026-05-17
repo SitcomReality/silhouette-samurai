@@ -1,3 +1,5 @@
+import { PHYSICS_DATA } from '../../../combat/frame-data.js';
+
 export function updatePlayerPhysics(controller, dt) {
   const p = controller.player;
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
