@@ -12,7 +12,8 @@ export function applyBladeDancePose(t, dir, attackType, attackProgress) {
     const currentAngle = Math.PI * startA + easedProgress * Math.PI * (endA - startA);
     const swordLen = anim.swordLen ?? 90;
     
-    t.swordAX = dir * -5; t.swordAY = -40;
+    // Move sword pivot forward so the hilt won't poke out the back during the lunge
+    t.swordAX = dir * 8; t.swordAY = -40;
     t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
     t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
     t.swordThickness = anim.swordThickness ?? 4;
