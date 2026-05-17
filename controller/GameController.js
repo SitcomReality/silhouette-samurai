@@ -89,11 +89,14 @@ export class GameController {
       tripTimer: 0,
       bladeDanceState: null,
       bladeDanceHitCount: 0,
-      bladeDanceLinkerCount: 0,
       bladeDanceInputWindow: 0,
-      bladeDanceCanRepeatLinker: false,
+      bladeDanceFinisherReady: false,
       bladeDanceCooldown: 0,
-      dodgeTimer: 0
+      dodgeTimer: 0,
+      finisherTransitionWindow: 0,
+      blockToFinisher: false,
+      ultraParryBonus: 1.0,
+      movementVector: { x: 0, y: 0 }
     };
 
     spawnCratesSquareWave(this, 2500, 4);
@@ -114,11 +117,16 @@ export class GameController {
       if (['Digit1', '1', 'KeyJ'].includes(code)) {
         this.player.attackBuffer = { btn: 1, time: 0.2 };
       }
-      // Block button (K/2) - now block instead of heavy attack
+      // Block button (K/2)
       if (['Digit2', '2', 'KeyK'].includes(code)) {
         if (this.player.state !== 'attack' && this.player.state !== 'dead') {
           this.player.isBlocking = true;
           this.player.blockStartTime = performance.now() / 1000;
+          this.player.blockBuffer = { time: 0.2 };
+          // Start finisher transition window if blade dance is active
+          if (this.bladeDance.canPerformFinisher(this.player)) {
+            this.player.finisherTransitionWindow = this.bladeDance.finisherGraceWindow;
+          }
         }
       }
     }
@@ -132,6 +140,8 @@ export class GameController {
     if (['Digit2', '2', 'KeyK'].includes(code)) {
       this.player.isBlocking = false;
       this.player.blockStartTime = 0;
+      this.player.blockBuffer = null;
+      this.player.finisherTransitionWindow = 0;
       // If we were in the block state, return to idle (but don't cancel attacks or death)
       if (this.player.state === 'block' && this.player.state !== 'attack' && this.player.state !== 'dead') {
         this.player.state = 'idle';
@@ -148,6 +158,12 @@ export class GameController {
     if (gp) {
       const b = gp.buttons;
       const axes = gp.axes;
+
+      // Analog stick for movement vector
+      const deadzone = 0.2;
+      const axisX = Math.abs(axes[0]) > deadzone ? axes[0] : 0;
+      const axisY = Math.abs(axes[1]) > deadzone ? axes[1] : 0;
+      this.player.movementVector = { x: axisX, y: axisY };
 
       // D-Pad or Left Stick
       if (b[12]?.pressed || axes[1] < -0.5) this.gamepadKeys['KeyW'] = true;
@@ -170,12 +186,17 @@ export class GameController {
         if (this.player.state !== 'attack' && this.player.state !== 'dead') {
           this.player.isBlocking = true;
           this.player.blockStartTime = performance.now() / 1000;
+          this.player.blockBuffer = { time: 0.2 };
+          if (this.bladeDance.canPerformFinisher(this.player)) {
+            this.player.finisherTransitionWindow = this.bladeDance.finisherGraceWindow;
+          }
         }
       }
       if (!blockPressed && blockWasPressed) {
         this.player.isBlocking = false;
         this.player.blockStartTime = 0;
-        // Ensure we exit the blocking pose when the gamepad button is released
+        this.player.blockBuffer = null;
+        this.player.finisherTransitionWindow = 0;
         if (this.player.state === 'block' && this.player.state !== 'attack' && this.player.state !== 'dead') {
           this.player.state = 'idle';
           this.player.stateTime = 0;
@@ -187,10 +208,17 @@ export class GameController {
       for (let i = 0; i < 16; i++) {
         this.prevGamepadButtons[i] = b[i]?.pressed || false;
       }
+    } else {
+      // Keyboard: convert WASD to movement vector
+      let vx = 0, vy = 0;
+      if (this.keyboardKeys['KeyA'] || this.keyboardKeys['ArrowLeft']) vx -= 1;
+      if (this.keyboardKeys['KeyD'] || this.keyboardKeys['ArrowRight']) vx += 1;
+      if (this.keyboardKeys['KeyW'] || this.keyboardKeys['ArrowUp'] || this.keyboardKeys['Space']) vy -= 1;
+      if (this.keyboardKeys['KeyS'] || this.keyboardKeys['ArrowDown']) vy += 1;
+      this.player.movementVector = { x: vx, y: vy };
     }
 
     // Combine keyboard and gamepad into master keys state
-    // We only need to iterate keys used by the game
     const relevantKeys = [
       'KeyW', 'KeyA', 'KeyS', 'KeyD', 
       'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 

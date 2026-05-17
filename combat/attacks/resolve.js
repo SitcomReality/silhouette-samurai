@@ -63,6 +63,14 @@ export function resolveAttackHits(controller) {
         p.counterBonusDamage = 1.0;
       }
       
+      // Apply ultra parry bonus (block->finisher combo)
+      if (p.ultraParryBonus > 1.0) {
+        damage *= p.ultraParryBonus;
+        controller.screenShake += 8;
+        controller.hitstop += 3;
+        p.ultraParryBonus = 1.0;
+      }
+      
       ent.health -= damage;
       
       // Apply knockback and hitstun

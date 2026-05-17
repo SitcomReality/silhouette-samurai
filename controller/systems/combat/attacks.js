@@ -17,30 +17,17 @@ export function updatePlayerAttacks(controller, dt) {
     }
     
     if (currentFrame >= frameData.totalFrames) {
+      // Continue dance after attack completes
+      if (p.bladeDanceState) {
+        controller.bladeDance.continueChain(p);
+      }
+      
       p.state = 'idle';
       p.attackType = 'none';
       p.attackFrameTime = 0;
       p.attackFrameData = null;
       p.attackHitEntities.clear();
-      
-      if (p.bladeDanceState && !controller.bladeDance.canAdvanceChain(p)) {
-        controller.bladeDance.endChain(p);
-      }
       return;
-    }
-    
-    if (p.bladeDanceState && frameData.isInRecovery(currentFrame)) {
-      const recoveryProgress = (currentFrame - (frameData.startup + frameData.active)) / frameData.recovery;
-      
-      // Delay the window opening until later in the recovery (e.g., after 35% progress)
-      // This forces the "beat" to be distinct from the hit impact.
-      if (recoveryProgress > 0.35 && recoveryProgress < 0.85 && p.bladeDanceInputWindow === 0) {
-        if (p.bladeDanceState === 'linker' && p.bladeDanceCanRepeatLinker) {
-          p.bladeDanceInputWindow = controller.bladeDance.repeatWindow;
-        } else {
-          p.bladeDanceInputWindow = controller.bladeDance.inputWindow;
-        }
-      }
     }
     
     resolveAttackHits(controller);
@@ -48,14 +35,32 @@ export function updatePlayerAttacks(controller, dt) {
 
   // Auto-loop selected attack for tuning
   if (controller.loopSelectedAttack && p.state !== 'attack' && p.state !== 'dead') {
-    // Prevent the player from drifting while auto-looping; ensure consistent test conditions
     p.vx = 0;
-    // For tuner auto-loop we zero vertical velocity so ground/air-specific movement won't reposition the player
     p.vy = 0;
-    // Trigger the selected attack; triggerAttack will suppress movement when loopSelectedAttack is true
     triggerAttack(controller, controller.tunerSelectedAttack || 'neutral');
   }
 
+  // Handle finisher input (block + direction during grace window)
+  if (p.finisherTransitionWindow > 0 && p.isBlocking) {
+    const direction = getDirectionInput(controller, false); // Don't allow neutral
+    if (direction && controller.bladeDance.canPerformFinisher(p)) {
+      const finisher = determineAttack(controller, true);
+      if (finisher) {
+        p.blockToFinisher = true;
+        triggerAttack(controller, finisher);
+        p.finisherTransitionWindow = 0;
+        p.blockBuffer = null;
+        return;
+      }
+    }
+  }
+
+  // Handle block buffer
+  if (p.blockBuffer && p.blockBuffer.time > 0) {
+    p.blockBuffer.time -= dt;
+  }
+
+  // Handle attack buffer
   if (p.attackBuffer && p.attackBuffer.time > 0) {
     p.attackBuffer.time -= dt;
     
@@ -75,14 +80,9 @@ export function updatePlayerAttacks(controller, dt) {
         canAttack = true;
       }
       
-      if (p.bladeDanceState && controller.bladeDance.canAdvanceChain(p)) {
-        const direction = getDirectionInput(controller);
-        const nextAttack = controller.bladeDance.advanceChain(p, direction);
-        if (nextAttack) {
-          triggerAttack(controller, nextAttack);
-          p.attackBuffer = null;
-          return;
-        }
+      // Chain into next attack during input window
+      if (p.bladeDanceState && p.bladeDanceInputWindow > 0) {
+        canAttack = true;
       }
       
       if (p.canCounter && p.counterWindow > 0) {

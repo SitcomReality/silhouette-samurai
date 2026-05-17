@@ -38,30 +38,32 @@ export function updatePlayerPhysics(controller, dt) {
   
   if (p.state !== 'attack' && p.state !== 'dead' && p.state !== 'block') {
     let isMoving = false;
-    const accel = (p.isGrounded ? 45 : 12) * dt;
+    const accel = (p.isGrounded ? 50 : 15) * dt;
     
-    let friction = 0.90;
+    let friction = 0.88;
     if (!p.isGrounded) {
-      friction = 0.985;
+      friction = 0.98;
     } else if (isSliding) {
-      friction = 0.992;
+      friction = 0.997; // Much more slide momentum
     } else if (p.isCrouching) {
       friction = 0.82;
     }
 
-    if (controller.keys['KeyA'] || controller.keys['ArrowLeft']) {
+    const mvec = p.movementVector;
+    
+    if (mvec.x < 0) {
       if (!p.isCrouching && !isSliding) {
-        p.vx -= accel;
+        p.vx += mvec.x * accel;
       } else if (p.isCrouching && !isSliding) {
-        p.vx -= accel * 0.4;
+        p.vx += mvec.x * accel * 0.4;
       }
       if (!isSliding) p.facing = 'left';
       isMoving = true;
-    } else if (controller.keys['KeyD'] || controller.keys['ArrowRight']) {
+    } else if (mvec.x > 0) {
       if (!p.isCrouching && !isSliding) {
-        p.vx += accel;
+        p.vx += mvec.x * accel;
       } else if (p.isCrouching && !isSliding) {
-        p.vx += accel * 0.4;
+        p.vx += mvec.x * accel * 0.4;
       }
       if (!isSliding) p.facing = 'right';
       isMoving = true;
@@ -71,13 +73,18 @@ export function updatePlayerPhysics(controller, dt) {
 
     if (p.jumpBuffer > 0 && !down) {
       if (p.isGrounded) {
-        p.vy = -20;
+        // Diagonal jumping based on movement vector
+        const jumpPower = 20;
+        const lateralBoost = mvec.x * 8;
+        
+        p.vy = -jumpPower;
+        p.vx += lateralBoost;
         p.isGrounded = false;
         p.doubleJumped = false;
         p.state = 'run';
         p.jumpBuffer = 0;
         
-        const jumpAngle = Math.atan2(p.vy, p.vx);
+        const jumpAngle = Math.atan2(p.vy, p.vx || lateralBoost);
         controller.visualFx.push({
           id: `fx_jump_${controller.fxId++}`,
           type: 'streak',
@@ -95,12 +102,16 @@ export function updatePlayerPhysics(controller, dt) {
         }
       } else if (!p.doubleJumped && jumpJustPressed && p.aerialPower >= 20) {
         const jumpPower = 0.6 + (p.aerialPower / 100) * 0.4;
-        p.vy = -16 * jumpPower;
+        const airJumpStrength = 16 * jumpPower;
+        const lateralBoost = mvec.x * 6;
+        
+        p.vy = -airJumpStrength;
+        p.vx += lateralBoost;
         p.aerialPower -= 20;
         p.doubleJumped = true;
         p.jumpBuffer = 0;
 
-        const jumpAngle = Math.atan2(p.vy, p.vx || (p.facing === 'right' ? 0.1 : -0.1));
+        const jumpAngle = Math.atan2(p.vy, p.vx || lateralBoost);
         controller.visualFx.push({
           id: `fx_djump_${controller.fxId++}`,
           type: 'streak',
@@ -123,7 +134,7 @@ export function updatePlayerPhysics(controller, dt) {
       p.state = isMoving && Math.abs(p.vx) > 1 ? 'run' : 'idle';
     }
   } else if (p.state === 'attack') {
-    const friction = p.isGrounded ? 0.93 : 0.97;
+    const friction = p.isGrounded ? 0.95 : 0.98;
     p.vx *= friction;
   }
 }

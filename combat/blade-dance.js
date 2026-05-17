@@ -4,92 +4,85 @@ export class BladeDanceSystem {
   constructor() {}
 
   get inputWindow() { return BLADE_DANCE_DATA.inputWindow; }
-  get repeatWindow() { return BLADE_DANCE_DATA.repeatWindow; }
   get cooldown() { return BLADE_DANCE_DATA.cooldown; }
+  get finisherGraceWindow() { return 0.4; } // Grace period for transitioning neutral block to directional finisher
 
   canInitiate(player) {
-    if (!player.isGrounded) return false;
     if (player.state === 'attack' || player.state === 'block') return false;
     if (player.bladeDanceCooldown > 0) return false;
     return true;
   }
 
   initiate(player) {
-    player.bladeDanceState = 'starter';
+    player.bladeDanceState = 'active';
     player.bladeDanceHitCount = 0;
-    player.bladeDanceLinkerCount = 0;
     player.bladeDanceInputWindow = 0;
-    player.bladeDanceCanRepeatLinker = false;
+    player.bladeDanceFinisherReady = false;
   }
 
   updateInputWindow(player, dt) {
     if (player.bladeDanceInputWindow > 0) {
       player.bladeDanceInputWindow -= dt;
-    }
-  }
-
-  canAdvanceChain(player) {
-    if (!player.bladeDanceState) return false;
-    if (player.bladeDanceInputWindow <= 0) return false;
-    return true;
-  }
-
-  advanceChain(player, direction) {
-    if (player.bladeDanceState === 'starter') {
-      // Advance to linker
-      player.bladeDanceState = 'linker';
-      player.bladeDanceHitCount = 1;
-      player.bladeDanceLinkerCount = 0;
-      player.bladeDanceCanRepeatLinker = true;
-      return this.getLinkerAttack(direction);
-    } else if (player.bladeDanceState === 'linker') {
-      if (player.bladeDanceCanRepeatLinker && player.bladeDanceLinkerCount < 1) {
-        // Repeat linker once
-        player.bladeDanceLinkerCount++;
-        player.bladeDanceHitCount++;
-        player.bladeDanceCanRepeatLinker = false;
-        return this.getLinkerAttack(direction);
-      } else {
-        // Advance to finisher
-        player.bladeDanceState = 'finisher';
-        player.bladeDanceHitCount++;
-        return this.getFinisherAttack(direction);
+      if (player.bladeDanceInputWindow <= 0) {
+        this.endChain(player);
       }
     }
-    return null;
+    if (player.finisherTransitionWindow > 0) {
+      player.finisherTransitionWindow -= dt;
+    }
   }
 
-  getLinkerAttack(direction) {
-    if (direction === 'up') return 'dance_linker_up';
-    if (direction === 'down') return 'dance_linker_down';
-    return 'dance_linker_neutral';
+  continueChain(player, fromBlock = false) {
+    if (!player.bladeDanceState) return;
+    
+    player.bladeDanceHitCount++;
+    player.bladeDanceInputWindow = this.inputWindow;
+    
+    // After 2 hits, finishers become available
+    if (player.bladeDanceHitCount >= 2) {
+      player.bladeDanceFinisherReady = true;
+    }
+    
+    // Ultra parry bonus for block->finisher combo
+    if (fromBlock && player.blockToFinisher) {
+      player.ultraParryBonus = 2.5;
+      player.blockToFinisher = false;
+    }
+  }
+
+  getStandardAttack(direction, isAir) {
+    if (isAir) {
+      if (direction === 'up') return 'air_up';
+      if (direction === 'down') return 'air_down';
+      if (direction === 'forward') return 'air_forward';
+      return 'air_neutral';
+    } else {
+      if (direction === 'up') return 'up';
+      if (direction === 'down') return 'down';
+      // Neutral as double-time linker
+      return 'neutral';
+    }
   }
 
   getFinisherAttack(direction) {
     if (direction === 'up') return 'dance_finisher_up';
     if (direction === 'down') return 'dance_finisher_down';
-    return 'dance_finisher_neutral';
+    if (direction === 'forward') return 'dance_finisher_neutral';
+    return null; // No neutral finisher without direction
+  }
+
+  canPerformFinisher(player) {
+    return player.bladeDanceState === 'active' && player.bladeDanceFinisherReady;
   }
 
   endChain(player) {
     player.bladeDanceState = null;
     player.bladeDanceInputWindow = 0;
     player.bladeDanceHitCount = 0;
-    player.bladeDanceLinkerCount = 0;
-    player.bladeDanceCanRepeatLinker = false;
+    player.bladeDanceFinisherReady = false;
     player.bladeDanceCooldown = this.cooldown;
-  }
-
-  canDodgeCancel(player) {
-    return player.bladeDanceState === 'linker' && !player.bladeDanceCanRepeatLinker;
-  }
-
-  dodgeCancel(player) {
-    this.endChain(player);
-    player.state = 'dodge';
-    player.dodgeTimer = 0.3;
-    const dir = player.facing === 'right' ? -1 : 1;
-    player.vx = dir * 15;
-    player.vy = -2;
+    player.finisherTransitionWindow = 0;
+    player.blockToFinisher = false;
+    player.ultraParryBonus = 1.0;
   }
 }

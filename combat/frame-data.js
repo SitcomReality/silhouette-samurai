@@ -15,9 +15,8 @@ export const PHYSICS_DATA = {
 };
 
 export const BLADE_DANCE_DATA = {
-  inputWindow: 0.45,
-  repeatWindow: 0.35,
-  cooldown: 0.4
+  inputWindow: 0.55,
+  cooldown: 0.3
 };
 
 export const SWOOSH_CONFIG = {

@@ -1,7 +1,8 @@
-export function determineAttack(controller) {
+export function determineAttack(controller, isFinisher = false) {
   const p = controller.player;
   
   const btn1 = controller.keys['Digit1'] || controller.keys['1'] || controller.keys['KeyJ'];
+  const btnBlock = controller.keys['Digit2'] || controller.keys['2'] || controller.keys['KeyK'];
   
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   const up = controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space'];
@@ -9,7 +10,7 @@ export function determineAttack(controller) {
   const right = controller.keys['KeyD'] || controller.keys['ArrowRight'];
   const forward = (p.facing === 'right' && right) || (p.facing === 'left' && left);
   
-  if (!btn1) return null;
+  if (!btn1 && !isFinisher) return null;
   
   // Determine direction
   let direction = 'neutral';
@@ -17,21 +18,30 @@ export function determineAttack(controller) {
   else if (down) direction = 'down';
   else if (forward) direction = 'forward';
   
+  // Finishers via block button
+  if (isFinisher) {
+    if (direction === 'neutral') return null; // No neutral finisher
+    return controller.bladeDance.getFinisherAttack(direction);
+  }
+  
   // Priority: Sliding Attacks
   const isSliding = (p.isSliding && p.state === 'attack' && p.attackType === 'sweep') || 
                     (down && p.isGrounded && Math.abs(p.vx) > 5 && p.state !== 'attack');
   if (isSliding && p.isGrounded && !p.bladeDanceState) {
-    return 'down'; // Sweep
+    return 'down';
   }
 
-  // Check for Blade Dance initiation (forward attack while grounded)
-  if (direction === 'forward' && p.isGrounded && !p.bladeDanceState) {
-    if (controller.bladeDance && controller.bladeDance.canInitiate(p)) {
-      return 'dance_starter';
-    }
+  // Start blade dance if not already active
+  if (!p.bladeDanceState && controller.bladeDance.canInitiate(p)) {
+    return 'dance_starter';
   }
   
-  // Aerial attacks
+  // Continue blade dance with standard attacks
+  if (p.bladeDanceState) {
+    return controller.bladeDance.getStandardAttack(direction, !p.isGrounded);
+  }
+  
+  // Fallback to standard attacks
   if (!p.isGrounded) {
     if (direction === 'up') return 'air_up';
     if (direction === 'down') return 'air_down';
@@ -39,15 +49,12 @@ export function determineAttack(controller) {
     return 'air_neutral';
   }
   
-  // Grounded attacks
   if (direction === 'up') return 'up';
   if (direction === 'down') return 'down';
-  // Forward on ground is intentionally omitted here as it's handled 
-  // by the Blade Dance initiation check at the top of this function.
   return 'neutral';
 }
 
-export function getDirectionInput(controller) {
+export function getDirectionInput(controller, allowNeutral = true) {
   const p = controller.player;
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   const up = controller.keys['KeyW'] || controller.keys['ArrowUp'] || controller.keys['Space'];
@@ -58,5 +65,5 @@ export function getDirectionInput(controller) {
   if (up) return 'up';
   if (down) return 'down';
   if (forward) return 'forward';
-  return 'neutral';
+  return allowNeutral ? 'neutral' : null;
 }
