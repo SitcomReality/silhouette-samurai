@@ -29,8 +29,8 @@ export const SWOOSH_CONFIG = {
   air_forward: { type: 'arc_swoosh', offsetX: 40, offsetY: -35, startAngle: 0.5, endAngle: -0.2, radius: 70, thickness: 30, squashY: 1.0, maxLife: 0.3 },
   air_up: { type: 'arc_swoosh', offsetX: 0, offsetY: -40, startAngle: -0.2, endAngle: -0.95, radius: 60, thickness: 32, squashY: 1.0, maxLife: 0.3 },
   air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: 1.57, length: 150, width: 35, maxLife: 0.25 },
-  dance_starter: { type: 'arc_swoosh', offsetX: 48, offsetY: -38, startAngle: 0.4, endAngle: -0.15, radius: 75, thickness: 28, squashY: 1.0, maxLife: 0.25 },
-  dance_linker_neutral: { type: 'arc_swoosh', offsetX: 35, offsetY: -38, startAngle: 0.5, endAngle: -0.1, radius: 65, thickness: 25, squashY: 1.0, maxLife: 0.22 },
+  dance_starter: { type: 'arc_swoosh', offsetX: 0, offsetY: -44, startAngle: 0.4, endAngle: 0, radius: 100, thickness: 20, squashY: 0.8, maxLife: 0.2 },
+  dance_linker_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -75, startAngle: -0.6, endAngle: 0.05, radius: 100, thickness: 20, squashY: 0.7, maxLife: 0.22 },
   dance_linker_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -45, startAngle: -0.15, endAngle: -0.85, radius: 60, thickness: 28, squashY: 1.0, maxLife: 0.24 },
   dance_linker_down: { type: 'arc_swoosh', offsetX: 35, offsetY: -15, startAngle: 0.75, endAngle: -0.15, radius: 70, thickness: 26, squashY: 0.4, maxLife: 0.26 },
   dance_finisher_neutral: { type: 'arc_swoosh', offsetX: 42, offsetY: -40, startAngle: 0.9, endAngle: -0.1, radius: 90, thickness: 60, squashY: 0.3, maxLife: 0.4 },
@@ -112,8 +112,8 @@ export const ATTACK_FRAME_DATA = {
   }),
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {
     startup: 6, active: 4, recovery: 24, damage: 12, knockback: { x: 6, y: -2 }, hitstun: 0.35, movement: { vx: 18, vy: 0 },
-    range: { width: 85, height: 40, offsetX: 40, offsetY: -38 },
-    anim: { swordLen: 85, startAngle: -1, endAngle: 0, bodyTopX: 7, bodyTopY: -35, headX: 11, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 3.5 }
+    range: { width: 85, height: 40, offsetX: 44, offsetY: -64 },
+    anim: { swordLen: 85, startAngle: -1, endAngle: 0, bodyTopX: -1, bodyTopY: -35, headX: 11, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 3.5 }
   }),
   dance_linker_up: new AttackFrameData('dance_linker_up', {
     startup: 8, active: 4, recovery: 24, damage: 10, knockback: { x: 2, y: -8 }, hitstun: 0.35, movement: { vx: 6, vy: -4 },
