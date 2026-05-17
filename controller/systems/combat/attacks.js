@@ -48,6 +48,11 @@ export function updatePlayerAttacks(controller, dt) {
 
   // Auto-loop selected attack for tuning
   if (controller.loopSelectedAttack && p.state !== 'attack' && p.state !== 'dead') {
+    // Prevent the player from drifting while auto-looping; ensure consistent test conditions
+    p.vx = 0;
+    // For tuner auto-loop we zero vertical velocity so ground/air-specific movement won't reposition the player
+    p.vy = 0;
+    // Trigger the selected attack; triggerAttack will suppress movement when loopSelectedAttack is true
     triggerAttack(controller, controller.tunerSelectedAttack || 'neutral');
   }
 

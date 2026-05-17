@@ -7,8 +7,8 @@ export function triggerAttack(controller, attackType) {
   const frameData = ATTACK_FRAME_DATA[attackType];
   if (!frameData) return;
   
-  // Check ground requirement
-  if (frameData.groundOnly && !p.isGrounded) return;
+  // Check ground requirement (allow bypass when auto-looping from the tuner so any attack can be tested)
+  if (frameData.groundOnly && !p.isGrounded && !controller.loopSelectedAttack) return;
   
   // Initialize attack state
   p.state = 'attack';
@@ -20,14 +20,23 @@ export function triggerAttack(controller, attackType) {
   p.attackHitEntities = new Set(); // Track which entities we've hit
   
   // Apply movement on startup (vx set, vy is additive so attacks don't steal existing inertia)
+  // When auto-looping from the tuner or when freezePlayer is enabled, suppress attack-applied movement so the player remains in place for easier testing.
   const dir = p.facing === 'right' ? 1 : -1;
-  if (frameData.movement) {
-    p.vx = dir * (frameData.movement.vx || 0);
-    // Add vertical component instead of replacing to preserve and augment current momentum
-    if (frameData.movement.vy !== undefined && frameData.movement.vy !== 0) {
-      p.vy += frameData.movement.vy;
-      p.isGrounded = false;
+  if (!(controller.loopSelectedAttack || controller.freezePlayer)) {
+    if (frameData.movement) {
+      p.vx = dir * (frameData.movement.vx || 0);
+      // Add vertical component instead of replacing to preserve and augment current momentum
+      if (frameData.movement.vy !== undefined && frameData.movement.vy !== 0) {
+        p.vy += frameData.movement.vy;
+        p.isGrounded = false;
+      }
     }
+  } else {
+    // Ensure velocities are stable for tuner playback
+    p.vx = 0;
+    // don't forcibly change vertical grounding unless movement explicitly intends to send player airborne in non-loop mode
+    // preserve p.vy when freezePlayer is set (so you can test mid-air poses), but zero it for loopSelectedAttack to keep consistent frame playback
+    if (controller.loopSelectedAttack) p.vy = 0;
   }
   
   // Blade Dance specific logic
