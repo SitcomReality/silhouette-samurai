@@ -20,6 +20,24 @@ export const BLADE_DANCE_DATA = {
   cooldown: 0.4
 };
 
+export const SWOOSH_CONFIG = {
+  neutral: { type: 'arc_swoosh', offsetX: 12, offsetY: -45, startAngle: 0.9, endAngle: -0.1, radius: 62, thickness: 30, squashY: 0.28, maxLife: 0.22 },
+  forward: { type: 'arc_swoosh', offsetX: 48, offsetY: -40, startAngle: 0.4, endAngle: -0.15, radius: 75, thickness: 25, squashY: 1.0, maxLife: 0.25 },
+  up: { type: 'arc_swoosh', offsetX: 0, offsetY: -30, startAngle: -0.1, endAngle: -0.9, radius: 65, thickness: 35, squashY: 1.0, maxLife: 0.28 },
+  down: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: 0.8, endAngle: -0.1, radius: 80, thickness: 30, squashY: 0.4, maxLife: 0.35 },
+  air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: 0.9, endAngle: -0.1, radius: 58, thickness: 28, squashY: 0.28, maxLife: 0.22 },
+  air_forward: { type: 'arc_swoosh', offsetX: 40, offsetY: -35, startAngle: 0.5, endAngle: -0.2, radius: 70, thickness: 30, squashY: 1.0, maxLife: 0.3 },
+  air_up: { type: 'arc_swoosh', offsetX: 0, offsetY: -40, startAngle: -0.2, endAngle: -0.95, radius: 60, thickness: 32, squashY: 1.0, maxLife: 0.3 },
+  air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: 1.57, length: 150, width: 35, maxLife: 0.25 },
+  dance_starter: { type: 'arc_swoosh', offsetX: 48, offsetY: -38, startAngle: 0.4, endAngle: -0.15, radius: 75, thickness: 28, squashY: 1.0, maxLife: 0.25 },
+  dance_linker_neutral: { type: 'arc_swoosh', offsetX: 35, offsetY: -38, startAngle: 0.5, endAngle: -0.1, radius: 65, thickness: 25, squashY: 1.0, maxLife: 0.22 },
+  dance_linker_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -45, startAngle: -0.15, endAngle: -0.85, radius: 60, thickness: 28, squashY: 1.0, maxLife: 0.24 },
+  dance_linker_down: { type: 'arc_swoosh', offsetX: 35, offsetY: -15, startAngle: 0.75, endAngle: -0.15, radius: 70, thickness: 26, squashY: 0.4, maxLife: 0.26 },
+  dance_finisher_neutral: { type: 'arc_swoosh', offsetX: 42, offsetY: -40, startAngle: 0.9, endAngle: -0.1, radius: 90, thickness: 60, squashY: 0.3, maxLife: 0.4 },
+  dance_finisher_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -60, startAngle: -0.1, endAngle: -1.0, radius: 85, thickness: 50, squashY: 1.0, maxLife: 0.38 },
+  dance_finisher_down: { type: 'streak', offsetX: 0, offsetY: -30, angle: 1.57, length: 180, width: 45, maxLife: 0.35 }
+};
+
 export class AttackFrameData {
   constructor(name, data) {
     this.name = name;

@@ -1,4 +1,4 @@
-import { ATTACK_FRAME_DATA } from '../frame-data.js';
+import { ATTACK_FRAME_DATA, SWOOSH_CONFIG } from '../frame-data.js';
 
 export function triggerAttack(controller, attackType) {
   const p = controller.player;
@@ -44,25 +44,7 @@ export function triggerAttack(controller, attackType) {
 }
 
 function createAttackSwoosh(controller, p, attackType) {
-  const swooshes = {
-    neutral: { type: 'arc_swoosh', offsetX: 12, offsetY: -45, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 62, thickness: 30, squashY: 0.28, maxLife: 0.22 },
-    forward: { type: 'arc_swoosh', offsetX: 48, offsetY: -40, startAngle: Math.PI * 0.4, endAngle: -Math.PI * 0.15, radius: 75, thickness: 25, maxLife: 0.25 },
-    up: { type: 'arc_swoosh', offsetX: 0, offsetY: -30, startAngle: -Math.PI * 0.1, endAngle: -Math.PI * 0.9, radius: 65, thickness: 35, maxLife: 0.28 },
-    down: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: Math.PI * 0.8, endAngle: -Math.PI * 0.1, radius: 80, thickness: 30, squashY: 0.4, maxLife: 0.35 },
-    air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 58, thickness: 28, squashY: 0.28, maxLife: 0.22 },
-    air_forward: { type: 'arc_swoosh', offsetX: 40, offsetY: -35, startAngle: Math.PI * 0.5, endAngle: -Math.PI * 0.2, radius: 70, thickness: 30, maxLife: 0.3 },
-    air_up: { type: 'arc_swoosh', offsetX: 0, offsetY: -40, startAngle: -Math.PI * 0.2, endAngle: -Math.PI * 0.95, radius: 60, thickness: 32, maxLife: 0.3 },
-    air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: Math.PI / 2, length: 150, width: 35, maxLife: 0.25 },
-    dance_starter: { type: 'arc_swoosh', offsetX: 48, offsetY: -38, startAngle: Math.PI * 0.4, endAngle: -Math.PI * 0.15, radius: 75, thickness: 28, maxLife: 0.25 },
-    dance_linker_neutral: { type: 'arc_swoosh', offsetX: 35, offsetY: -38, startAngle: Math.PI * 0.5, endAngle: -Math.PI * 0.1, radius: 65, thickness: 25, maxLife: 0.22 },
-    dance_linker_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -45, startAngle: -Math.PI * 0.15, endAngle: -Math.PI * 0.85, radius: 60, thickness: 28, maxLife: 0.24 },
-    dance_linker_down: { type: 'arc_swoosh', offsetX: 35, offsetY: -15, startAngle: Math.PI * 0.75, endAngle: -Math.PI * 0.15, radius: 70, thickness: 26, squashY: 0.4, maxLife: 0.26 },
-    dance_finisher_neutral: { type: 'arc_swoosh', offsetX: 42, offsetY: -40, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 90, thickness: 60, squashY: 0.3, maxLife: 0.4 },
-    dance_finisher_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -60, startAngle: -Math.PI * 0.1, endAngle: -Math.PI * 1.0, radius: 85, thickness: 50, maxLife: 0.38 },
-    dance_finisher_down: { type: 'streak', offsetX: 0, offsetY: -30, angle: Math.PI / 2, length: 180, width: 45, maxLife: 0.35 }
-  };
-  
-  const config = swooshes[attackType];
+  const config = SWOOSH_CONFIG[attackType];
   if (!config) return;
   
   const dir = p.facing === 'right' ? 1 : -1;
@@ -80,8 +62,8 @@ function createAttackSwoosh(controller, p, attackType) {
   };
   
   if (config.type === 'arc_swoosh') {
-    fx.startAngle = config.startAngle;
-    fx.endAngle = config.endAngle;
+    fx.startAngle = config.startAngle * Math.PI;
+    fx.endAngle = config.endAngle * Math.PI;
     fx.radius = config.radius;
     fx.thickness = config.thickness;
     fx.squashY = config.squashY || 1.0;

@@ -165,12 +165,14 @@ export class UIOverlay {
       this.attackData = module.ATTACK_FRAME_DATA;
       this.physicsData = module.PHYSICS_DATA;
       this.bladeDanceData = module.BLADE_DANCE_DATA;
+      this.swooshData = module.SWOOSH_CONFIG;
       
       // Create deep baseline copies so we can export only changed values later
       this._tunerBaseline = {
         physics: JSON.parse(JSON.stringify(this.physicsData)),
         bladeDance: JSON.parse(JSON.stringify(this.bladeDanceData)),
-        attacks: {}
+        attacks: {},
+        swooshes: JSON.parse(JSON.stringify(this.swooshData))
       };
       for (const [k, v] of Object.entries(this.attackData)) {
         // serialize instance properties
@@ -199,7 +201,7 @@ export class UIOverlay {
       
       document.getElementById('btn-export-tuner').onclick = () => {
         const baseline = this._tunerBaseline;
-        const exportData = { PHYSICS_DATA: {}, BLADE_DANCE_DATA: {}, ATTACK_FRAME_DATA: {} };
+        const exportData = { PHYSICS_DATA: {}, BLADE_DANCE_DATA: {}, SWOOSH_CONFIG: {}, ATTACK_FRAME_DATA: {} };
 
         // Physics diffs
         for (const [k, v] of Object.entries(this.physicsData)) {
@@ -209,6 +211,11 @@ export class UIOverlay {
         // Blade dance diffs
         for (const [k, v] of Object.entries(this.bladeDanceData)) {
           if (baseline.bladeDance[k] !== v) exportData.BLADE_DANCE_DATA[k] = v;
+        }
+
+        // Swoosh diffs
+        for (const [k, v] of Object.entries(this.swooshData)) {
+          if (JSON.stringify(baseline.swooshes[k]) !== JSON.stringify(v)) exportData.SWOOSH_CONFIG[k] = v;
         }
 
         // Attacks diffs
@@ -241,6 +248,7 @@ export class UIOverlay {
         // Clean up empty sections (don't include if no changes)
         if (Object.keys(exportData.PHYSICS_DATA).length === 0) delete exportData.PHYSICS_DATA;
         if (Object.keys(exportData.BLADE_DANCE_DATA).length === 0) delete exportData.BLADE_DANCE_DATA;
+        if (Object.keys(exportData.SWOOSH_CONFIG).length === 0) delete exportData.SWOOSH_CONFIG;
         if (Object.keys(exportData.ATTACK_FRAME_DATA).length === 0) delete exportData.ATTACK_FRAME_DATA;
 
         const payload = JSON.stringify(exportData, null, 2);
@@ -324,6 +332,27 @@ export class UIOverlay {
     this.createSlider(container, 'Head Y', data.anim, 'headY', -100, 20, 1);
     this.createSlider(container, 'Body Bot X', data.anim, 'bodyBotX', -40, 40, 1);
     this.createSlider(container, 'Body Bot Y', data.anim, 'bodyBotY', -40, 40, 1);
+
+    // Swoosh customization
+    if (this.swooshData && this.swooshData[key]) {
+      const s = this.swooshData[key];
+      this.createSectionHeader(container, `Swoosh: ${s.type.replace('_', ' ')}`);
+      this.createSlider(container, 'Swoosh Offset X', s, 'offsetX', -100, 100, 1);
+      this.createSlider(container, 'Swoosh Offset Y', s, 'offsetY', -100, 100, 1);
+      this.createSlider(container, 'Swoosh Duration', s, 'maxLife', 0.05, 1.0, 0.01);
+      
+      if (s.type === 'arc_swoosh') {
+        this.createSlider(container, 'Start Angle (x PI)', s, 'startAngle', -2, 2, 0.05);
+        this.createSlider(container, 'End Angle (x PI)', s, 'endAngle', -2, 2, 0.05);
+        this.createSlider(container, 'Radius', s, 'radius', 10, 150, 1);
+        this.createSlider(container, 'Thickness', s, 'thickness', 1, 100, 1);
+        this.createSlider(container, 'Squash Y', s, 'squashY', 0.1, 2.0, 0.05);
+      } else if (s.type === 'streak') {
+        this.createSlider(container, 'Angle (Rad)', s, 'angle', -Math.PI, Math.PI, 0.05);
+        this.createSlider(container, 'Length', s, 'length', 10, 400, 1);
+        this.createSlider(container, 'Width', s, 'width', 1, 100, 1);
+      }
+    }
   }
 
   refreshPhysicsTuner() {
