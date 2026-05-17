@@ -156,8 +156,7 @@ export class CombatTuner {
       if (s.type === 'arc_swoosh') {
         createSlider(container, 'Start Angle (x PI)', s, 'startAngle', -2, 2, 0.05);
         createSlider(container, 'End Angle (x PI)', s, 'endAngle', -2, 2, 0.05);
-        createSlider(container, 'Radius', s, 'radius', 10, 150, 1);
-        createSlider(container, 'Thickness', s, 'thickness', 1, 100, 1);
+        // Radius and Thickness are fixed globally (radius=100, thickness=20) and no longer editable here.
         createSlider(container, 'Squash Y', s, 'squashY', 0.1, 2.0, 0.05);
       } else if (s.type === 'streak') {
         createSlider(container, 'Angle (Rad)', s, 'angle', -Math.PI, Math.PI, 0.05);

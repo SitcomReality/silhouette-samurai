@@ -64,8 +64,9 @@ function createAttackSwoosh(controller, p, attackType) {
   if (config.type === 'arc_swoosh') {
     fx.startAngle = config.startAngle * Math.PI;
     fx.endAngle = config.endAngle * Math.PI;
-    fx.radius = config.radius;
-    fx.thickness = config.thickness;
+    // Use global convention: radius 100 and thickness 20
+    fx.radius = 100;
+    fx.thickness = 20;
     fx.squashY = config.squashY || 1.0;
   } else if (config.type === 'streak') {
     fx.angle = config.angle;
