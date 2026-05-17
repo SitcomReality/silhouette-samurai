@@ -90,12 +90,12 @@ export const ATTACK_FRAME_DATA = {
   dance_starter: new AttackFrameData('dance_starter', {
     startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
     range: { width: 80, height: 60, offsetX: 50, offsetY: -38 },
-    anim: { swordLen: 90, startAngle: 0.6, endAngle: -0.1, bodyTopX: 5, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 4 }
+    anim: { swordLen: 90, startAngle: 0.6, endAngle: 0, bodyTopX: 5, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 4 }
   }),
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {
     startup: 6, active: 4, recovery: 24, damage: 12, knockback: { x: 6, y: -2 }, hitstun: 0.35, movement: { vx: 18, vy: 0 },
     range: { width: 85, height: 40, offsetX: 40, offsetY: -38 },
-    anim: { swordLen: 85, startAngle: 0.5, endAngle: -0.4, bodyTopX: 12, bodyTopY: -35, headX: 18, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 3.5 }
+    anim: { swordLen: 85, startAngle: -1, endAngle: 0, bodyTopX: 7, bodyTopY: -35, headX: 11, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 3.5 }
   }),
   dance_linker_up: new AttackFrameData('dance_linker_up', {
     startup: 8, active: 4, recovery: 24, damage: 10, knockback: { x: 2, y: -8 }, hitstun: 0.35, movement: { vx: 6, vy: -4 },
