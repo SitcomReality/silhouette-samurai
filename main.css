@@ -188,8 +188,10 @@ body, html {
 
 .combat-tuner {
   position: absolute;
-  bottom: 120%;
-  left: 0;
+  /* Place tuner inside the viewport at the bottom-right for easy access on all sizes */
+  bottom: 1.5rem;
+  right: 1.5rem;
+  left: auto;
   width: 22rem;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(12px);
@@ -200,6 +202,8 @@ body, html {
   pointer-events: auto;
   z-index: 100;
   max-height: 75vh;
+  /* Slight elevation shadow so it stands out above UI */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 .tuner-header {
   padding: 0.75rem;
