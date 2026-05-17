@@ -88,9 +88,9 @@ export const ATTACK_FRAME_DATA = {
     anim: { swordLen: 58, startAngle: 0.15, endAngle: -0.35, bodyTopX: 22, bodyTopY: -15, headX: 26, headY: -25, bodyBotX: -10, bodyBotY: 0, swordThickness: 3 }
   }),
   dance_starter: new AttackFrameData('dance_starter', {
-    startup: 4, active: 5, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
-    range: { width: 95, height: 45, offsetX: 50, offsetY: -38 },
-    anim: { swordLen: 90, startAngle: 0.6, endAngle: -0.2, bodyTopX: 15, bodyTopY: -35, headX: 20, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 4 }
+    startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
+    range: { width: 80, height: 60, offsetX: 50, offsetY: -38 },
+    anim: { swordLen: 90, startAngle: 0.6, endAngle: -0.1, bodyTopX: 5, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 4 }
   }),
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {
     startup: 6, active: 4, recovery: 24, damage: 12, knockback: { x: 6, y: -2 }, hitstun: 0.35, movement: { vx: 18, vy: 0 },
