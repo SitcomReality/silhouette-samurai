@@ -39,74 +39,74 @@ export class AttackFrameData {
 export const ATTACK_FRAME_DATA = {
   // Grounded attacks
   neutral: new AttackFrameData('neutral', {
-    startup: 4,
-    active: 3,
-    recovery: 8,
-    damage: 10,
+    startup: 2,
+    active: 4,
+    recovery: 6,
+    damage: 8,
     knockback: { x: 3, y: -1 },
-    hitstun: 0.25,
-    range: { width: 55, height: 30, offsetX: 28, offsetY: -40 }
+    hitstun: 0.2,
+    range: { width: 60, height: 35, offsetX: 30, offsetY: -40 }
   }),
 
   forward: new AttackFrameData('forward', {
-    startup: 6,
-    active: 4,
-    recovery: 12,
-    damage: 15,
-    knockback: { x: 6, y: -2 },
-    hitstun: 0.35,
-    movement: { vx: 18, vy: 0 },
-    range: { width: 70, height: 35, offsetX: 40, offsetY: -38 }
+    startup: 5,
+    active: 5,
+    recovery: 10,
+    damage: 14,
+    knockback: { x: 7, y: -2 },
+    hitstun: 0.3,
+    movement: { vx: 20, vy: 0 },
+    range: { width: 75, height: 40, offsetX: 45, offsetY: -38 }
   }),
 
   up: new AttackFrameData('up', {
-    startup: 8,
-    active: 5,
-    recovery: 14,
-    damage: 18,
-    knockback: { x: 2, y: -12 },
-    hitstun: 0.5,
+    startup: 6,
+    active: 6,
+    recovery: 12,
+    damage: 16,
+    knockback: { x: 2, y: -14 },
+    hitstun: 0.45,
     launch: true,
-    range: { width: 50, height: 70, offsetX: 20, offsetY: -55 },
+    range: { width: 55, height: 75, offsetX: 20, offsetY: -55 },
     sweetspot: { 
-      offsetX: 25, offsetY: -75, radius: 15,
-      damageBonus: 5, knockbackMult: 1.3 
+      offsetX: 25, offsetY: -75, radius: 18,
+      damageBonus: 6, knockbackMult: 1.4 
     }
   }),
 
   down: new AttackFrameData('down', {
-    startup: 7,
-    active: 4,
-    recovery: 13,
+    startup: 4,
+    active: 5,
+    recovery: 10,
     damage: 12,
-    knockback: { x: 4, y: -8 },
-    hitstun: 0.4,
+    knockback: { x: 5, y: -7 },
+    hitstun: 0.35,
     trip: true,
-    range: { width: 65, height: 25, offsetX: 35, offsetY: -15 }
+    range: { width: 70, height: 30, offsetX: 35, offsetY: -15 }
   }),
 
   // Aerial attacks
   air_neutral: new AttackFrameData('air_neutral', {
-    startup: 5,
-    active: 4,
-    recovery: 10,
-    damage: 11,
+    startup: 3,
+    active: 5,
+    recovery: 8,
+    damage: 10,
     knockback: { x: 5, y: -3 },
-    hitstun: 0.3,
+    hitstun: 0.25,
     groundOnly: false,
-    range: { width: 55, height: 40, offsetX: 28, offsetY: -40 }
+    range: { width: 60, height: 45, offsetX: 30, offsetY: -40 }
   }),
 
   air_forward: new AttackFrameData('air_forward', {
-    startup: 7,
-    active: 5,
-    recovery: 15,
-    damage: 16,
-    knockback: { x: 8, y: -4 },
-    hitstun: 0.4,
+    startup: 4,
+    active: 6,
+    recovery: 12,
+    damage: 15,
+    knockback: { x: 10, y: -3 },
+    hitstun: 0.35,
     groundOnly: false,
-    movement: { vx: 12, vy: 2 },
-    range: { width: 65, height: 40, offsetX: 38, offsetY: -35 }
+    movement: { vx: 28, vy: 0 }, // Significant forward lunge
+    range: { width: 70, height: 45, offsetX: 40, offsetY: -35 }
   }),
 
   air_up: new AttackFrameData('air_up', {
@@ -133,16 +133,16 @@ export const ATTACK_FRAME_DATA = {
     range: { width: 40, height: 50, offsetX: 0, offsetY: 10 }
   }),
 
-  // Blade Dance chain attacks - increased durations for rhythmic ballet feel
+  // Blade Dance chain attacks - Snappier starts, rhythmic recoveries
   dance_starter: new AttackFrameData('dance_starter', {
-    startup: 10,
-    active: 5,
-    recovery: 28,
-    damage: 12,
-    knockback: { x: 5, y: -1 },
-    hitstun: 0.35,
-    movement: { vx: 22, vy: 0 },
-    range: { width: 75, height: 35, offsetX: 40, offsetY: -38 }
+    startup: 5,
+    active: 6,
+    recovery: 20,
+    damage: 15,
+    knockback: { x: 6, y: -1 },
+    hitstun: 0.4,
+    movement: { vx: 25, vy: 0 },
+    range: { width: 80, height: 40, offsetX: 45, offsetY: -38 }
   }),
 
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {

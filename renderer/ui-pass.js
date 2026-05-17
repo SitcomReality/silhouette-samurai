@@ -41,4 +41,37 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
     ctx.fillText(ft.text, scX, scY);
     ctx.restore();
   }
+
+  // Combat Status Overlay (only when devMode or tuner is active)
+  if (controller.devMode || controller.tunerActive) {
+    const p = controller.player;
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.fillRect(10, 10, 200, 120);
+    ctx.strokeStyle = 'white';
+    ctx.strokeRect(10, 10, 200, 120);
+    
+    ctx.font = '10px monospace';
+    ctx.fillStyle = 'white';
+    let y = 25;
+    ctx.fillText(`STATE: ${p.state}`, 20, y); y += 15;
+    ctx.fillText(`ATTACK: ${p.attackType}`, 20, y); y += 15;
+    ctx.fillText(`FRAME: ${Math.floor(p.attackFrameTime * 60)}`, 20, y); y += 15;
+    ctx.fillText(`DANCE: ${p.bladeDanceState || 'none'}`, 20, y); y += 15;
+    ctx.fillText(`WINDOW: ${p.bladeDanceInputWindow.toFixed(2)}`, 20, y); y += 15;
+    ctx.fillText(`COMBO: ${p.combo}`, 20, y); y += 15;
+    
+    // Blade Dance Timing Indicator
+    if (p.bladeDanceState && p.bladeDanceInputWindow > 0) {
+      const barW = 100;
+      const progress = p.bladeDanceInputWindow / 0.5; // normalized against max window approx
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fillRect(20, y, barW, 4);
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(20, y, barW * progress, 4);
+      ctx.fillText(`PRESS NOW!`, 130, y + 5);
+    }
+    
+    ctx.restore();
+  }
 }

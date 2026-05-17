@@ -17,6 +17,13 @@ export function determineAttack(controller) {
   else if (down) direction = 'down';
   else if (forward) direction = 'forward';
   
+  // Priority: Sliding Attacks
+  const isSliding = (p.isSliding && p.state === 'attack' && p.attackType === 'sweep') || 
+                    (down && p.isGrounded && Math.abs(p.vx) > 5 && p.state !== 'attack');
+  if (isSliding && p.isGrounded && !p.bladeDanceState) {
+    return 'down'; // Sweep
+  }
+
   // Check for Blade Dance initiation (forward attack while grounded)
   if (direction === 'forward' && p.isGrounded && !p.bladeDanceState) {
     if (controller.bladeDance && controller.bladeDance.canInitiate(p)) {

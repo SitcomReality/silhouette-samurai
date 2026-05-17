@@ -21,8 +21,13 @@ export class UIOverlay {
     this.headerIcon = document.getElementById('header-icon');
     this.headerHighlight = document.getElementById('header-highlight');
     
+    this.tunerEl = document.getElementById('combat-tuner');
+    this.tunerSelect = document.getElementById('tuner-attack-select');
+    this.tunerControls = document.getElementById('tuner-controls');
+    
     this.initThemes();
     this.initControls();
+    this.initTuner();
     
     this.lastScore = -1;
     this.lastCombo = -1;
@@ -110,6 +115,94 @@ export class UIOverlay {
     }
   }
   
+  initTuner() {
+    const btnToggle = document.getElementById('btn-toggle-tuner');
+    const btnClose = document.getElementById('btn-close-tuner');
+    
+    btnToggle.onclick = () => {
+      this.tunerEl.classList.toggle('hidden');
+      this.controller.tunerActive = !this.tunerEl.classList.contains('hidden');
+      this.refreshTuner();
+    };
+    btnClose.onclick = () => {
+      this.tunerEl.classList.add('hidden');
+      this.controller.tunerActive = false;
+    };
+
+    // Lazy load frame data modules
+    import('./combat/frame-data.js').then(module => {
+      this.attackData = module.ATTACK_FRAME_DATA;
+      Object.keys(this.attackData).forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = key.replace(/_/g, ' ').toUpperCase();
+        this.tunerSelect.appendChild(opt);
+      });
+      
+      this.tunerSelect.onchange = () => this.refreshTuner();
+    });
+  }
+
+  refreshTuner() {
+    if (!this.attackData || !this.tunerSelect.value) return;
+    const key = this.tunerSelect.value;
+    const data = this.attackData[key];
+    
+    this.tunerControls.innerHTML = '';
+    
+    const fields = [
+      { name: 'startup', label: 'Startup (Frames)', min: 0, max: 60 },
+      { name: 'active', label: 'Active (Frames)', min: 1, max: 60 },
+      { name: 'recovery', label: 'Recovery (Frames)', min: 0, max: 120 },
+      { name: 'damage', label: 'Damage', min: 0, max: 100 },
+      { name: 'hitstun', label: 'Hitstun (Sec)', min: 0, max: 2, step: 0.05 },
+    ];
+
+    fields.forEach(field => {
+      const container = document.createElement('div');
+      container.className = 'tuner-control';
+      
+      const val = data[field.name];
+      container.innerHTML = `
+        <label>${field.label} <span class="tuner-val">${val}</span></label>
+        <input type="range" min="${field.min}" max="${field.max}" step="${field.step || 1}" value="${val}">
+      `;
+      
+      const input = container.querySelector('input');
+      const valDisplay = container.querySelector('.tuner-val');
+      
+      input.oninput = (e) => {
+        const newVal = parseFloat(e.target.value);
+        data[field.name] = newVal;
+        valDisplay.textContent = newVal;
+        // Re-calculate total frames if needed
+        if (['startup', 'active', 'recovery'].includes(field.name)) {
+          data.totalFrames = data.startup + data.active + data.recovery;
+        }
+      };
+      
+      this.tunerControls.appendChild(container);
+    });
+
+    // Special handling for nested movement
+    if (data.movement) {
+      const mContainer = document.createElement('div');
+      mContainer.className = 'tuner-control';
+      mContainer.innerHTML = `
+        <label>Lunge Velocity X <span class="tuner-val">${data.movement.vx}</span></label>
+        <input type="range" min="0" max="60" step="1" value="${data.movement.vx}">
+      `;
+      const mInput = mContainer.querySelector('input');
+      const mVal = mContainer.querySelector('.tuner-val');
+      mInput.oninput = (e) => {
+        const newVal = parseInt(e.target.value);
+        data.movement.vx = newVal;
+        mVal.textContent = newVal;
+      };
+      this.tunerControls.appendChild(mContainer);
+    }
+  }
+
   update() {
     const stats = this.controller.stats;
     const currentCombo = this.controller.player.combo;
