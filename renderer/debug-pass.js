@@ -1,7 +1,7 @@
 import { getActiveHitbox } from '../combat/hitbox.js';
 
 export function renderDebug(ctx, controller, viewWidth, camYOffset) {
-  const drawCharacterDebug = (char, x, y, color) => {
+  const drawCharacterDebug = (char, entity, color) => {
     if (!char.world) return;
     const w = char.world;
     
@@ -58,10 +58,25 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       ctx.lineTo(bx, by);
       ctx.stroke();
     }
+
+    // Hurtbox rectangle (centered roughly around the character body)
+    const hw = (char.width || 30);
+    const hh = (char.height || 70);
+    const centerX = (entity.x - controller.cameraX) + viewWidth / 2;
+    const centerY = (entity.y - 40) + camYOffset; // match collision checks which offset by ~40
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#10b981'; // green tint for hurtbox
+    ctx.fillRect(centerX - hw/2, centerY - hh/2, hw, hh);
+    ctx.restore();
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(centerX - hw/2, centerY - hh/2, hw, hh);
   };
 
+  // Player debug (character + hurtbox + active hitbox if attacking)
   if (controller.player.character) {
-    drawCharacterDebug(controller.player.character, controller.player.x, controller.player.y, '#38bdf8');
+    drawCharacterDebug(controller.player.character, controller.player, '#38bdf8');
     
     if (controller.player.state === 'attack') {
       // Derive normalized attack progress from the active AttackFrameData (safer than relying on a non-existent attackTimer)
@@ -80,9 +95,25 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
     }
   }
   
+  // Entities: draw character debug, hurtboxes and their active hitboxes when attacking
   controller.entities.forEach(ent => {
     if (ent.type !== 'crate' && ent.character) {
-      drawCharacterDebug(ent.character, ent.x, ent.y, ent.state === 'dead' ? '#64748b' : '#f43f5e');
+      const color = ent.state === 'dead' ? '#64748b' : '#f43f5e';
+      drawCharacterDebug(ent.character, ent, color);
+
+      if (ent.state === 'attack' && ent.attackFrameData) {
+        const progress = ent.attackFrameTime / ent.attackFrameData.getDuration();
+        const eh = getActiveHitbox(ent, ent.attackType, progress);
+        if (eh) {
+          const hx = (eh.x - controller.cameraX) + viewWidth / 2;
+          const hy = eh.y + camYOffset;
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.25)';
+          ctx.fillRect(hx - eh.width/2, hy - eh.height/2, eh.width, eh.height);
+          ctx.strokeStyle = '#ff4444';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(hx - eh.width/2, hy - eh.height/2, eh.width, eh.height);
+        }
+      }
     } else if (ent.type === 'crate') {
       const scX = (ent.x - controller.cameraX) + viewWidth / 2;
       const scY = ent.y - (ent.height || 50) / 2 + camYOffset;
