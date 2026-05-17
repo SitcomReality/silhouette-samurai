@@ -48,8 +48,8 @@ export class AttackFrameData {
 export const ATTACK_FRAME_DATA = {
   neutral: new AttackFrameData('neutral', {
     startup: 2, active: 4, recovery: 6, damage: 8, knockback: { x: 3, y: -1 }, hitstun: 0.2,
-    range: { width: 60, height: 35, offsetX: 30, offsetY: -40 },
-    anim: { swordLen: 75, startAngle: 0.4, endAngle: -0.4, bodyTopX: 8, bodyTopY: -35, headX: 12, headY: -55, bodyBotX: -5, bodyBotY: 0, swordThickness: 3 }
+    range: { width: 70, height: 35, offsetX: 60, offsetY: -53 },
+    anim: { swordLen: 75, startAngle: 0.4, endAngle: -0.2, bodyTopX: 0, bodyTopY: -35, headX: -11, headY: -55, bodyBotX: -5, bodyBotY: 0, swordThickness: 3 }
   }),
   forward: new AttackFrameData('forward', {
     startup: 6, active: 4, recovery: 12, damage: 16, knockback: { x: 9, y: -2 }, hitstun: 0.35, movement: { vx: 26, vy: 0 },

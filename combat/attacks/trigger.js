@@ -45,7 +45,7 @@ export function triggerAttack(controller, attackType) {
 
 function createAttackSwoosh(controller, p, attackType) {
   const swooshes = {
-    neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 62, thickness: 30, squashY: 0.28, maxLife: 0.22 },
+    neutral: { type: 'arc_swoosh', offsetX: 12, offsetY: -45, startAngle: Math.PI * 0.9, endAngle: -Math.PI * 0.1, radius: 62, thickness: 30, squashY: 0.28, maxLife: 0.22 },
     forward: { type: 'arc_swoosh', offsetX: 48, offsetY: -40, startAngle: Math.PI * 0.4, endAngle: -Math.PI * 0.15, radius: 75, thickness: 25, maxLife: 0.25 },
     up: { type: 'arc_swoosh', offsetX: 0, offsetY: -30, startAngle: -Math.PI * 0.1, endAngle: -Math.PI * 0.9, radius: 65, thickness: 35, maxLife: 0.28 },
     down: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: Math.PI * 0.8, endAngle: -Math.PI * 0.1, radius: 80, thickness: 30, squashY: 0.4, maxLife: 0.35 },
