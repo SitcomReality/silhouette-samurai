@@ -63,10 +63,11 @@ export function getActiveHitbox(entity, attackType, attackProgress) {
     hitboxX = x + dir * 30;
     hitboxY = y - 50;
   } else if (attackType === 'up_slash') {
-    hitboxW = 60;
-    hitboxH = 70;
-    hitboxX = x + dir * 20;
-    hitboxY = y - 60;
+    // Wider, higher hurtbox to match an upward launching sword arc
+    hitboxW = 110;               // wider to capture sweeping arc
+    hitboxH = 80;                // tall but focused above the player's head
+    hitboxX = x + dir * 30;      // reach a bit further forward
+    hitboxY = y - 80;            // positioned higher to sit above the character
   } else if (attackType === 'sweep') {
     hitboxW = 75;
     hitboxH = 30;

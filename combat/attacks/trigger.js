@@ -19,12 +19,13 @@ export function triggerAttack(controller, attackType) {
   p.attackHitConfirmed = false;
   p.attackHitEntities = new Set(); // Track which entities we've hit
   
-  // Apply movement on startup
+  // Apply movement on startup (vx set, vy is additive so attacks don't steal existing inertia)
   const dir = p.facing === 'right' ? 1 : -1;
   if (frameData.movement) {
-    p.vx = dir * frameData.movement.vx;
-    p.vy = frameData.movement.vy;
-    if (frameData.movement.vy !== 0) {
+    p.vx = dir * (frameData.movement.vx || 0);
+    // Add vertical component instead of replacing to preserve and augment current momentum
+    if (frameData.movement.vy !== undefined && frameData.movement.vy !== 0) {
+      p.vy += frameData.movement.vy;
       p.isGrounded = false;
     }
   }

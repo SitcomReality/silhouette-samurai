@@ -29,16 +29,23 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
   }
   
   if (attackType === 'up' || attackType === 'air_up' || attackType === 'up_slash') {
-    const easedProgress = attackProgress < 0.3 ? easeInCubic(attackProgress / 0.3) * 0.3 :
-                          0.3 + easeOutCubic((attackProgress - 0.3) / 0.7) * 0.7;
-    const arcAngle = -Math.PI * 0.15 - (easedProgress * Math.PI * 0.95);
-    const swordLen = 52;
-    t.swordBX = dir * 15 + Math.cos(arcAngle) * swordLen * dir * 0.6;
-    t.swordBY = -50 + Math.sin(arcAngle) * swordLen;
-    t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
+    // Stronger upward sweep: longer sword and wider arc, visually launching the character upward
+    const easedProgress = attackProgress < 0.25 ? easeInCubic(attackProgress / 0.25) * 0.25 :
+                          0.25 + easeOutCubic((attackProgress - 0.25) / 0.75) * 0.75;
+    // Wider swing angle and longer blade to emphasize reach
+    const arcAngle = -Math.PI * 0.25 - (easedProgress * Math.PI * 1.1);
+    const swordLen = 82; // lengthened sword
+    t.swordBX = dir * 20 + Math.cos(arcAngle) * swordLen * dir * 0.75;
+    t.swordBY = -60 + Math.sin(arcAngle) * swordLen;
+    t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir * 0.75;
     t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
-    t.bodyTopX = dir * (8 + easedProgress * 8); t.bodyTopY = -35 - easedProgress * 5;
-    t.headX = dir * (12 + easedProgress * 10); t.headY = -45 - easedProgress * 8;
+    t.swordThickness = 2.5 + (1 - easedProgress) * 1.5;
+    // Body and head lift to convey upward propulsion
+    t.bodyTopX = dir * (10 + easedProgress * 10);
+    t.bodyTopY = -40 - easedProgress * 8;
+    t.bodyBotY = -8 - easedProgress * 6;
+    t.headX = dir * (14 + easedProgress * 12);
+    t.headY = -50 - easedProgress * 10;
     return true;
   }
   

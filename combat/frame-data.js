@@ -67,10 +67,12 @@ export const ATTACK_FRAME_DATA = {
     knockback: { x: 2, y: -14 },
     hitstun: 0.45,
     launch: true,
-    range: { width: 55, height: 75, offsetX: 20, offsetY: -55 },
+    // Additive movement to boost upward momentum without zeroing existing vy
+    movement: { vx: 8, vy: -8 },
+    range: { width: 110, height: 80, offsetX: 30, offsetY: -80 },
     sweetspot: { 
-      offsetX: 25, offsetY: -75, radius: 18,
-      damageBonus: 6, knockbackMult: 1.4 
+      offsetX: 40, offsetY: -95, radius: 20,
+      damageBonus: 8, knockbackMult: 1.45 
     }
   }),
 
