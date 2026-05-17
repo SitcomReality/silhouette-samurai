@@ -80,6 +80,11 @@ export class MusicManager {
     const phraseStep = (this.barsInCurrentSection * 16) + step;
     const isTransitionBar = this.barsInCurrentSection === 3;
     const combo = this.currentCombo;
+    
+    // Progressive intensity based on combo (0-50 scale)
+    const comboIntensity = Math.min(combo / 50, 1.0);
+    const rhythmIntensity = 0.3 + comboIntensity * 0.7; // 0.3 to 1.0
+    
     const kick = DRUM_PATTERNS.kick[s][step];
     const snare = DRUM_PATTERNS.snare[s][step];
     const hat = DRUM_PATTERNS.hat[s][step];
@@ -90,27 +95,74 @@ export class MusicManager {
     const playDrums = !isTransitionBar || (s === 2);
     const filterCutoff = this.filterNode.frequency.value;
 
-    if (kick && playDrums) this.synth.playKick(time, 'action');
-    if (snare && playDrums) this.synth.playSnare(time, 'action');
-    if (hat && playDrums) this.synth.playHat(time, 'action');
-    if (bass) this.synth.playSynth(bass, time, 'base', 'sine', s === 0 ? 0.08 : 0.12, 0.4, false, true, 0.02, filterCutoff);
-    if (melody) this.synth.playSynth(melody, time, 'base', s === 0 ? 'sine' : 'triangle', s === 0 ? 0.12 : 0.18, 0.5, false, true, 0.02, filterCutoff);
-    if (arp && combo >= 4) this.synth.playSynth(arp, time, 'action', 'square', 0.03, 0.15, true, false, 0.02, filterCutoff);
-    if (counter && combo >= 8) this.synth.playSynth(counter, time, 'ballet', 'sine', 0.08, 0.3, false, false, 0.05, filterCutoff);
-    if (combo >= 10 && melody && step % 2 === 0) this.synth.playSynth(melody + 12, time, 'ballet', 'sine', 0.05, 0.2, true, false, 0.02, filterCutoff);
+    // Drums with progressive intensity
+    if (kick && playDrums) this.synth.playKick(time, 'action', rhythmIntensity);
+    if (snare && playDrums) this.synth.playSnare(time, 'action', rhythmIntensity);
+    if (hat && playDrums) this.synth.playHat(time, 'action', rhythmIntensity * 0.8);
+    
+    // Bass foundation - always present but gets fuller
+    if (bass) {
+      const bassVol = 0.1 + comboIntensity * 0.08;
+      this.synth.playString(bass, time, 'base', bassVol, 0.4, false);
+    }
+    
+    // Primary melody - piano at low combo, shifts to pluck/string at higher combos
+    if (melody) {
+      const melodyVol = 0.12 + comboIntensity * 0.08;
+      if (combo < 10) {
+        this.synth.playPiano(melody, time, 'base', melodyVol, 0.5);
+      } else if (combo < 25) {
+        this.synth.playPluck(melody, time, 'base', melodyVol, 0.5);
+      } else {
+        this.synth.playString(melody, time, 'base', melodyVol, 0.6, true);
+      }
+    }
+    
+    // Glockenspiel counter-melody appears at mid combo
+    if (counter && combo >= 8) {
+      const bellVol = 0.06 + (comboIntensity - 0.16) * 0.1;
+      this.synth.playBell(counter, time, 'ballet', bellVol, 0.35);
+    }
+    
+    // Arpeggio layer with plucks
+    if (arp && combo >= 4) {
+      const arpVol = 0.04 + comboIntensity * 0.05;
+      this.synth.playPluck(arp, time, 'action', arpVol, 0.2);
+    }
+    
+    // High octave melody doubling at high combo
+    if (combo >= 20 && melody && step % 2 === 0) {
+      const highVol = 0.05 + (comboIntensity - 0.4) * 0.08;
+      this.synth.playBell(melody + 12, time, 'ballet', highVol, 0.3);
+    }
+    
+    // Rich string pad at very high combo
+    if (combo >= 30 && melody && step % 4 === 0) {
+      const padVol = 0.08 + (comboIntensity - 0.6) * 0.1;
+      this.synth.playString(melody - 12, time, 'ballet', padVol, 1.2, true);
+    }
   }
 
   update(combo, enemyCount, enemyProximity) {
     this.currentCombo = combo;
     this.enemyProximity = enemyProximity;
     if (!this.loaded || !this.playing) return;
-    const actionTarget = Math.min(combo / 15, 1) * 0.8;
-    this.gainNodes.action.gain.setTargetAtTime(actionTarget, this.ctx.currentTime, 0.3);
-    const balletTarget = combo > 8 ? Math.min((combo - 8) / 12, 1) * 0.8 : 0;
-    this.gainNodes.ballet.gain.setTargetAtTime(balletTarget, this.ctx.currentTime, 0.5);
-    let targetFreq = 20000;
-    if (enemyCount === 0) targetFreq = 600;
-    else if (enemyProximity > 400) targetFreq = 3000;
-    this.filterNode.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.2);
+    
+    // Smoother, more gradual transitions based on combo
+    const comboFactor = Math.min(combo / 50, 1.0);
+    const actionTarget = 0.4 + comboFactor * 0.5; // Always audible, scales to full
+    this.gainNodes.action.gain.setTargetAtTime(actionTarget, this.ctx.currentTime, 0.5);
+    
+    const balletTarget = combo > 8 ? 0.3 + Math.min((combo - 8) / 42, 1.0) * 0.6 : 0.15;
+    this.gainNodes.ballet.gain.setTargetAtTime(balletTarget, this.ctx.currentTime, 0.7);
+    
+    // Base layer always present for serene ambience
+    const baseTarget = 0.7 + comboFactor * 0.3;
+    this.gainNodes.base.gain.setTargetAtTime(baseTarget, this.ctx.currentTime, 0.6);
+    
+    // Gentler filter changes
+    let targetFreq = 8000 + comboFactor * 12000;
+    if (enemyCount === 0) targetFreq = Math.max(3000, targetFreq * 0.5);
+    this.filterNode.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.4);
   }
 }

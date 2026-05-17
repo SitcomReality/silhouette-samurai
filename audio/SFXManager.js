@@ -32,78 +32,77 @@ export class SFXManager {
 
     const when = rhythmSync ? this.beatClock.snapToNext16th(this.ctx, 50) : this.ctx.currentTime;
     const isHeavy = damage > 20;
+    
+    // Check if hit is near a beat for bass boost
+    const timeToBeat = when - this.ctx.currentTime;
+    const onBeat = Math.abs(timeToBeat) < 0.05;
+    const beatBoost = onBeat ? 1.4 : 1.0;
 
-    // Short impact transient (keeps previous attack feel)
-    const transientOsc = this.ctx.createOscillator();
-    transientOsc.type = isHeavy ? 'square' : 'sine';
-    transientOsc.frequency.setValueAtTime(isHeavy ? 120 : 180, when);
-    transientOsc.frequency.exponentialRampToValueAtTime(30, when + 0.09);
+    // Enhanced bass/kick component when on-beat
+    const bassOsc = this.ctx.createOscillator();
+    bassOsc.type = 'sine';
+    bassOsc.frequency.setValueAtTime(isHeavy ? 80 : 100, when);
+    bassOsc.frequency.exponentialRampToValueAtTime(30, when + 0.15);
 
-    const transientGain = this.ctx.createGain();
-    transientGain.gain.setValueAtTime(isHeavy ? 0.55 : 0.35, when);
-    transientGain.gain.exponentialRampToValueAtTime(0.01, when + 0.14);
+    const bassGain = this.ctx.createGain();
+    bassGain.gain.setValueAtTime((isHeavy ? 0.5 : 0.35) * beatBoost, when);
+    bassGain.gain.exponentialRampToValueAtTime(0.01, when + 0.18);
 
-    transientOsc.connect(transientGain);
-    transientGain.connect(this.masterGain);
+    bassOsc.connect(bassGain);
+    bassGain.connect(this.masterGain);
 
-    // Noise body for impact
+    // Percussive noise body
     const noise = this.ctx.createBufferSource();
     const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.04));
     }
     noise.buffer = buffer;
 
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = isHeavy ? 'bandpass' : 'highpass';
-    noiseFilter.frequency.value = isHeavy ? 900 : 2600;
-    noiseFilter.Q.value = 1;
+    noiseFilter.frequency.value = isHeavy ? 800 : 2200;
+    noiseFilter.Q.value = 1.5;
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(isHeavy ? 0.45 : 0.28, when);
+    noiseGain.gain.setValueAtTime((isHeavy ? 0.4 : 0.25) * beatBoost, when);
     noiseGain.gain.linearRampToValueAtTime(0, when + 0.12);
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
     noiseGain.connect(this.masterGain);
 
-    // Refined music-aware response:
-    // Instead of a chord, we play a beat-synced high-pitched 'sparkle' 
-    // using an F-minor pentatonic scale to ensure it harmonizes perfectly.
+    // Subtle tonal component - much quieter and more integrated
     const pentatonic = [65, 68, 70, 72, 75, 77, 80, 82, 84, 87]; 
     const noteMidi = pentatonic[combo % pentatonic.length];
     const freq = 440 * Math.pow(2, (noteMidi - 69) / 12);
 
-    const sparkleOsc = this.ctx.createOscillator();
-    sparkleOsc.type = 'sine';
-    sparkleOsc.frequency.setValueAtTime(freq, when);
-    // Add a tiny pitch sweep for 'juice'
-    sparkleOsc.frequency.exponentialRampToValueAtTime(freq * 1.05, when + 0.1);
+    const toneOsc = this.ctx.createOscillator();
+    toneOsc.type = 'triangle';
+    toneOsc.frequency.setValueAtTime(freq, when);
+    toneOsc.frequency.exponentialRampToValueAtTime(freq * 1.02, when + 0.08);
 
-    const sparkleGain = this.ctx.createGain();
-    sparkleGain.gain.setValueAtTime(0.15, when);
-    sparkleGain.gain.exponentialRampToValueAtTime(0.001, when + 0.4);
+    const toneGain = this.ctx.createGain();
+    toneGain.gain.setValueAtTime(0.06, when); // Much more subtle
+    toneGain.gain.exponentialRampToValueAtTime(0.001, when + 0.25);
 
-    const sparkleFilter = this.ctx.createBiquadFilter();
-    sparkleFilter.type = 'highpass';
-    sparkleFilter.frequency.value = 1000;
+    const toneFilter = this.ctx.createBiquadFilter();
+    toneFilter.type = 'lowpass';
+    toneFilter.frequency.value = freq * 3;
+    toneFilter.Q.value = 2;
 
-    sparkleOsc.connect(sparkleFilter);
-    sparkleFilter.connect(sparkleGain);
-    sparkleGain.connect(this.masterGain);
-
-    sparkleOsc.start(when);
-    sparkleOsc.stop(when + 0.45);
+    toneOsc.connect(toneFilter);
+    toneFilter.connect(toneGain);
+    toneGain.connect(this.masterGain);
 
     // Start all sources
-    transientOsc.start(when);
-    transientOsc.stop(when + 0.15);
+    bassOsc.start(when);
+    bassOsc.stop(when + 0.2);
     noise.start(when);
-    // stop noise shortly after
     noise.stop(when + 0.12);
-
-
+    toneOsc.start(when);
+    toneOsc.stop(when + 0.3);
   }
 
   playSlam(rhythmSync = true) {
