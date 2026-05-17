@@ -26,7 +26,7 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
     return true;
   }
   
-  if (attackType === 'forward' || attackType === 'air_forward' || attackType === 'thrust') {
+  if (attackType === 'air_forward' || attackType === 'thrust') {
     const snap = Math.pow(attackProgress, 0.3);
     const swordLen = anim.swordLen ?? 95;
     

@@ -42,7 +42,8 @@ export function determineAttack(controller) {
   // Grounded attacks
   if (direction === 'up') return 'up';
   if (direction === 'down') return 'down';
-  if (direction === 'forward') return 'forward';
+  // Forward on ground is intentionally omitted here as it's handled 
+  // by the Blade Dance initiation check at the top of this function.
   return 'neutral';
 }
 

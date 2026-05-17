@@ -22,7 +22,6 @@ export const BLADE_DANCE_DATA = {
 
 export const SWOOSH_CONFIG = {
   neutral: { type: 'arc_swoosh', offsetX: 7, offsetY: -50, startAngle: 0.9, endAngle: -0.25, radius: 100, thickness: 20, squashY: 0.3, maxLife: 0.22 },
-  forward: { type: 'arc_swoosh', offsetX: 48, offsetY: -40, startAngle: 0.4, endAngle: -0.15, radius: 75, thickness: 25, squashY: 1.0, maxLife: 0.25 },
   up: { type: 'arc_swoosh', offsetX: 0, offsetY: -30, startAngle: -0.1, endAngle: -0.9, radius: 65, thickness: 35, squashY: 1.0, maxLife: 0.28 },
   down: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: 0.8, endAngle: -0.1, radius: 80, thickness: 30, squashY: 0.4, maxLife: 0.35 },
   air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: 0.9, endAngle: -0.1, radius: 58, thickness: 28, squashY: 0.28, maxLife: 0.22 },
@@ -68,11 +67,6 @@ export const ATTACK_FRAME_DATA = {
     startup: 2, active: 4, recovery: 6, damage: 8, knockback: { x: 3, y: -1 }, hitstun: 0.2,
     range: { width: 70, height: 35, offsetX: 60, offsetY: -53 },
     anim: { swordLen: 75, startAngle: 0.7, endAngle: -0.1, bodyTopX: 0, bodyTopY: -35, headX: -11, headY: -55, bodyBotX: -5, bodyBotY: 0, swordThickness: 3 }
-  }),
-  forward: new AttackFrameData('forward', {
-    startup: 6, active: 4, recovery: 12, damage: 16, knockback: { x: 9, y: -2 }, hitstun: 0.35, movement: { vx: 26, vy: 0 },
-    range: { width: 95, height: 40, offsetX: 55, offsetY: -35 },
-    anim: { swordLen: 95, startAngle: 0, endAngle: 0, bodyTopX: 15, bodyTopY: -35, headX: 20, headY: -55, bodyBotX: -10, bodyBotY: 0, swordThickness: 4 }
   }),
   up: new AttackFrameData('up', {
     startup: 6, active: 6, recovery: 12, damage: 16, knockback: { x: 2, y: -14 }, hitstun: 0.45, launch: true, movement: { vx: 8, vy: -8 },
