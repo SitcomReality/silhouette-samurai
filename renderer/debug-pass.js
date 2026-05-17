@@ -74,6 +74,24 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
     ctx.strokeRect(centerX - hw/2, centerY - hh/2, hw, hh);
   };
 
+  // Helper to draw frame-data based hitbox (used by active attack frames)
+  const drawFrameHitbox = (entity, frameData, frameTime, colorFill = 'rgba(255,0,0,0.25)', colorStroke = '#ff4444') => {
+    if (!frameData) return;
+    const currentFrame = Math.floor(frameTime * 60);
+    if (!frameData.isActive(currentFrame)) return;
+    // Use range from frame data to display exact damage area
+    const range = frameData.range;
+    if (!range) return;
+    const dir = entity.facing === 'right' ? 1 : -1;
+    const hx = (entity.x + dir * range.offsetX - controller.cameraX) + viewWidth / 2;
+    const hy = (entity.y + range.offsetY) + camYOffset;
+    ctx.fillStyle = colorFill;
+    ctx.fillRect(hx - range.width/2, hy - range.height/2, range.width, range.height);
+    ctx.strokeStyle = colorStroke;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(hx - range.width/2, hy - range.height/2, range.width, range.height);
+  };
+
   // Player debug (character + hurtbox + active hitbox if attacking)
   if (controller.player.character) {
     drawCharacterDebug(controller.player.character, controller.player, '#38bdf8');
@@ -82,15 +100,20 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       // Derive normalized attack progress from the active AttackFrameData (safer than relying on a non-existent attackTimer)
       const frameData = controller.player.attackFrameData;
       const progress = frameData ? (controller.player.attackFrameTime / frameData.getDuration()) : 0;
-      const hitbox = getActiveHitbox(controller.player, controller.player.attackType, progress);
-      if (hitbox) {
-        const hx = (hitbox.x - controller.cameraX) + viewWidth / 2;
-        const hy = hitbox.y + camYOffset;
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-        ctx.fillRect(hx - hitbox.width/2, hy - hitbox.height/2, hitbox.width, hitbox.height);
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(hx - hitbox.width/2, hy - hitbox.height/2, hitbox.width, hitbox.height);
+      // Prefer frame-data based hitbox for accuracy
+      if (frameData) {
+        drawFrameHitbox(controller.player, frameData, controller.player.attackFrameTime, 'rgba(255,0,0,0.35)', '#ff0000');
+      } else {
+        const hitbox = getActiveHitbox(controller.player, controller.player.attackType, progress);
+        if (hitbox) {
+          const hx = (hitbox.x - controller.cameraX) + viewWidth / 2;
+          const hy = hitbox.y + camYOffset;
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+          ctx.fillRect(hx - hitbox.width/2, hy - hitbox.height/2, hitbox.width, hitbox.height);
+          ctx.strokeStyle = '#ff0000';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(hx - hitbox.width/2, hy - hitbox.height/2, hitbox.width, hitbox.height);
+        }
       }
     }
   }
@@ -102,7 +125,11 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       drawCharacterDebug(ent.character, ent, color);
 
       if (ent.state === 'attack' && ent.attackFrameData) {
-        const progress = ent.attackFrameTime / ent.attackFrameData.getDuration();
+        // Draw the precise frame-data range hitbox if active
+        drawFrameHitbox(ent, ent.attackFrameData, ent.attackFrameTime, 'rgba(255,0,0,0.25)', '#ff4444');
+      } else if (ent.state === 'attack') {
+        // Fallback to older hitbox helper if frame data missing
+        const progress = ent.attackFrameTime / (ent.attackFrameData ? ent.attackFrameData.getDuration() : 1);
         const eh = getActiveHitbox(ent, ent.attackType, progress);
         if (eh) {
           const hx = (eh.x - controller.cameraX) + viewWidth / 2;
