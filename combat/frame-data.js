@@ -26,10 +26,10 @@ export const SWOOSH_CONFIG = {
   up: { type: 'arc_swoosh', offsetX: 0, offsetY: -30, startAngle: -0.1, endAngle: -0.9, radius: 65, thickness: 35, squashY: 1.0, maxLife: 0.28 },
   down: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: 0.8, endAngle: -0.1, radius: 80, thickness: 30, squashY: 0.4, maxLife: 0.35 },
   air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -35, startAngle: 0.9, endAngle: -0.1, radius: 58, thickness: 28, squashY: 0.28, maxLife: 0.22 },
-  air_forward: { type: 'arc_swoosh', offsetX: 40, offsetY: -35, startAngle: 0.5, endAngle: -0.2, radius: 70, thickness: 30, squashY: 1.0, maxLife: 0.3 },
-  air_up: { type: 'arc_swoosh', offsetX: 0, offsetY: -40, startAngle: -0.2, endAngle: -0.95, radius: 60, thickness: 32, squashY: 1.0, maxLife: 0.3 },
+  air_forward: { type: 'arc_swoosh', offsetX: 15, offsetY: -35, startAngle: 1, endAngle: -0.2, radius: 70, thickness: 30, squashY: 0.3, maxLife: 0.3 },
+  air_up: { type: 'arc_swoosh', offsetX: 10, offsetY: -70, startAngle: 0.05, endAngle: -0.95, radius: 60, thickness: 32, squashY: 1, maxLife: 0.3 },
   air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: 1.57, length: 150, width: 35, maxLife: 0.25 },
-  dance_starter: { type: 'arc_swoosh', offsetX: 0, offsetY: -44, startAngle: 0.4, endAngle: 0, radius: 100, thickness: 20, squashY: 0.8, maxLife: 0.2 },
+  dance_starter: { type: 'arc_swoosh', offsetX: 0, offsetY: -44, startAngle: 1, endAngle: 0, radius: 100, thickness: 20, squashY: 0.3, maxLife: 0.2 },
   dance_linker_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -75, startAngle: -0.6, endAngle: 0.05, radius: 100, thickness: 20, squashY: 0.7, maxLife: 0.22 },
   dance_linker_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -45, startAngle: -0.15, endAngle: -0.85, radius: 60, thickness: 28, squashY: 1.0, maxLife: 0.24 },
   dance_linker_down: { type: 'arc_swoosh', offsetX: 35, offsetY: -15, startAngle: 0.75, endAngle: -0.15, radius: 70, thickness: 26, squashY: 0.4, maxLife: 0.26 },
@@ -91,14 +91,14 @@ export const ATTACK_FRAME_DATA = {
     anim: { swordLen: 75, startAngle: 0.4, endAngle: -0.4, bodyTopX: 8, bodyTopY: -35, headX: 12, headY: -55, bodyBotX: -5, bodyBotY: 0, swordThickness: 3 }
   }),
   air_forward: new AttackFrameData('air_forward', {
-    startup: 4, active: 6, recovery: 12, damage: 15, knockback: { x: 10, y: -3 }, hitstun: 0.35, groundOnly: false, movement: { vx: 28, vy: 0 },
+    startup: 4, active: 6, recovery: 12, damage: 15, knockback: { x: 10, y: -3 }, hitstun: 0.35, groundOnly: false, movement: { vx: 33, vy: 0 },
     range: { width: 70, height: 45, offsetX: 40, offsetY: -35 },
-    anim: { swordLen: 95, startAngle: 0, endAngle: 0, bodyTopX: 15, bodyTopY: -35, headX: 20, headY: -55, bodyBotX: -10, bodyBotY: 0, swordThickness: 4 }
+    anim: { swordLen: 105, startAngle: -0.2, endAngle: 0.1, bodyTopX: 0, bodyTopY: -35, headX: 4, headY: -55, bodyBotX: -10, bodyBotY: 0, swordThickness: 4 }
   }),
   air_up: new AttackFrameData('air_up', {
     startup: 6, active: 6, recovery: 12, damage: 14, knockback: { x: 1, y: -10 }, hitstun: 0.45, groundOnly: false,
-    range: { width: 45, height: 65, offsetX: 15, offsetY: -65 },
-    anim: { swordLen: 82, startAngle: -0.25, endAngle: -1.35, bodyTopX: 20, bodyTopY: -48, headX: 26, headY: -60, bodyBotX: 0, bodyBotY: -14, swordThickness: 2.5 }
+    range: { width: 100, height: 60, offsetX: 0, offsetY: -120 },
+    anim: { swordLen: 82, startAngle: 0, endAngle: -1, bodyTopX: 20, bodyTopY: -48, headX: 26, headY: -60, bodyBotX: 0, bodyBotY: -14, swordThickness: 2.5 }
   }),
   air_down: new AttackFrameData('air_down', {
     startup: 9, active: 4, recovery: 18, damage: 20, knockback: { x: 0, y: 15 }, hitstun: 0.5, spike: true, groundOnly: false, movement: { vx: 0, vy: 8 },
@@ -108,7 +108,7 @@ export const ATTACK_FRAME_DATA = {
   dance_starter: new AttackFrameData('dance_starter', {
     startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
     range: { width: 80, height: 60, offsetX: 50, offsetY: -38 },
-    anim: { swordLen: 90, startAngle: 0.6, endAngle: 0, bodyTopX: 5, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 4 }
+    anim: { swordLen: 90, startAngle: 0.35, endAngle: 0, bodyTopX: 2, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -8, bodyBotY: 0, swordThickness: 4 }
   }),
   dance_linker_neutral: new AttackFrameData('dance_linker_neutral', {
     startup: 6, active: 4, recovery: 24, damage: 12, knockback: { x: 6, y: -2 }, hitstun: 0.35, movement: { vx: 18, vy: 0 },
