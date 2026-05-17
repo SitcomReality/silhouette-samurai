@@ -46,6 +46,11 @@ export function updatePlayerAttacks(controller, dt) {
     resolveAttackHits(controller);
   }
 
+  // Auto-loop selected attack for tuning
+  if (controller.loopSelectedAttack && p.state !== 'attack' && p.state !== 'dead') {
+    triggerAttack(controller, controller.tunerSelectedAttack || 'neutral');
+  }
+
   if (p.attackBuffer && p.attackBuffer.time > 0) {
     p.attackBuffer.time -= dt;
     

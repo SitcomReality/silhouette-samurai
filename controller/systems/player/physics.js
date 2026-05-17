@@ -10,6 +10,12 @@ export function updatePlayerPhysics(controller, dt) {
   const prevJumpPressed = controller.prevKeys['KeyW'] || controller.prevKeys['ArrowUp'] || controller.prevKeys['Space'];
   const jumpJustPressed = jumpPressed && !prevJumpPressed;
 
+  if (controller.freezePlayer) {
+    p.vx = 0;
+    p.vy = 0;
+    return;
+  }
+
   if (p.state === 'dodge') {
     if (p.dodgeTimer <= 0) {
       p.state = 'idle';

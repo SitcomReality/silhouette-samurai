@@ -20,6 +20,9 @@ export class GameController {
     this.baseGroundY = 400;
     this.cameraX = 0;
     this.devMode = false;
+    this.freezePlayer = false;
+    this.loopSelectedAttack = false;
+    this.tunerSelectedAttack = 'neutral';
     this.audioEngine = null;
     
     this.keys = {};

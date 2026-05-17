@@ -27,6 +27,18 @@ export class CombatTuner {
       </div>
       <div class="tuner-content">
         <div id="tuner-attacks" class="tuner-panel">
+          <div class="tuner-section" style="padding: 10px; border-bottom: 1px solid #334155; background: rgba(0,0,0,0.2);">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+               <label class="dev-mode-toggle" style="border: none; padding: 0; margin: 0;">
+                 <input type="checkbox" id="tuner-freeze-player" />
+                 <span>Freeze Player Movement</span>
+               </label>
+               <label class="dev-mode-toggle" style="border: none; padding: 0; margin: 0;">
+                 <input type="checkbox" id="tuner-loop-attack" />
+                 <span>Auto-Loop Selected Attack</span>
+               </label>
+            </div>
+          </div>
           <div class="tuner-section">
             <label style="color:#94a3b8;font-weight:600;display:block;margin-bottom:4px;">Select Attack:</label>
             <select id="tuner-attack-select" style="width:100%;background:#0f172a;color:white;border:1px solid #334155;padding:4px;border-radius:4px;"></select>
@@ -47,6 +59,11 @@ export class CombatTuner {
 
     const btnClose = document.getElementById('btn-close-tuner');
     const tunerSelect = document.getElementById('tuner-attack-select');
+    const freezeToggle = document.getElementById('tuner-freeze-player');
+    const loopToggle = document.getElementById('tuner-loop-attack');
+
+    freezeToggle.onchange = (e) => { this.controller.freezePlayer = e.target.checked; };
+    loopToggle.onchange = (e) => { this.controller.loopSelectedAttack = e.target.checked; };
     
     btnToggle.onclick = () => {
       this.tunerEl.classList.toggle('hidden');
@@ -81,7 +98,10 @@ export class CombatTuner {
         tunerSelect.appendChild(opt);
       });
       
-      tunerSelect.onchange = () => this.refreshAttacksTuner();
+      tunerSelect.onchange = () => {
+        this.controller.tunerSelectedAttack = tunerSelect.value;
+        this.refreshAttacksTuner();
+      };
       
       document.querySelectorAll('.tuner-tab').forEach(tab => {
         tab.onclick = (e) => {
