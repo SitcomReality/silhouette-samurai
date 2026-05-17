@@ -49,14 +49,14 @@ export const ATTACK_FRAME_DATA = {
   }),
 
   forward: new AttackFrameData('forward', {
-    startup: 5,
-    active: 5,
+    startup: 4,      // slightly quicker windup
+    active: 6,       // a focused, slightly longer active window to land the punch
     recovery: 10,
-    damage: 14,
-    knockback: { x: 7, y: -2 },
-    hitstun: 0.3,
-    movement: { vx: 20, vy: 0 },
-    range: { width: 75, height: 40, offsetX: 45, offsetY: -38 }
+    damage: 16,      // punchier damage
+    knockback: { x: 8, y: -2 },
+    hitstun: 0.32,
+    movement: { vx: 24, vy: 0 }, // stronger forward lunge to sell momentum
+    range: { width: 85, height: 44, offsetX: 50, offsetY: -38 } // extended reach to match longer-tipped visuals
   }),
 
   up: new AttackFrameData('up', {

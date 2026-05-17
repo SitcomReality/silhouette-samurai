@@ -17,15 +17,31 @@ export function applyBladeDancePose(t, dir, attackType, attackProgress) {
   }
   
   if (attackType === 'dance_linker_neutral') {
-    const extend = Math.sin(attackProgress * Math.PI);
-    const swordLen = 70;
-    t.swordAX = dir * 8; t.swordAY = -38;
-    t.swordBX = t.swordAX + dir * extend * swordLen;
-    t.swordBY = -38 + extend * 12; // More upward flourish
-    t.swordThickness = 2.5 + extend * 2.0;
-    t.bodyTopX = dir * extend * 15;
-    t.headX = dir * extend * 18;
-    t.bodyBotX = -dir * extend * 5;
+    // Make linker feel like a deliberate snap rather than a tiny poke:
+    // quick, high-contrast motion: short coil then a sharp forward thrust that visibly extends the blade tip.
+    const wind = Math.min(attackProgress / 0.28, 1.0);
+    const snap = attackProgress < 0.28 ? 0 : (attackProgress - 0.28) / 0.72;
+    const windEase = easeInCubic(wind);
+    const snapEase = easeOutCubic(snap);
+
+    const swordLen = 84; // slightly longer for visible tip travel
+    const baseAX = dir * 8;
+    const baseAY = -38;
+
+    // Sword base lifts during windup and then jerks forward on snap
+    t.swordAX = baseAX + dir * (-3 * windEase);
+    t.swordAY = baseAY - windEase * 6;
+    t.swordBX = t.swordAX + dir * (Math.max(0.2, snapEase) * swordLen);
+    t.swordBY = t.swordAY + snapEase * 16 - windEase * 6;
+
+    // Thicken blade sharply at impact
+    t.swordThickness = 2.0 + snapEase * 4.0;
+
+    // Torso/neck movement kept compact: small coil, then short recoil on snap to sell weight transfer
+    t.bodyTopX = dir * (6 * windEase + 12 * snapEase);
+    t.headX = dir * (8 * windEase + 14 * snapEase);
+    t.bodyBotX = -dir * (6 * windEase + 2 * snapEase);
+
     return true;
   }
   
