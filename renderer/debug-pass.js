@@ -1,5 +1,4 @@
 import { getActiveHitbox } from '../combat/hitbox.js';
-import { ATTACK_CONFIG } from '../combat/attacks/config.js';
 
 export function renderDebug(ctx, controller, viewWidth, camYOffset) {
   const drawCharacterDebug = (char, x, y, color) => {
@@ -65,7 +64,9 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
     drawCharacterDebug(controller.player.character, controller.player.x, controller.player.y, '#38bdf8');
     
     if (controller.player.state === 'attack') {
-      const progress = 1 - controller.player.attackTimer / ATTACK_CONFIG[controller.player.attackType].duration;
+      // Derive normalized attack progress from the active AttackFrameData (safer than relying on a non-existent attackTimer)
+      const frameData = controller.player.attackFrameData;
+      const progress = frameData ? (controller.player.attackFrameTime / frameData.getDuration()) : 0;
       const hitbox = getActiveHitbox(controller.player, controller.player.attackType, progress);
       if (hitbox) {
         const hx = (hitbox.x - controller.cameraX) + viewWidth / 2;
