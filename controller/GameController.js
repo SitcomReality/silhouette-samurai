@@ -229,7 +229,7 @@ export class GameController {
     this.prevKeys = { ...this.keys };
   }
 
-  bladeDanceFinisherAttack(direction) {
+  getFinisherAttack(direction) {
     if (direction === 'up') return 'dance_finisher_up';
     if (direction === 'down') return 'dance_finisher_down';
     if (direction === 'forward') return 'dance_finisher_neutral';

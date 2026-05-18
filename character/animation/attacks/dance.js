@@ -1,7 +1,7 @@
 import { ATTACK_FRAME_DATA } from '../../../combat/frame-data.js';
 import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
 
-export function applyBladeDancePose(t, dir, attackType, attackProgress) {
+export function applyFinisherPose(t, dir, attackType, attackProgress) {
   const frameData = ATTACK_FRAME_DATA[attackType];
   const anim = frameData?.anim || {};
   

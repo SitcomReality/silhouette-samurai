@@ -1,7 +1,7 @@
 import { applyReactionPose } from './animation/states/reactions.js';
 import { applyLocomotionPose } from './animation/states/locomotion.js';
 import { applyBasicAttackPose } from './animation/attacks/basic.js';
-import { applyBladeDancePose } from './animation/attacks/dance.js';
+import { applyFinisherPose } from './animation/attacks/dance.js';
 import { applySpecialAttackPose } from './animation/attacks/special.js';
 
 export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0) {
@@ -25,7 +25,7 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   if (!applyReactionPose(t, dir, state)) {
     if (state === 'attack') {
       const handled = applyBasicAttackPose(t, dir, attackType, attackProgress) ||
-                      applyBladeDancePose(t, dir, attackType, attackProgress) ||
+                      applyFinisherPose(t, dir, attackType, attackProgress) ||
                       applySpecialAttackPose(t, dir, attackType, attackProgress);
     } else {
       applyLocomotionPose(t, dir, state, stateTime, isGrounded, vy, isCrouching, isSliding);

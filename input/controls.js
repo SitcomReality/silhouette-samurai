@@ -18,16 +18,10 @@ export function determineAttack(controller, isFinisher = false) {
   else if (down) direction = 'down';
   else if (forward) direction = 'forward';
   
-  // Finishers via block button
-  if (isFinisher) {
-    if (direction === 'neutral') return null; // No neutral finisher
-    return controller.bladeDance.getFinisherAttack(direction);
-  }
-  
   // Finisher Logic: Only available if combo >= 5
   if (isFinisher) {
     if (direction === 'neutral' || p.combo < 5) return null;
-    return controller.bladeDanceFinisherAttack(direction);
+    return controller.getFinisherAttack(direction);
   }
 
   // Priority: Sliding Attacks

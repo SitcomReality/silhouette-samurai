@@ -76,10 +76,7 @@ export function updatePlayerAttacks(controller, dt) {
         canAttack = true;
       }
       
-      // Chain into next attack during input window
-      if (p.bladeDanceState && p.bladeDanceInputWindow > 0) {
-        canAttack = true;
-      }
+
       
       if (p.canCounter && p.counterWindow > 0) {
         canAttack = true;

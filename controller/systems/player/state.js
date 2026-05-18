@@ -6,7 +6,6 @@ export function updatePlayerTimersAndRegen(controller, dt) {
   if (p.staggerTimer > 0) p.staggerTimer -= dt;
   if (p.tripTimer > 0) p.tripTimer -= dt;
   if (p.counterWindow > 0) p.counterWindow -= dt;
-  if (p.bladeDanceCooldown > 0) p.bladeDanceCooldown -= dt;
   if (p.dodgeTimer > 0) p.dodgeTimer -= dt;
   
 
