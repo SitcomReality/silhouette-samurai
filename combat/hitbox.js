@@ -1,109 +1,31 @@
-import { ATTACK_CONFIG } from './attacks/config.js';
-
-export function getActiveHitbox(entity, attackType, attackProgress) {
+// Legacy hitbox helper for debug visualization
+// Returns approximate hitbox based on frame data when available
+export function getActiveHitbox(entity, attackType, attackProgress, frameData = null) {
   if (entity.state !== 'attack' || !attackType) return null;
   
-  const dir = entity.facing === 'right' ? 1 : -1;
-  const x = entity.x;
-  const y = entity.y;
-  const config = ATTACK_CONFIG[attackType];
-  
-  if (!config) return null;
-  
-  // Different active windows for different attacks
-  let activeStart = 0.2;
-  let activeEnd = 0.8;
-  
-  if (attackType === 'slash') {
-    activeStart = 0.1;
-    activeEnd = 0.5;
-  } else if (attackType === 'thrust') {
-    activeStart = 0.3;
-    activeEnd = 0.8;
-  } else if (attackType === 'rising_slash') {
-    activeStart = 0.2;
-    activeEnd = 0.8;
-  } else if (attackType === 'up_slash') {
-    activeStart = 0.2;
-    activeEnd = 0.7;
-  } else if (attackType === 'sweep') {
-    activeStart = 0.2;
-    activeEnd = 0.7;
-  } else if (attackType === 'down_thrust') {
-    activeStart = 0.2; // Fast fall is active immediately
-    activeEnd = 1.0;
-  } else if (attackType === 'heavy_slash') {
-    activeStart = 0.3;
-    activeEnd = 0.7;
+  // Use frame data if provided (preferred method)
+  if (frameData && frameData.range) {
+    const dir = entity.facing === 'right' ? 1 : -1;
+    return {
+      x: entity.x + dir * frameData.range.offsetX,
+      y: entity.y + frameData.range.offsetY,
+      width: frameData.range.width,
+      height: frameData.range.height
+    };
   }
   
-  if (attackProgress < activeStart || attackProgress > activeEnd) return null;
-  
-  // Calculate hitbox position based on attack type
-  let hitboxX = x + dir * config.reach * 0.5;
-  let hitboxY = y - 40;
-  let hitboxW = config.reach;
-  let hitboxH = 50;
-  
-  if (attackType === 'slash') {
-    // Move the hurtbox up and a bit more forward to match the visual blade tip
-    hitboxW = 55;
-    hitboxH = 28;
-    hitboxX = x + dir * (config.reach * 0.6);
-    hitboxY = y - 45;
-  } else if (attackType === 'thrust') {
-    hitboxW = 85;
-    hitboxH = 36;
-    // Move hurtbox up and more forward to match sword tip during the thrust
-    hitboxX = x + dir * (config.reach * 0.6);
-    hitboxY = y - 35;
-  } else if (attackType === 'rising_slash') {
-    hitboxW = 60;
-    hitboxH = 80;
-    hitboxX = x + dir * 30;
-    hitboxY = y - 50;
-  } else if (attackType === 'up_slash') {
-    // Wider, higher hurtbox to match an upward launching sword arc
-    hitboxW = 110;               // wider to capture sweeping arc
-    hitboxH = 80;                // tall but focused above the player's head
-    hitboxX = x + dir * 30;      // reach a bit further forward
-    hitboxY = y - 80;            // positioned higher to sit above the character
-  } else if (attackType === 'sweep') {
-    hitboxW = 75;
-    hitboxH = 30;
-    hitboxY = y - 15;
-  } else if (attackType === 'down_thrust') {
-    hitboxW = 40;
-    hitboxH = 70;
-    hitboxX = x;
-    hitboxY = y + 10;
-  } else if (attackType === 'heavy_slash') {
-    hitboxW = 80;
-    hitboxH = 60;
-    hitboxX = x + dir * 40;
-    hitboxY = y - 35;
-  }
-  
-  return {
-    x: hitboxX,
-    y: hitboxY,
-    width: hitboxW,
-    height: hitboxH,
-    damage: config.damage,
-    pushback: config.pushback,
-    launchVy: config.launchVy
-  };
+  return null;
 }
 
 export function checkHitboxCollision(hitbox, target) {
   if (!hitbox) return false;
   
   const dx = Math.abs(hitbox.x - target.x);
-  const dy = Math.abs(hitbox.y - target.y);
+  const dy = Math.abs(hitbox.y - (target.y - 40));
   
   const hw = hitbox.width / 2;
   const hh = hitbox.height / 2;
-  const tw = target.character ? target.character.width : (target.width || 50) / 2;
+  const tw = target.character ? target.character.width / 2 : (target.width || 50) / 2;
   const th = target.character ? target.character.height / 2 : (target.height || 50) / 2;
   
   return dx < (hw + tw) && dy < (hh + th);

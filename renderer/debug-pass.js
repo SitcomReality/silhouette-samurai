@@ -104,7 +104,7 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       if (frameData) {
         drawFrameHitbox(controller.player, frameData, controller.player.attackFrameTime, 'rgba(255,0,0,0.35)', '#ff0000');
       } else {
-        const hitbox = getActiveHitbox(controller.player, controller.player.attackType, progress);
+        const hitbox = getActiveHitbox(controller.player, controller.player.attackType, progress, controller.player.attackFrameData);
         if (hitbox) {
           const hx = (hitbox.x - controller.cameraX) + viewWidth / 2;
           const hy = hitbox.y + camYOffset;
@@ -130,7 +130,7 @@ export function renderDebug(ctx, controller, viewWidth, camYOffset) {
       } else if (ent.state === 'attack') {
         // Fallback to older hitbox helper if frame data missing
         const progress = ent.attackFrameTime / (ent.attackFrameData ? ent.attackFrameData.getDuration() : 1);
-        const eh = getActiveHitbox(ent, ent.attackType, progress);
+        const eh = getActiveHitbox(ent, ent.attackType, progress, ent.attackFrameData);
         if (eh) {
           const hx = (eh.x - controller.cameraX) + viewWidth / 2;
           const hy = eh.y + camYOffset;
