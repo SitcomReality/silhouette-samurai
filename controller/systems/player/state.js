@@ -9,9 +9,7 @@ export function updatePlayerTimersAndRegen(controller, dt) {
   if (p.bladeDanceCooldown > 0) p.bladeDanceCooldown -= dt;
   if (p.dodgeTimer > 0) p.dodgeTimer -= dt;
   
-  if (p.bladeDanceState) {
-    controller.bladeDance.updateInputWindow(p, dt);
-  }
+
 
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   

@@ -24,24 +24,20 @@ export function determineAttack(controller, isFinisher = false) {
     return controller.bladeDance.getFinisherAttack(direction);
   }
   
+  // Finisher Logic: Only available if combo >= 5
+  if (isFinisher) {
+    if (direction === 'neutral' || p.combo < 5) return null;
+    return controller.bladeDanceFinisherAttack(direction);
+  }
+
   // Priority: Sliding Attacks
   const isSliding = (p.isSliding && p.state === 'attack' && p.attackType === 'sweep') || 
                     (down && p.isGrounded && Math.abs(p.vx) > 5 && p.state !== 'attack');
-  if (isSliding && p.isGrounded && !p.bladeDanceState) {
+  if (isSliding && p.isGrounded) {
     return 'down';
   }
-
-  // Start blade dance if not already active
-  if (!p.bladeDanceState && controller.bladeDance.canInitiate(p)) {
-    return 'dance_starter';
-  }
   
-  // Continue blade dance with standard attacks
-  if (p.bladeDanceState) {
-    return controller.bladeDance.getStandardAttack(direction, !p.isGrounded);
-  }
-  
-  // Fallback to standard attacks
+  // Standard Attacks
   if (!p.isGrounded) {
     if (direction === 'up') return 'air_up';
     if (direction === 'down') return 'air_down';
@@ -51,6 +47,7 @@ export function determineAttack(controller, isFinisher = false) {
   
   if (direction === 'up') return 'up';
   if (direction === 'down') return 'down';
+  if (direction === 'forward') return 'forward';
   return 'neutral';
 }
 

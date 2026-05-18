@@ -4,7 +4,6 @@ import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
 import { updateEngine } from './update.js';
 import { determineAttack } from '../input/controls.js';
 import { ParrySystem } from '../combat/parry.js';
-import { BladeDanceSystem } from '../combat/blade-dance.js';
 
 export class GameController {
   constructor() {
@@ -35,7 +34,6 @@ export class GameController {
     
     // Combat systems
     this.parry = new ParrySystem();
-    this.bladeDance = new BladeDanceSystem();
     
     this.nextSpawnX = 3000;
     this.particleId = 0;
@@ -87,11 +85,6 @@ export class GameController {
       hitstunTimer: 0,
       staggerTimer: 0,
       tripTimer: 0,
-      bladeDanceState: null,
-      bladeDanceHitCount: 0,
-      bladeDanceInputWindow: 0,
-      bladeDanceFinisherReady: false,
-      bladeDanceCooldown: 0,
       dodgeTimer: 0,
       finisherTransitionWindow: 0,
       blockToFinisher: false,
@@ -123,9 +116,9 @@ export class GameController {
           this.player.isBlocking = true;
           this.player.blockStartTime = performance.now() / 1000;
           this.player.blockBuffer = { time: 0.2 };
-          // Start finisher transition window if blade dance is active
-          if (this.bladeDance.canPerformFinisher(this.player)) {
-            this.player.finisherTransitionWindow = this.bladeDance.finisherGraceWindow;
+          // Start finisher transition window if combo is high enough
+          if (this.player.combo >= 5) {
+            this.player.finisherTransitionWindow = 0.4; // Finisher grace window
           }
         }
       }
@@ -187,8 +180,8 @@ export class GameController {
           this.player.isBlocking = true;
           this.player.blockStartTime = performance.now() / 1000;
           this.player.blockBuffer = { time: 0.2 };
-          if (this.bladeDance.canPerformFinisher(this.player)) {
-            this.player.finisherTransitionWindow = this.bladeDance.finisherGraceWindow;
+          if (this.player.combo >= 5) {
+            this.player.finisherTransitionWindow = 0.4;
           }
         }
       }
@@ -234,5 +227,12 @@ export class GameController {
     this.pollGamepad();
     updateEngine(this, dt);
     this.prevKeys = { ...this.keys };
+  }
+
+  bladeDanceFinisherAttack(direction) {
+    if (direction === 'up') return 'dance_finisher_up';
+    if (direction === 'down') return 'dance_finisher_down';
+    if (direction === 'forward') return 'dance_finisher_neutral';
+    return null;
   }
 }

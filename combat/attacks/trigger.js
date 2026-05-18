@@ -39,10 +39,7 @@ export function triggerAttack(controller, attackType) {
     if (controller.loopSelectedAttack) p.vy = 0;
   }
   
-  // Blade Dance specific logic
-  if (attackType === 'dance_starter') {
-    controller.bladeDance.initiate(p);
-  }
+
   
   // Create attack-specific visual effects (simplified for now)
   createAttackSwoosh(controller, p, attackType);

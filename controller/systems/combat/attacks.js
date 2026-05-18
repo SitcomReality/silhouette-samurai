@@ -17,11 +17,6 @@ export function updatePlayerAttacks(controller, dt) {
     }
     
     if (currentFrame >= frameData.totalFrames) {
-      // Continue dance after attack completes
-      if (p.bladeDanceState) {
-        controller.bladeDance.continueChain(p);
-      }
-      
       p.state = 'idle';
       p.attackType = 'none';
       p.attackFrameTime = 0;
@@ -43,11 +38,12 @@ export function updatePlayerAttacks(controller, dt) {
   // Handle finisher input (block + direction during grace window)
   if (p.finisherTransitionWindow > 0 && p.isBlocking) {
     const direction = getDirectionInput(controller, false); // Don't allow neutral
-    if (direction && controller.bladeDance.canPerformFinisher(p)) {
+    if (direction && p.combo >= 5) {
       const finisher = determineAttack(controller, true);
       if (finisher) {
         p.blockToFinisher = true;
         triggerAttack(controller, finisher);
+        p.combo = 0; // Finishers reset combo
         p.finisherTransitionWindow = 0;
         p.blockBuffer = null;
         return;
@@ -96,7 +92,8 @@ export function updatePlayerAttacks(controller, dt) {
     }
   }
 
-  if (p.state !== 'attack' && p.stateTime > 2.5 && p.combo > 0) {
+  const decayTime = 1.4; // Consolidated from COMBO_CONFIG.decayTime if imported
+  if (p.state !== 'attack' && p.stateTime > decayTime && p.combo > 0) {
     p.combo = 0;
   }
 }

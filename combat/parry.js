@@ -34,13 +34,7 @@ export class ParrySystem {
     defender.counterWindow = 0.5;
     defender.counterBonusDamage = this.counterBonusDamage;
     
-    // Continue blade dance on successful parry
-    if (defender === controller.player && controller.bladeDance) {
-      if (!defender.bladeDanceState) {
-        controller.bladeDance.initiate(defender);
-      }
-      controller.bladeDance.continueChain(defender, true);
-    }
+
     
     // Visual/audio feedback
     controller.hitstop = 4;

@@ -57,19 +57,20 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
     ctx.fillText(`STATE: ${p.state}`, 20, y); y += 15;
     ctx.fillText(`ATTACK: ${p.attackType}`, 20, y); y += 15;
     ctx.fillText(`FRAME: ${Math.floor(p.attackFrameTime * 60)}`, 20, y); y += 15;
-    ctx.fillText(`DANCE: ${p.bladeDanceState || 'none'}`, 20, y); y += 15;
-    ctx.fillText(`WINDOW: ${p.bladeDanceInputWindow.toFixed(2)}`, 20, y); y += 15;
     ctx.fillText(`COMBO: ${p.combo}`, 20, y); y += 15;
     
-    // Blade Dance Timing Indicator
-    if (p.bladeDanceState && p.bladeDanceInputWindow > 0) {
+    // Combo Decays
+    if (p.combo > 0) {
       const barW = 100;
-      const progress = p.bladeDanceInputWindow / 0.5; // normalized against max window approx
+      const decayTime = 1.4;
+      const progress = Math.max(0, (decayTime - p.stateTime) / decayTime);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.fillRect(20, y, barW, 4);
       ctx.fillStyle = '#06b6d4';
       ctx.fillRect(20, y, barW * progress, 4);
-      ctx.fillText(`PRESS NOW!`, 130, y + 5);
+      if (p.combo >= 5) {
+        ctx.fillText(`FINISHER READY!`, 130, y + 5);
+      }
     }
     
     ctx.restore();

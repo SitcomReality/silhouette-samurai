@@ -4,6 +4,27 @@ import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
 export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
   const frameData = ATTACK_FRAME_DATA[attackType];
   const anim = frameData?.anim || {};
+
+  if (attackType === 'forward') {
+    const easedProgress = Math.pow(attackProgress, 0.4);
+    const startA = anim.startAngle ?? 0.7;
+    const endA = anim.endAngle ?? 0;
+    const currentAngle = Math.PI * startA + easedProgress * Math.PI * (endA - startA);
+    const swordLen = anim.swordLen ?? 64;
+    
+    t.swordAX = dir * 8; t.swordAY = -40;
+    t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
+    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
+    t.swordThickness = anim.swordThickness ?? 4;
+    
+    t.bodyTopX = dir * (anim.bodyTopX ?? 2) * easedProgress;
+    t.bodyTopY = anim.bodyTopY ?? -35;
+    t.headX = dir * (anim.headX ?? 0) * easedProgress;
+    t.headY = anim.headY ?? -55;
+    t.bodyBotX = dir * (anim.bodyBotX ?? -9) * easedProgress;
+    t.bodyBotY = anim.bodyBotY ?? -6;
+    return true;
+  }
   
   if (attackType === 'neutral' || attackType === 'air_neutral' || attackType === 'slash') {
     const snap = Math.pow(attackProgress, 0.4);
