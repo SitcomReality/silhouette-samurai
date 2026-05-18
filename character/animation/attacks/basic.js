@@ -51,29 +51,27 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
   }
   
   if (attackType === 'air_forward' || attackType === 'thrust') {
-    const snap = Math.pow(attackProgress, 0.3);
-    
-    if (attackProgress < 0.2) {
-      const wind = attackProgress / 0.2;
-      t.bodyTopX = -dir * 10 * wind;
-      t.swordAX = -dir * 15; t.swordAY = originY;
-      t.swordBX = -dir * 30; t.swordBY = originY;
-    } else {
-      const strike = (attackProgress - 0.2) / 0.8;
-      const easedStrike = easeOutCubic(strike);
-      
-      t.bodyTopX = dir * (anim.bodyTopX ?? 15) * easedStrike;
-      t.bodyTopY = anim.bodyTopY ?? -35;
-      t.headX = dir * (anim.headX ?? 20) * easedStrike;
-      t.headY = anim.headY ?? -55;
-      t.bodyBotX = dir * (anim.bodyBotX ?? -10) * easedStrike;
-      t.bodyBotY = anim.bodyBotY ?? 0;
-      
-      t.swordAX = dir * 10; t.swordAY = originY;
-      t.swordBX = t.swordAX + dir * currentLen * Math.min(1.1, easedStrike * 1.2); 
-      t.swordBY = originY;
-      t.swordThickness = anim.swordThickness ?? 4;
-    }
+    // Use configured start/end angles so air_forward actually swings the blade
+    const easedProgress = attackProgress < 0.2 ? easeInCubic(attackProgress / 0.2) * 0.2 :
+                          0.2 + easeOutCubic((attackProgress - 0.2) / 0.8) * 0.8;
+    const startA = anim.startAngle ?? -0.2;
+    const endA = anim.endAngle ?? 0.1;
+    const arcAngle = Math.PI * startA + easedProgress * Math.PI * (endA - startA);
+    const sLen = currentLen;
+
+    // Body follow-through
+    t.bodyTopX = dir * (anim.bodyTopX ?? 15) * easedProgress;
+    t.bodyTopY = anim.bodyTopY ?? -35;
+    t.headX = dir * (anim.headX ?? 20) * easedProgress;
+    t.headY = anim.headY ?? -55;
+    t.bodyBotX = dir * (anim.bodyBotX ?? -10) * easedProgress;
+    t.bodyBotY = anim.bodyBotY ?? 0;
+
+    // Place origin and compute blade tip using angle
+    t.swordAX = dir * (anim.swordAnchorX ?? 10); t.swordAY = originY;
+    t.swordBX = t.swordAX + Math.cos(arcAngle) * sLen * dir;
+    t.swordBY = t.swordAY + Math.sin(arcAngle) * sLen;
+    t.swordThickness = anim.swordThickness ?? 4;
     return true;
   }
   
