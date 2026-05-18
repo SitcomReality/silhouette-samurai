@@ -8,6 +8,7 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       const scX = (ent.x - controller.cameraX) + viewWidth / 2;
       const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.4 : 40) + camYOffset;
       const glowRadius = (ent.scale || 1.0) * 60;
+      // Base orange glow
       const grad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius);
       grad.addColorStop(0, 'rgba(255,110,30,0.28)');
       grad.addColorStop(0.4, 'rgba(255,110,30,0.12)');
@@ -16,6 +17,23 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       ctx.beginPath();
       ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
       ctx.fill();
+
+      // If there's a recent damage spark near this enemy, overlay a sharp white flash
+      const isFlashing = controller.visualFx.some(fx =>
+        fx.type === 'damage_spark' &&
+        Math.hypot((fx.x || 0) - ent.x, (fx.y || 0) - ent.y) < 40 &&
+        fx.life < (fx.maxLife || 0.25) * 0.6
+      );
+      if (isFlashing) {
+        const flashGrad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius * 0.7);
+        flashGrad.addColorStop(0, 'rgba(255,255,255,0.95)');
+        flashGrad.addColorStop(0.2, 'rgba(255,255,255,0.6)');
+        flashGrad.addColorStop(1, 'rgba(255,255,255,0.0)');
+        ctx.beginPath();
+        ctx.fillStyle = flashGrad;
+        ctx.arc(scX, scY, glowRadius * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.restore();
   }
