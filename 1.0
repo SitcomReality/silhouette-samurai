@@ -1,0 +1,51 @@
+// Distorted high-pass filter for glitch effect
+const filter = this.ctx.createBiquadFilter();
+filter.type = 'highpass';
+filter.frequency.value = 1500 + intensity * 1000;
+
+const noiseGain = this.ctx.createGain();
+noiseGain.gain.setValueAtTime((0.25 + intensity * 0.2), when);
+noiseGain.gain.exponentialRampToValueAtTime(0.01, when + 0.2);
+
+noise.connect(filter);
+filter.connect(noiseGain);
+noiseGain.connect(this.gainNodes[layer]);
+
+// Triangle oscillation
+const osc = this.ctx.createOscillator();
+osc.type = 'triangle';
+osc.frequency.setValueAtTime(200, when);
+osc.frequency.exponentialRampToValueAtTime(100, when + 0.1);
+
+const oscGain = this.ctx.createGain();
+oscGain.gain.setValueAtTime(0.25 * intensity, when);
+oscGain.gain.exponentialRampToValueAtTime(0.01, when + 0.15);
+
+osc.connect(oscGain);
+oscGain.connect(this.gainNodes[layer]);
+
+noise.start(when);
+osc.start(when);
+osc.stop(when + 0.2);
+
+for (let s = 0; s < stutters; s++) {
+  const stutterTime = when + s * 0.05;
+  const noise = this.ctx.createBufferSource();
+  const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  noise.buffer = buffer;
+  
+  const filter = this.ctx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 6000;
+  
+  const gain = this.ctx.createGain();
+  gain.gain.setValueAtTime((0.15 + intensity * 0.1) * (1 - s*0.2), stutterTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, stutterTime + 0.05);
+  
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(this.gainNodes[layer]);
+  noise.start(stutterTime);
+}

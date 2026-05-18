@@ -27,46 +27,100 @@ export class MusicSynthesizer {
         data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
     }
     noise.buffer = buffer;
+    
+    // Distorted high-pass filter for glitch effect
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.value = 1000;
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.3 * intensity, when);
-    gain.gain.exponentialRampToValueAtTime(0.01, when + 0.2);
+    filter.frequency.value = 1500 + intensity * 1000;
+    
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime((0.25 + intensity * 0.2), when);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, when + 0.2);
+    
     noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.gainNodes[layer]);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.gainNodes[layer]);
+    
+    // Triangle oscillation
     const osc = this.ctx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(200, when);
     osc.frequency.exponentialRampToValueAtTime(100, when + 0.1);
+    
     const oscGain = this.ctx.createGain();
     oscGain.gain.setValueAtTime(0.25 * intensity, when);
     oscGain.gain.exponentialRampToValueAtTime(0.01, when + 0.15);
+    
     osc.connect(oscGain);
     oscGain.connect(this.gainNodes[layer]);
+    
     noise.start(when);
     osc.start(when);
     osc.stop(when + 0.2);
   }
 
-  playHat(time, layer = 'base', intensity = 1.0) {
+  playHat(time, layer = 'base', intensity = 1.0, stutters = 1) {
     const when = Math.max(this.ctx.currentTime, time);
-    const noise = this.ctx.createBufferSource();
-    const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-    noise.buffer = buffer;
+    
+    for (let s = 0; s < stutters; s++) {
+      const stutterTime = when + s * 0.05;
+      const noise = this.ctx.createBufferSource();
+      const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      noise.buffer = buffer;
+      
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 6000;
+      
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime((0.15 + intensity * 0.1) * (1 - s*0.2), stutterTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, stutterTime + 0.05);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.gainNodes[layer]);
+      noise.start(stutterTime);
+    }
+  }
+
+  playAcidBass(midiNote, time, layer, vol, duration, accent = false) {
+    const when = Math.max(this.ctx.currentTime, time);
+    const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+    
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = freq;
+    
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.value = 5000;
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(accent ? freq * 8 : freq * 3, when);
+    filter.frequency.exponentialRampToValueAtTime(freq, when + duration * 0.5);
+    filter.Q.value = accent ? 15 : 5; // Squelch resonance
+    
+    // Waveshaper for distortion
+    const curve = new Float32Array(400);
+    for (let i = 0; i < 400; i++) {
+        const x = (i * 2) / 400 - 1;
+        curve[i] = (3 + 10) * x * 20 * (Math.PI / 180) / (Math.PI + 10 * Math.abs(x));
+    }
+    const distortion = this.ctx.createWaveShaper();
+    distortion.curve = curve;
+    distortion.oversample = '4x';
+    
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.15 * intensity, when);
-    gain.gain.exponentialRampToValueAtTime(0.01, when + 0.05);
-    noise.connect(filter);
-    filter.connect(gain);
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(vol * (accent ? 1.2 : 0.8), when + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
+    
+    osc.connect(filter);
+    filter.connect(distortion);
+    distortion.connect(gain);
     gain.connect(this.gainNodes[layer]);
-    noise.start(when);
+    
+    osc.start(when);
+    osc.stop(when + duration);
   }
 
   // Piano-like sound with gentle attack
