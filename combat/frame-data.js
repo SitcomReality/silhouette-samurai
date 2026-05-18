@@ -22,7 +22,7 @@ export const COMBO_CONFIG = {
 export const SWOOSH_CONFIG = {
   neutral: { type: 'arc_swoosh', offsetX: -10, offsetY: -55, startAngle: 0.65, endAngle: -0.25, radius: 100, thickness: 20, squashY: 0.15, maxLife: 0.22 },
   up: { type: 'arc_swoosh', offsetX: 30, offsetY: -65, startAngle: -0.1, endAngle: -0.9, radius: 65, thickness: 35, squashY: 0.9, maxLife: 0.26 },
-  down: { type: 'arc_swoosh', offsetX: 10, offsetY: -52, startAngle: -1.3, endAngle: 0, radius: 80, thickness: 30, squashY: 0.3, maxLife: 0.35 },
+  down: { type: 'arc_swoosh', offsetX: 10, offsetY: -52, startAngle: 1.2, endAngle: -0.4, radius: 80, thickness: 30, squashY: 0.3, maxLife: 0.35 },
   forward: { type: 'arc_swoosh', offsetX: -13, offsetY: -60, startAngle: -0.8, endAngle: 0.45, radius: 100, thickness: 20, squashY: 0.15, maxLife: 0.24 },
   air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: -0.9, endAngle: -0.1, radius: 58, thickness: 28, squashY: 0.85, maxLife: 0.22 },
   air_forward: { type: 'arc_swoosh', offsetX: 15, offsetY: -35, startAngle: 1, endAngle: -0.2, radius: 70, thickness: 30, squashY: 0.3, maxLife: 0.3 },
@@ -72,8 +72,8 @@ export const ATTACK_FRAME_DATA = {
   }),
   down: new AttackFrameData('down', {
     startup: 4, active: 10, recovery: 14, damage: 12, knockback: { x: 5, y: -7 }, hitstun: 0.35, trip: true, movement: { vx: 20, vy: 0 },
-    range: { width: 70, height: 30, offsetX: 35, offsetY: -15 },
-    anim: { swordLen: 81, swordStartLen: 44, swordOriginY: -60, startAngle: -1, endAngle: -0.05, bodyTopX: 13, bodyTopY: -34, headX: 12, headY: -48, bodyBotX: 31, bodyBotY: 4, swordThickness: 3 }
+    range: { width: 60, height: 80, offsetX: 50, offsetY: -40 },
+    anim: { swordLen: 33, swordStartLen: 71, swordOriginY: -60, startAngle: 1, endAngle: -0.1, bodyTopX: 13, bodyTopY: -34, headX: 12, headY: -48, bodyBotX: 31, bodyBotY: 4, swordThickness: 3 }
   }),
   air_neutral: new AttackFrameData('air_neutral', {
     startup: 3, active: 5, recovery: 8, damage: 10, knockback: { x: 5, y: -3 }, hitstun: 0.25, groundOnly: false,
