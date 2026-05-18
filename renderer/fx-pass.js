@@ -1,4 +1,25 @@
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
+  // Soft enemy glow rendered on FX layer so outlines remain unified in SDF pass
+  const enemies = controller.entities.filter(e => e.state !== 'dead' && e.type === 'enemy');
+  if (enemies.length > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const ent of enemies) {
+      const scX = (ent.x - controller.cameraX) + viewWidth / 2;
+      const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.4 : 40) + camYOffset;
+      const glowRadius = (ent.scale || 1.0) * 120;
+      const grad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius);
+      grad.addColorStop(0, 'rgba(255,110,30,0.28)');
+      grad.addColorStop(0.4, 'rgba(255,110,30,0.12)');
+      grad.addColorStop(1, 'rgba(255,110,30,0.0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   for (const fx of controller.visualFx) {
     if (fx.type === 'parry_flash') {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
