@@ -171,7 +171,7 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       ctx.translate(scX, scY);
       ctx.rotate(fx.rotation);
       
-      const length = (45 + p * 80);
+      const length = (45 + p * 80) * 3;
       const width = 3.5 * alpha;
       
       const grad = ctx.createLinearGradient(-length, 0, length, 0);
