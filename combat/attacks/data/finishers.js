@@ -12,9 +12,8 @@ export const FINISHER_ATTACKS = {
     anim: { swordLen: 60, swordStartLen: 60, swordOriginY: -45, startAngle: -0.6, endAngle: 0.9, bodyTopX: 20, bodyTopY: -40, headX: 25, headY: -55, bodyBotX: -8, bodyBotY: -18, swordThickness: 5 }
   }),
   dance_finisher_down: new AttackFrameData('dance_finisher_down', {
-    startup: 16, active: 6, recovery: 40, damage: 28, knockback: { x: 0, y: 25 }, hitstun: 0.75, spike: true, movement: { vx: 0, vy: 8 },
-    range: { width: 55, height: 70, offsetX: 0, offsetY: 10 },
-    // Use a sweeping down-sweep animation (more like standard "down" attack) so blade arcs across rather than pointing straight down
-    anim: { swordLen: 70, swordStartLen: 70, swordOriginY: -60, startAngle: 0.15, endAngle: -0.35, bodyTopX: 0, bodyTopY: -45, headX: 0, headY: -60, bodyBotX: 0, bodyBotY: -25, swordThickness: 6 }
+    startup: 8, active: 8, recovery: 20, damage: 28, knockback: { x: 0, y: 25 }, hitstun: 0.75, spike: true, movement: { vx: 0, vy: 8 },
+    range: { width: 150, height: 90, offsetX: 0, offsetY: -10 },
+    anim: { swordLen: 60, swordStartLen: 50, swordOriginY: -26, startAngle: 0.75, endAngle: -0.05, bodyTopX: -10, bodyTopY: -40, headX: -7, headY: -56, bodyBotX: -30, bodyBotY: 15, swordThickness: 4 }
   })
 };

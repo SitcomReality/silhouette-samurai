@@ -9,5 +9,5 @@ export const SWOOSH_CONFIG = {
   air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: 1.57, length: 150, width: 35, maxLife: 0.25 },
   dance_finisher_neutral: { type: 'arc_swoosh', offsetX: 42, offsetY: -40, startAngle: 0.9, endAngle: -0.1, radius: 90, thickness: 60, squashY: 0.3, maxLife: 0.4 },
   dance_finisher_up: { type: 'arc_swoosh', offsetX: 20, offsetY: -60, startAngle: -0.1, endAngle: -1.0, radius: 85, thickness: 50, squashY: 1.0, maxLife: 0.38 },
-  dance_finisher_down: { type: 'arc_swoosh', offsetX: 10, offsetY: -52, startAngle: 1.2, endAngle: -0.4, radius: 80, thickness: 30, squashY: 0.3, maxLife: 0.35 }
+  dance_finisher_down: { type: 'arc_swoosh', offsetX: -3, offsetY: -32, startAngle: 1.3, endAngle: -0.25, radius: 80, thickness: 30, squashY: 0.35, maxLife: 0.25 }
 };
