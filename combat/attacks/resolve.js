@@ -108,7 +108,7 @@ export function resolveAttackHits(controller) {
           controller.stats.score += 100 * (1 + p.combo * 0.1);
         }
         
-        spawnDebris(controller, ent, dir, damage);
+        spawnDebris(controller, ent, dir, damage, frameData);
       } else {
         ent.state = 'hit';
         ent.stateTime = 0;
@@ -182,44 +182,89 @@ function checkHitboxCollision(hitbox, target) {
   return dx < (hw + tw) && dy < (hh + th);
 }
 
-function spawnDebris(controller, ent, dir, damage) {
+function spawnDebris(controller, ent, dir, damage, frameData) {
   if (ent.type === 'crate') return;
   
   const scale = ent.scale || 1.0;
-  const sliceY = ent.y - 40 * scale; // Slice horizontally through torso
+  const sliceY = ent.y - 35 * scale; // Slice roughly through midsection
   
-  // Top half (head + upper body) - gets knocked back
+  let cutAngle = 0;
+  if (frameData && frameData.anim && frameData.anim.endAngle !== undefined) {
+    cutAngle = frameData.anim.endAngle * Math.PI;
+    if (dir === -1) {
+      cutAngle = Math.PI - cutAngle;
+    }
+  } else {
+    cutAngle = (Math.random() - 0.5) * 0.5; // fallback angle
+  }
+  
+  const vx = Math.cos(cutAngle);
+  const vy = Math.sin(cutAngle);
+  
+  let nx1 = -vy;
+  let ny1 = vx;
+  
+  let nx2 = vy;
+  let ny2 = -vx;
+  
+  if (ny1 < 0) {
+      nx1 = -nx1; ny1 = -ny1;
+      nx2 = -nx2; ny2 = -ny2;
+  }
+  
+  const cloneChar = (original) => {
+      return {
+          width: original.width,
+          height: original.height,
+          world: JSON.parse(JSON.stringify(original.world))
+      };
+  };
+
+  const topChar = cloneChar(ent.character);
+  topChar.world.slice = { x: ent.x, y: sliceY, nx: nx1, ny: ny1 };
+  
+  const botChar = cloneChar(ent.character);
+  botChar.world.slice = { x: ent.x, y: sliceY, nx: nx2, ny: ny2 };
+
   const topHalf = {
     id: `debris_top_${controller.particleId++}`,
+    type: 'enemy',
+    state: 'dead',
+    isSliced: true,
     x: ent.x,
-    y: sliceY - 20 * scale,
+    y: ent.y,
+    lastX: ent.x,
+    lastY: ent.y,
     vx: dir * damage * 0.4,
     vy: -Math.abs(damage) * 0.35 - 4,
-    radius: 18 * scale,
-    life: 0,
-    maxLife: 2.0,
-    isGrounded: false,
-    shape: 'circle',
-    vAngle: dir * 0.1
+    vAngle: dir * 0.05,
+    health: 0,
+    stateTime: 0,
+    scale: scale,
+    character: topChar
   };
   
-  // Bottom half (legs) - falls straight down
   const bottomHalf = {
-    id: `debris_bottom_${controller.particleId++}`,
+    id: `debris_bot_${controller.particleId++}`,
+    type: 'enemy',
+    state: 'dead',
+    isSliced: true,
     x: ent.x,
-    y: sliceY + 15 * scale,
+    y: ent.y,
+    lastX: ent.x,
+    lastY: ent.y,
     vx: dir * damage * 0.1,
     vy: -2,
-    radius: 15 * scale,
-    life: 0,
-    maxLife: 2.0,
-    isGrounded: false,
-    shape: 'circle'
+    vAngle: -dir * 0.02,
+    health: 0,
+    stateTime: 0,
+    scale: scale,
+    character: botChar
   };
   
-  controller.particles.push(topHalf, bottomHalf);
+  controller.entities.push(topHalf, bottomHalf);
   
-  // Add a few small blood particles for effect
+  // Add a few small particles for effect
   for (let i = 0; i < 3; i++) {
     const ang = Math.random() * Math.PI * 2;
     const spd = 4 + Math.random() * 6;

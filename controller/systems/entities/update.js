@@ -11,12 +11,27 @@ export function updateEntities(controller, dt) {
     if (ent.flashTimer > 0) ent.flashTimer -= dt;
 
     if (ent.state === 'dead') {
-      ent.isGrounded = false;
-      ent.vy += 0.6;
-      ent.x += ent.vx;
-      ent.y += ent.vy;
+      if (!ent.isGrounded) {
+        ent.vy += 0.6;
+        ent.x += ent.vx;
+        ent.y += ent.vy;
+        
+        if (ent.y >= controller.baseGroundY) {
+          ent.y = controller.baseGroundY;
+          ent.vy *= -0.3; // slight bounce
+          ent.vx *= 0.6;
+          if (Math.abs(ent.vy) < 2) {
+            ent.vy = 0;
+            ent.isGrounded = true;
+          }
+        }
+      } else {
+        ent.vx *= 0.8;
+        ent.x += ent.vx;
+        ent.vAngle = 0; // stop tumbling when grounded
+      }
 
-      if (ent.y > controller.baseGroundY + 800 || ent.stateTime > 4) {
+      if (ent.stateTime > 4) {
         controller.entities.splice(i, 1);
       }
       continue;

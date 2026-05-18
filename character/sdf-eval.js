@@ -22,5 +22,10 @@ export function evalCharacterSDF(char, px, py, blendK = 16) {
     d = smin(d, swordD, blendK * 0.4);
   }
   
+  if (w.slice) {
+    const sliceD = (px - w.slice.x) * w.slice.nx + (py - w.slice.y) * w.slice.ny;
+    d = Math.max(d, sliceD);
+  }
+  
   return d;
 }
