@@ -98,7 +98,7 @@ export const ATTACK_FRAME_DATA = {
   forward: new AttackFrameData('forward', {
     startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
     range: { width: 80, height: 60, offsetX: 50, offsetY: -38 },
-    anim: { swordLen: 64, startAngle: 0.7, endAngle: 0, bodyTopX: 2, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -9, bodyBotY: -6, swordThickness: 4 }
+    anim: { swordLen: 70, startAngle: -1, endAngle: 0, bodyTopX: 2, bodyTopY: -35, headX: 0, headY: -55, bodyBotX: -9, bodyBotY: -6, swordThickness: 4 }
   }),
   dance_finisher_neutral: new AttackFrameData('dance_finisher_neutral', {
     startup: 16, active: 6, recovery: 40, damage: 30, knockback: { x: 18, y: -4 }, hitstun: 0.7, movement: { vx: 10, vy: 0 },
