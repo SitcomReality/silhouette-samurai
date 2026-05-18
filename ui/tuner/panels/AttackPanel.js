@@ -38,7 +38,9 @@ export class AttackPanel {
     
     createSectionHeader(container, 'Animation Setup');
     if (!data.anim) data.anim = {};
-    createSlider(container, 'Sword Length', data.anim, 'swordLen', 20, 150, 1);
+    createSlider(container, 'Sword Start Length', data.anim, 'swordStartLen', 0, 150, 1);
+    createSlider(container, 'Sword End Length', data.anim, 'swordLen', 20, 150, 1);
+    createSlider(container, 'Sword Origin Y', data.anim, 'swordOriginY', -100, 20, 1);
     createSlider(container, 'Start Angle (x PI)', data.anim, 'startAngle', -2, 2, 0.05);
     createSlider(container, 'End Angle (x PI)', data.anim, 'endAngle', -2, 2, 0.05);
     createSlider(container, 'Sword Thickness', data.anim, 'swordThickness', 1, 15, 0.5);

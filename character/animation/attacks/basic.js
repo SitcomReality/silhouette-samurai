@@ -5,16 +5,20 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
   const frameData = ATTACK_FRAME_DATA[attackType];
   const anim = frameData?.anim || {};
 
+  const sLen = anim.swordStartLen ?? (anim.swordLen ?? 64);
+  const eLen = anim.swordLen ?? 64;
+  const currentLen = sLen + (eLen - sLen) * attackProgress;
+  const originY = anim.swordOriginY ?? -40;
+
   if (attackType === 'forward') {
     const easedProgress = Math.pow(attackProgress, 0.4);
     const startA = anim.startAngle ?? 0.7;
     const endA = anim.endAngle ?? 0;
     const currentAngle = Math.PI * startA + easedProgress * Math.PI * (endA - startA);
-    const swordLen = anim.swordLen ?? 64;
     
-    t.swordAX = dir * 8; t.swordAY = -40;
-    t.swordBX = t.swordAX + Math.cos(currentAngle) * swordLen * dir;
-    t.swordBY = t.swordAY + Math.sin(currentAngle) * swordLen;
+    t.swordAX = dir * 8; t.swordAY = originY;
+    t.swordBX = t.swordAX + Math.cos(currentAngle) * currentLen * dir;
+    t.swordBY = t.swordAY + Math.sin(currentAngle) * currentLen;
     t.swordThickness = anim.swordThickness ?? 4;
     
     t.bodyTopX = dir * (anim.bodyTopX ?? 2) * easedProgress;
@@ -31,11 +35,10 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
     const startA = anim.startAngle ?? 0.4;
     const endA = anim.endAngle ?? -0.4;
     const arcAngle = (Math.PI * startA) - (snap * Math.PI * (startA - endA));
-    const swordLen = anim.swordLen ?? 75;
     
-    t.swordAX = dir * -5; t.swordAY = -30;
-    t.swordBX = t.swordAX + Math.cos(arcAngle) * swordLen * dir;
-    t.swordBY = t.swordAY + Math.sin(arcAngle) * swordLen;
+    t.swordAX = dir * -5; t.swordAY = originY;
+    t.swordBX = t.swordAX + Math.cos(arcAngle) * currentLen * dir;
+    t.swordBY = t.swordAY + Math.sin(arcAngle) * currentLen;
     t.swordThickness = (anim.swordThickness ?? 3) + (1 - snap) * 2;
     
     t.bodyTopX = dir * (anim.bodyTopX ?? 8) * snap;
@@ -49,13 +52,12 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
   
   if (attackType === 'air_forward' || attackType === 'thrust') {
     const snap = Math.pow(attackProgress, 0.3);
-    const swordLen = anim.swordLen ?? 95;
     
     if (attackProgress < 0.2) {
       const wind = attackProgress / 0.2;
       t.bodyTopX = -dir * 10 * wind;
-      t.swordAX = -dir * 15; t.swordAY = -35;
-      t.swordBX = -dir * 30; t.swordBY = -35;
+      t.swordAX = -dir * 15; t.swordAY = originY;
+      t.swordBX = -dir * 30; t.swordBY = originY;
     } else {
       const strike = (attackProgress - 0.2) / 0.8;
       const easedStrike = easeOutCubic(strike);
@@ -67,9 +69,9 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
       t.bodyBotX = dir * (anim.bodyBotX ?? -10) * easedStrike;
       t.bodyBotY = anim.bodyBotY ?? 0;
       
-      t.swordAX = dir * 10; t.swordAY = -35;
-      t.swordBX = t.swordAX + dir * swordLen * Math.min(1.1, easedStrike * 1.2); 
-      t.swordBY = -35;
+      t.swordAX = dir * 10; t.swordAY = originY;
+      t.swordBX = t.swordAX + dir * currentLen * Math.min(1.1, easedStrike * 1.2); 
+      t.swordBY = originY;
       t.swordThickness = anim.swordThickness ?? 4;
     }
     return true;
@@ -81,12 +83,10 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
     const startA = anim.startAngle ?? -0.25;
     const endA = anim.endAngle ?? -1.35;
     const arcAngle = (Math.PI * startA) - (easedProgress * Math.PI * (startA - endA));
-    const swordLen = anim.swordLen ?? 82;
     
-    t.swordBX = dir * 20 + Math.cos(arcAngle) * swordLen * dir * 0.75;
-    t.swordBY = -60 + Math.sin(arcAngle) * swordLen;
-    t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir * 0.75;
-    t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+    t.swordAX = dir * 5; t.swordAY = originY - 15;
+    t.swordBX = t.swordAX + Math.cos(arcAngle) * currentLen * dir;
+    t.swordBY = t.swordAY + Math.sin(arcAngle) * currentLen;
     t.swordThickness = (anim.swordThickness ?? 2.5) + (1 - easedProgress) * 1.5;
     
     t.bodyTopX = dir * ((anim.bodyTopX ?? 20) * easedProgress);
@@ -102,12 +102,10 @@ export function applyBasicAttackPose(t, dir, attackType, attackProgress) {
     const startA = anim.startAngle ?? 0.15;
     const endA = anim.endAngle ?? -0.35;
     const arcAngle = (Math.PI * startA) - (easedProgress * Math.PI * (startA - endA));
-    const swordLen = anim.swordLen ?? 58;
     
-    t.swordBX = dir * (15 + easedProgress * 25) + Math.cos(arcAngle) * swordLen * dir * 0.5;
-    t.swordBY = -10 + Math.sin(arcAngle) * swordLen * 0.5;
-    t.swordAX = t.swordBX - Math.cos(arcAngle) * swordLen * dir;
-    t.swordAY = t.swordBY - Math.sin(arcAngle) * swordLen;
+    t.swordAX = dir * (15 + easedProgress * 15); t.swordAY = originY + 25;
+    t.swordBX = t.swordAX + Math.cos(arcAngle) * currentLen * dir;
+    t.swordBY = t.swordAY + Math.sin(arcAngle) * currentLen;
     t.bodyBotX = dir * (anim.bodyBotX ?? -10);
     t.bodyBotY = anim.bodyBotY ?? 0;
     t.bodyTopX = dir * ((anim.bodyTopX ?? 22) * easedProgress); 
