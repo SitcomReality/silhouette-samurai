@@ -68,25 +68,40 @@ export function applyFinisherPose(t, dir, attackType, attackProgress) {
   }
   
   if (attackType === 'dance_finisher_down') {
+    // Make the down finisher sweep across using configured start/end angles so the tuner sliders actually affect the pose.
+    const startA = anim.startAngle ?? 0.15;
+    const endA = anim.endAngle ?? -0.35;
+
     if (attackProgress < 0.25) {
       const tuck = easeInCubic(attackProgress / 0.25);
-      t.bodyTopX = 0; t.bodyTopY = -40 - tuck * 5;
-      t.headX = 0; t.headY = -55 - tuck * 5;
+      // small tuck windup before the sweep
+      t.bodyTopX = 0; t.bodyTopY = -40 - tuck * 6;
+      t.headX = 0; t.headY = -55 - tuck * 6;
       t.bodyBotY = -15 - tuck * 10;
-      t.swordAX = 0; t.swordAY = originY + 15 - tuck * 15;
-      t.swordBX = 0; t.swordBY = originY + 35 + tuck * 5;
-      t.swordThickness = (anim.swordThickness ?? 9) - 4;
+      // keep origin near body during windup
+      t.swordAX = 0; t.swordAY = originY + 12 - tuck * 12;
+      // blade folded slightly forward in windup
+      const windAngle = Math.PI * (startA + 0.2);
+      t.swordBX = t.swordAX + Math.cos(windAngle) * (sLen * 0.6) * dir;
+      t.swordBY = t.swordAY + Math.sin(windAngle) * (sLen * 0.6);
+      t.swordThickness = (anim.swordThickness ?? 6) - 2;
     } else {
-      const plunge = easeInCubic((attackProgress - 0.25) / 0.75);
-      t.bodyTopX = anim.bodyTopX ?? 0; 
-      t.bodyTopY = (anim.bodyTopY ?? -45) + plunge * 10 - 45*(1-plunge);
-      t.headX = anim.headX ?? 0; 
-      t.headY = (anim.headY ?? -60) + plunge * 10 - 60*(1-plunge);
-      t.bodyBotX = anim.bodyBotX ?? 0;
-      t.bodyBotY = (anim.bodyBotY ?? -25) + plunge * 15 - 25*(1-plunge);
+      // Sweep phase uses configured angles so tuner start/end affect the motion.
+      const sweepT = easeOutCubic((attackProgress - 0.25) / 0.75);
+      const arcAngle = Math.PI * (startA + sweepT * (endA - startA));
+      // keep sword origin inside the body
       t.swordAX = 0; t.swordAY = originY;
-      t.swordBX = 0; t.swordBY = originY + 40 + plunge * currentLen;
-      t.swordThickness = (anim.swordThickness ?? 9) - 3 + plunge * 3;
+      t.swordBX = t.swordAX + Math.cos(arcAngle) * currentLen * dir;
+      t.swordBY = t.swordAY + Math.sin(arcAngle) * currentLen;
+
+      // Body follow-through for a sweeping motion
+      t.bodyTopX = dir * ((anim.bodyTopX ?? 10) * (0.6 + 0.4 * sweepT));
+      t.bodyTopY = (anim.bodyTopY ?? -45) + (1 - sweepT) * -5;
+      t.headX = dir * ((anim.headX ?? 8) * (0.6 + 0.6 * sweepT));
+      t.headY = (anim.headY ?? -60) + (1 - sweepT) * -6;
+      t.bodyBotX = anim.bodyBotX ?? 0;
+      t.bodyBotY = (anim.bodyBotY ?? -25) + sweepT * 8;
+      t.swordThickness = (anim.swordThickness ?? 6) - (1 - sweepT) * 2;
     }
     return true;
   }
