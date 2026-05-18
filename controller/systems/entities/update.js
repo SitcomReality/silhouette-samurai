@@ -16,7 +16,8 @@ export function updateEntities(controller, dt) {
         ent.x += ent.vx;
         ent.y += ent.vy;
         
-        if (ent.y >= controller.baseGroundY) {
+        // Sliced debris halves now fall through the ground instead of colliding.
+        if (!ent.isSliced && ent.y >= controller.baseGroundY) {
           ent.y = controller.baseGroundY;
           ent.vy *= -0.3; // slight bounce
           ent.vx *= 0.6;

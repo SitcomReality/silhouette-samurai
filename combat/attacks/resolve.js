@@ -186,16 +186,19 @@ function spawnDebris(controller, ent, dir, damage, frameData) {
   if (ent.type === 'crate') return;
   
   const scale = ent.scale || 1.0;
-  const sliceY = ent.y - 35 * scale; // Slice roughly through midsection
+  // Add random vertical and horizontal jitter to the slice origin for more natural variance
+  const sliceY = (ent.y - 35 * scale) + (Math.random() - 0.5) * 20 * scale;
+  const sliceX = ent.x + (Math.random() - 0.5) * 10 * scale;
   
   let cutAngle = 0;
   if (frameData && frameData.anim && frameData.anim.endAngle !== undefined) {
-    cutAngle = frameData.anim.endAngle * Math.PI;
+    // Take base angle from animation but add significant random jitter for an organic feel
+    cutAngle = (frameData.anim.endAngle + (Math.random() - 0.5) * 0.25) * Math.PI;
     if (dir === -1) {
       cutAngle = Math.PI - cutAngle;
     }
   } else {
-    cutAngle = (Math.random() - 0.5) * 0.5; // fallback angle
+    cutAngle = (Math.random() - 0.5) * 1.5; 
   }
   
   const vx = Math.cos(cutAngle);
@@ -221,11 +224,13 @@ function spawnDebris(controller, ent, dir, damage, frameData) {
   };
 
   const topChar = cloneChar(ent.character);
-  topChar.world.slice = { x: ent.x, y: sliceY, nx: nx1, ny: ny1 };
+  topChar.world.slice = { x: sliceX, y: sliceY, nx: nx1, ny: ny1 };
   
   const botChar = cloneChar(ent.character);
-  botChar.world.slice = { x: ent.x, y: sliceY, nx: nx2, ny: ny2 };
+  botChar.world.slice = { x: sliceX, y: sliceY, nx: nx2, ny: ny2 };
 
+  // Jitter the impulses and rotation speeds for each half to make deaths look unique
+  const topImpulse = damage * (0.3 + Math.random() * 0.2);
   const topHalf = {
     id: `debris_top_${controller.particleId++}`,
     type: 'enemy',
@@ -235,15 +240,16 @@ function spawnDebris(controller, ent, dir, damage, frameData) {
     y: ent.y,
     lastX: ent.x,
     lastY: ent.y,
-    vx: dir * damage * 0.4,
-    vy: -Math.abs(damage) * 0.35 - 4,
-    vAngle: dir * 0.05,
+    vx: dir * topImpulse + (Math.random() - 0.5) * 4,
+    vy: -Math.abs(damage) * (0.3 + Math.random() * 0.2) - 5,
+    vAngle: dir * (0.04 + Math.random() * 0.1),
     health: 0,
     stateTime: 0,
     scale: scale,
     character: topChar
   };
   
+  const botImpulse = damage * (0.1 + Math.random() * 0.1);
   const bottomHalf = {
     id: `debris_bot_${controller.particleId++}`,
     type: 'enemy',
@@ -253,9 +259,9 @@ function spawnDebris(controller, ent, dir, damage, frameData) {
     y: ent.y,
     lastX: ent.x,
     lastY: ent.y,
-    vx: dir * damage * 0.1,
-    vy: -2,
-    vAngle: -dir * 0.02,
+    vx: dir * botImpulse + (Math.random() - 0.5) * 2,
+    vy: -(1 + Math.random() * 3),
+    vAngle: -dir * (0.01 + Math.random() * 0.03),
     health: 0,
     stateTime: 0,
     scale: scale,
