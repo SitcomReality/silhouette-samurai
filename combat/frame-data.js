@@ -91,9 +91,9 @@ export const ATTACK_FRAME_DATA = {
     anim: { swordLen: 82, swordStartLen: 82, swordOriginY: -45, startAngle: 0, endAngle: -1, bodyTopX: 20, bodyTopY: -48, headX: 26, headY: -60, bodyBotX: 0, bodyBotY: -14, swordThickness: 2.5 }
   }),
   air_down: new AttackFrameData('air_down', {
-    startup: 9, active: 4, recovery: 18, damage: 20, knockback: { x: 0, y: 15 }, hitstun: 0.5, spike: true, groundOnly: false, movement: { vx: 0, vy: 8 },
-    range: { width: 40, height: 50, offsetX: 0, offsetY: 10 },
-    anim: { swordLen: 72, swordStartLen: 13, swordOriginY: -36, startAngle: 0.15, endAngle: 0.65, bodyTopX: 0, bodyTopY: -21, headX: 4, headY: -37, bodyBotX: 1, bodyBotY: 10, swordThickness: 3 }
+    startup: 4, active: 30, recovery: 8, damage: 20, knockback: { x: 0, y: 15 }, hitstun: 0.5, spike: true, groundOnly: false, movement: { vx: 0, vy: 8 },
+    range: { width: 80, height: 100, offsetX: 0, offsetY: 25 },
+    anim: { swordLen: 78, swordStartLen: 10, swordOriginY: -36, startAngle: 0.55, endAngle: 0.65, bodyTopX: 0, bodyTopY: -21, headX: 4, headY: -37, bodyBotX: 1, bodyBotY: 10, swordThickness: 3 }
   }),
   forward: new AttackFrameData('forward', {
     startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
