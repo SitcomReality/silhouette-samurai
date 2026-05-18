@@ -8,6 +8,7 @@ export function updateEntities(controller, dt) {
     }
 
     ent.stateTime += dt;
+    if (ent.flashTimer > 0) ent.flashTimer -= dt;
 
     if (ent.state === 'dead') {
       ent.isGrounded = false;

@@ -8,32 +8,22 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       const scX = (ent.x - controller.cameraX) + viewWidth / 2;
       const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.4 : 40) + camYOffset;
       const glowRadius = (ent.scale || 1.0) * 60;
-      // Base orange glow
       const grad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius);
-      grad.addColorStop(0, 'rgba(255,110,30,0.28)');
-      grad.addColorStop(0.4, 'rgba(255,110,30,0.12)');
+      
+      if (ent.flashTimer > 0) {
+        const flashP = Math.min(ent.flashTimer / 0.15, 1.0);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${0.5 * flashP})`);
+        grad.addColorStop(0.3, `rgba(255, 255, 255, ${0.2 * flashP})`);
+      } else {
+        grad.addColorStop(0, 'rgba(255,110,30,0.28)');
+        grad.addColorStop(0.4, 'rgba(255,110,30,0.12)');
+      }
       grad.addColorStop(1, 'rgba(255,110,30,0.0)');
+      
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
       ctx.fill();
-
-      // If there's a recent damage spark near this enemy, overlay a sharp white flash
-      const isFlashing = controller.visualFx.some(fx =>
-        fx.type === 'damage_spark' &&
-        Math.hypot((fx.x || 0) - ent.x, (fx.y || 0) - ent.y) < 40 &&
-        fx.life < (fx.maxLife || 0.25) * 0.6
-      );
-      if (isFlashing) {
-        const flashGrad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius * 0.7);
-        flashGrad.addColorStop(0, 'rgba(255,255,255,0.95)');
-        flashGrad.addColorStop(0.2, 'rgba(255,255,255,0.6)');
-        flashGrad.addColorStop(1, 'rgba(255,255,255,0.0)');
-        ctx.beginPath();
-        ctx.fillStyle = flashGrad;
-        ctx.arc(scX, scY, glowRadius * 0.7, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
     ctx.restore();
   }
@@ -178,21 +168,29 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       const alpha = 1 - p;
       
       ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.strokeStyle = '#ffff00';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#ffff00';
-      ctx.shadowBlur = 25;
+      ctx.translate(scX, scY);
+      ctx.rotate(fx.rotation);
       
-      // Draw 6 spikes radiating from center
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + (fx.rotation || 0);
-        const len = (20 + p * 15) * (1 + Math.sin(p * Math.PI) * 0.3);
-        ctx.beginPath();
-        ctx.moveTo(scX, scY);
-        ctx.lineTo(scX + Math.cos(angle) * len, scY + Math.sin(angle) * len);
-        ctx.stroke();
-      }
+      const length = (45 + p * 80);
+      const width = 3.5 * alpha;
+      
+      const grad = ctx.createLinearGradient(-length, 0, length, 0);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      grad.addColorStop(0.5, `rgba(255, 255, 255, ${alpha})`);
+      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      
+      ctx.fillStyle = grad;
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 20 * alpha;
+      
+      // Draw symmetrical lens flare (two elongated triangles meeting at center)
+      ctx.beginPath();
+      ctx.moveTo(-length, 0);
+      ctx.lineTo(0, -width);
+      ctx.lineTo(length, 0);
+      ctx.lineTo(0, width);
+      ctx.closePath();
+      ctx.fill();
       
       ctx.restore();
     }

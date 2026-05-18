@@ -14,6 +14,7 @@ export function spawnEnemy(controller, x, difficulty = 1) {
     isCrouching: false,
     health: hp,
     maxHealth: hp,
+    flashTimer: 0,
     // Increase enemy visual scale by 50% to match the player's visual size
     scale: 1.5,
     state: 'idle',
@@ -41,6 +42,7 @@ export function spawnBoss(controller, x, difficulty = 1) {
     isCrouching: false,
     health: hp,
     maxHealth: hp,
+    flashTimer: 0,
     state: 'idle',
     stateTime: Math.random() * 2,
     attackType: 'none',

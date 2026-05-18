@@ -72,6 +72,7 @@ export function resolveAttackHits(controller) {
       }
       
       ent.health -= damage;
+      ent.flashTimer = 0.15;
       
       // Apply knockback and hitstun
       if (frameData.spike && !ent.isGrounded) {
