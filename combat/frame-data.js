@@ -93,7 +93,7 @@ export const ATTACK_FRAME_DATA = {
   air_down: new AttackFrameData('air_down', {
     startup: 9, active: 4, recovery: 18, damage: 20, knockback: { x: 0, y: 15 }, hitstun: 0.5, spike: true, groundOnly: false, movement: { vx: 0, vy: 8 },
     range: { width: 40, height: 50, offsetX: 0, offsetY: 10 },
-    anim: { swordLen: 58, swordStartLen: 58, swordOriginY: -35, startAngle: 0.15, endAngle: -0.35, bodyTopX: 22, bodyTopY: -15, headX: 26, headY: -25, bodyBotX: -10, bodyBotY: 0, swordThickness: 3 }
+    anim: { swordLen: 72, swordStartLen: 13, swordOriginY: -36, startAngle: 0.15, endAngle: 0.65, bodyTopX: 0, bodyTopY: -21, headX: 4, headY: -37, bodyBotX: 1, bodyBotY: 10, swordThickness: 3 }
   }),
   forward: new AttackFrameData('forward', {
     startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },

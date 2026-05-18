@@ -16,8 +16,8 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   t.bulgeAX = 0; t.bulgeAY = -20; t.bulgeAR = 0;
   t.bulgeBX = 0; t.bulgeBY = -20; t.bulgeBR = 0;
   
-  // Idle: sword resting diagonally behind back (iaijutsu ready)
-  t.swordAX = -dir * 8; t.swordAY = -25;
+  // Idle: sword resting diagonally behind back (iaijutsu ready) — origin locked to body center (no horizontal offset)
+  t.swordAX = 0; t.swordAY = -25;
   t.swordBX = -dir * 35; t.swordBY = -50;
   t.swordThickness = 3;
 
@@ -32,6 +32,9 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     }
   }
 
+  // Ensure sword origin stays inside the body (prevent horizontal movement) before scaling
+  t.swordAX = 0;
+  
   // Apply scale to all calculated target positions
   t.bodyBotX *= scale; t.bodyBotY *= scale;
   t.bodyTopX *= scale; t.bodyTopY *= scale;
