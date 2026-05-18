@@ -25,7 +25,7 @@ export const SWOOSH_CONFIG = {
   down: { type: 'arc_swoosh', offsetX: 10, offsetY: -52, startAngle: 1.2, endAngle: -0.4, radius: 80, thickness: 30, squashY: 0.3, maxLife: 0.35 },
   forward: { type: 'arc_swoosh', offsetX: -13, offsetY: -67, startAngle: -0.8, endAngle: 0.35, radius: 100, thickness: 20, squashY: 0.15, maxLife: 0.24 },
   air_neutral: { type: 'arc_swoosh', offsetX: 0, offsetY: -15, startAngle: -0.9, endAngle: -0.1, radius: 58, thickness: 28, squashY: 0.85, maxLife: 0.22 },
-  air_forward: { type: 'arc_swoosh', offsetX: -10, offsetY: -69, startAngle: 1, endAngle: -0.1, radius: 70, thickness: 30, squashY: 0.3, maxLife: 0.3 },
+  air_forward: { type: 'arc_swoosh', offsetX: -10, offsetY: -69, startAngle: 1.3, endAngle: -0.3, radius: 70, thickness: 30, squashY: 0.3, maxLife: 0.3 },
   air_up: { type: 'arc_swoosh', offsetX: 10, offsetY: -70, startAngle: 0.05, endAngle: -0.95, radius: 60, thickness: 32, squashY: 1, maxLife: 0.3 },
   air_down: { type: 'streak', offsetX: 0, offsetY: -20, angle: 1.57, length: 150, width: 35, maxLife: 0.25 },
   dance_finisher_neutral: { type: 'arc_swoosh', offsetX: 42, offsetY: -40, startAngle: 0.9, endAngle: -0.1, radius: 90, thickness: 60, squashY: 0.3, maxLife: 0.4 },
@@ -77,13 +77,14 @@ export const ATTACK_FRAME_DATA = {
   }),
   air_neutral: new AttackFrameData('air_neutral', {
     startup: 3, active: 5, recovery: 8, damage: 10, knockback: { x: 5, y: -3 }, hitstun: 0.25, groundOnly: false,
+    movement: { vx: 0, vy: -20 },
     range: { width: 60, height: 70, offsetX: 45, offsetY: -66 },
     anim: { swordLen: 75, swordStartLen: 75, swordOriginY: -40, startAngle: -0.9, endAngle: 0, bodyTopX: 8, bodyTopY: -35, headX: 12, headY: -55, bodyBotX: -5, bodyBotY: 0, swordThickness: 3 }
   }),
   air_forward: new AttackFrameData('air_forward', {
-    startup: 4, active: 6, recovery: 12, damage: 15, knockback: { x: 10, y: -3 }, hitstun: 0.35, groundOnly: false, movement: { vx: 33, vy: 0 },
-    range: { width: 70, height: 45, offsetX: 40, offsetY: -35 },
-    anim: { swordLen: 105, swordStartLen: 105, swordOriginY: -35, startAngle: -0.2, endAngle: 0.1, bodyTopX: 0, bodyTopY: -35, headX: 4, headY: -55, bodyBotX: -10, bodyBotY: 0, swordThickness: 4 }
+    startup: 4, active: 6, recovery: 12, damage: 15, knockback: { x: 10, y: -3 }, hitstun: 0.35, groundOnly: false,
+    range: { width: 70, height: 60, offsetX: 50, offsetY: -55 },
+    anim: { swordLen: 54, swordStartLen: 16, swordOriginY: -35, startAngle: 0.6, endAngle: -0.1, bodyTopX: 0, bodyTopY: -35, headX: 15, headY: -55, bodyBotX: -20, bodyBotY: -20, swordThickness: 4 }
   }),
   air_up: new AttackFrameData('air_up', {
     startup: 6, active: 6, recovery: 12, damage: 14, knockback: { x: 1, y: -10 }, hitstun: 0.45, groundOnly: false,
