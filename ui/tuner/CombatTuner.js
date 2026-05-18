@@ -82,13 +82,15 @@ export class CombatTuner {
       this.swooshData = module.SWOOSH_CONFIG;
       
       this._tunerBaseline = {
-        physics: JSON.parse(JSON.stringify(this.physicsData)),
-        bladeDance: JSON.parse(JSON.stringify(this.bladeDanceData)),
+        physics: this.physicsData ? JSON.parse(JSON.stringify(this.physicsData)) : {},
+        bladeDance: this.bladeDanceData ? JSON.parse(JSON.stringify(this.bladeDanceData)) : {},
         attacks: {},
-        swooshes: JSON.parse(JSON.stringify(this.swooshData))
+        swooshes: this.swooshData ? JSON.parse(JSON.stringify(this.swooshData)) : {}
       };
-      for (const [k, v] of Object.entries(this.attackData)) {
-        this._tunerBaseline.attacks[k] = JSON.parse(JSON.stringify(v));
+      if (this.attackData) {
+        for (const [k, v] of Object.entries(this.attackData)) {
+          this._tunerBaseline.attacks[k] = JSON.parse(JSON.stringify(v));
+        }
       }
 
       Object.keys(this.attackData).forEach(key => {
