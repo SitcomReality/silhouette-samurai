@@ -1,20 +1,25 @@
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
-  // Soft enemy glow rendered on FX layer so outlines remain unified in SDF pass
+  // Stylized enemy core glow: tighter and more performant than radial gradients
   const enemies = controller.entities.filter(e => e.state !== 'dead' && e.type === 'enemy');
   if (enemies.length > 0) {
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
     for (const ent of enemies) {
       const scX = (ent.x - controller.cameraX) + viewWidth / 2;
-      const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.4 : 40) + camYOffset;
-      const glowRadius = (ent.scale || 1.0) * 120;
-      const grad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius);
-      grad.addColorStop(0, 'rgba(255,110,30,0.28)');
-      grad.addColorStop(0.4, 'rgba(255,110,30,0.12)');
-      grad.addColorStop(1, 'rgba(255,110,30,0.0)');
-      ctx.fillStyle = grad;
+      // Center glow on the torso
+      const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.5 : 40) + camYOffset;
+      const scale = (ent.scale || 1.0);
+      const pulse = 0.85 + Math.sin(ent.stateTime * 5) * 0.15;
+      const radius = 22 * scale * pulse;
+      
+      // Performant flat-color circles instead of expensive radial gradients
+      ctx.fillStyle = 'rgba(255, 70, 0, 0.15)';
       ctx.beginPath();
-      ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
+      ctx.arc(scX, scY, radius * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(255, 130, 0, 0.25)';
+      ctx.beginPath();
+      ctx.arc(scX, scY, radius * 0.7, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
