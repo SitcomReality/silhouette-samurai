@@ -55,8 +55,8 @@ export function extractSDFSegments(
       if (top < highestTop) highestTop = top;
     }
 
-    // Ensure intro text is considered when present so its SDF is sampled even with no nearby entities/particles.
-    if (controller && controller.introLayouts) {
+    // Ensure intro text is considered when present (only if we have grounded entities to blend with or checking all)
+    if (controller && controller.introLayouts && entities.some(e => e.isGrounded || e.type === 'player')) {
       for (const layout of controller.introLayouts) {
         const textCenter = layout.x + (layout.width || 0) * 0.5;
         const halfW = (layout.width || 0) * 0.5 + globalBlendK * 2.0;
