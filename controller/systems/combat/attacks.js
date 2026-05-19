@@ -1,9 +1,15 @@
 import { resolveAttackHits } from '../../../combat/attacks/resolve.js';
-import { triggerAttack } from '../../../combat/attacks/trigger.js';
-import { determineAttack, getDirectionInput } from '../../../input/controls.js';
+import { triggerUnifiedAttack } from '../../../combat/attacks/trigger.js';
+import { CHARGE_CONFIG } from '../../../combat/frame-data.js';
 
 export function updatePlayerAttacks(controller, dt) {
   const p = controller.player;
+  
+  // Update charge time if charging
+  if (p.attackCharging && !controller.freezePlayer) {
+    p.attackChargeTime += dt;
+    p.attackChargeTime = Math.min(p.attackChargeTime, CHARGE_CONFIG.maxChargeTime);
+  }
   
   if (p.state === 'attack') {
     p.attackFrameTime += dt;
@@ -32,23 +38,13 @@ export function updatePlayerAttacks(controller, dt) {
   if (controller.loopSelectedAttack && p.state !== 'attack' && p.state !== 'dead') {
     p.vx = 0;
     p.vy = 0;
-    triggerAttack(controller, controller.tunerSelectedAttack || 'neutral');
-  }
-
-  // Handle finisher input (block + direction during grace window)
-  if (p.finisherTransitionWindow > 0 && p.isBlocking) {
-    const direction = getDirectionInput(controller, false); // Don't allow neutral
-    if (direction && p.combo >= 5) {
-      const finisher = determineAttack(controller, true);
-      if (finisher) {
-        p.blockToFinisher = true;
-        triggerAttack(controller, finisher);
-        p.combo = 0; // Finishers reset combo
-        p.finisherTransitionWindow = 0;
-        p.blockBuffer = null;
-        return;
-      }
-    }
+    // Simulate a full charge unified attack
+    p.attackBuffer = {
+      btn: 1,
+      time: 0.2,
+      chargeTime: CHARGE_CONFIG.maxChargeTime,
+      movementVector: { x: 1, y: 0 }
+    };
   }
 
   // Handle block buffer
@@ -56,14 +52,9 @@ export function updatePlayerAttacks(controller, dt) {
     p.blockBuffer.time -= dt;
   }
 
-  // Handle attack buffer
+  // Handle attack buffer (now includes charge data)
   if (p.attackBuffer && p.attackBuffer.time > 0) {
     p.attackBuffer.time -= dt;
-    
-    const oldJ = controller.keys['KeyJ'];
-    controller.keys['KeyJ'] = true;
-    const bufferedType = determineAttack(controller);
-    controller.keys['KeyJ'] = oldJ;
 
     let canAttack = false;
     
@@ -76,20 +67,18 @@ export function updatePlayerAttacks(controller, dt) {
         canAttack = true;
       }
       
-
-      
       if (p.canCounter && p.counterWindow > 0) {
         canAttack = true;
       }
     }
     
-    if (canAttack && bufferedType) {
-      triggerAttack(controller, bufferedType);
+    if (canAttack) {
+      triggerUnifiedAttack(controller, p.attackBuffer.chargeTime || 0, p.attackBuffer.movementVector || { x: 0, y: 0 });
       p.attackBuffer = null;
     }
   }
 
-  const decayTime = 1.4; // Consolidated from COMBO_CONFIG.decayTime if imported
+  const decayTime = 1.4;
   if (p.state !== 'attack' && p.stateTime > decayTime && p.combo > 0) {
     p.combo = 0;
   }

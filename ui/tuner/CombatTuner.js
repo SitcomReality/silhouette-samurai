@@ -58,12 +58,20 @@ export class CombatTuner {
         }
       }
 
-      Object.keys(this.attackData).forEach(key => {
+      // Add unified attack first
+      const unifiedOpt = document.createElement('option');
+      unifiedOpt.value = 'unified';
+      unifiedOpt.textContent = '⚡ UNIFIED ATTACK (NEW)';
+      tunerSelect.appendChild(unifiedOpt);
+      
+      Object.keys(this.attackData).filter(k => k !== 'unified').forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
         opt.textContent = key.replace(/_/g, ' ').toUpperCase();
         tunerSelect.appendChild(opt);
       });
+      
+      tunerSelect.value = 'unified';
       
       tunerSelect.onchange = () => {
         this.controller.tunerSelectedAttack = tunerSelect.value;

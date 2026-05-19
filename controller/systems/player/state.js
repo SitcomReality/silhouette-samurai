@@ -69,6 +69,12 @@ export function updatePlayerTimersAndRegen(controller, dt) {
     }
   }
 
+  // Cancel charging if blocking
+  if (p.isBlocking) {
+    p.attackCharging = false;
+    p.attackChargeTime = 0;
+  }
+  
   if (p.isBlocking && p.state !== 'attack' && p.state !== 'dead') {
     p.state = 'block';
     p.vx *= 0.85;

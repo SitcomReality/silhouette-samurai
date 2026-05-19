@@ -1,84 +1,115 @@
-import { ATTACK_FRAME_DATA, SWOOSH_CONFIG } from '../frame-data.js';
+import { UNIFIED_ATTACK, CHARGE_CONFIG } from '../frame-data.js';
 
-export function triggerAttack(controller, attackType) {
+export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   const p = controller.player;
   if (p.state === 'dead' || p.state === 'stagger') return;
   
-  const frameData = ATTACK_FRAME_DATA[attackType];
-  if (!frameData) return;
+  // Clone the unified attack data so we can modify it per-attack
+  const frameData = JSON.parse(JSON.stringify(UNIFIED_ATTACK));
   
-  // Check ground requirement (allow bypass when auto-looping from the tuner so any attack can be tested)
-  if (frameData.groundOnly && !p.isGrounded && !controller.loopSelectedAttack) return;
+  // Calculate charge power (0 to 1)
+  const chargePower = Math.min(chargeTime / CHARGE_CONFIG.maxChargeTime, 1.0);
   
-  // Initialize attack state
-  p.state = 'attack';
-  p.stateTime = 0;
-  p.attackType = attackType;
-  p.attackFrameData = frameData;
-  p.attackFrameTime = 0;
-  p.attackHitConfirmed = false;
-  p.attackHitEntities = new Set(); // Track which entities we've hit
+  // Scale damage and knockback based on charge
+  const damageScale = CHARGE_CONFIG.minDamageScale + (CHARGE_CONFIG.maxDamageScale - CHARGE_CONFIG.minDamageScale) * chargePower;
+  const knockbackScale = CHARGE_CONFIG.minKnockbackScale + (CHARGE_CONFIG.maxKnockbackScale - CHARGE_CONFIG.minKnockbackScale) * chargePower;
+  const movementScale = CHARGE_CONFIG.minMovementScale + (CHARGE_CONFIG.maxMovementScale - CHARGE_CONFIG.minMovementScale) * chargePower;
   
-  // Apply movement on startup (vx set, vy is additive so attacks don't steal existing inertia)
-  // When auto-looping from the tuner or when freezePlayer is enabled, suppress attack-applied movement so the player remains in place for easier testing.
+  frameData.damage *= damageScale;
+  frameData.knockback.x *= knockbackScale;
+  frameData.knockback.y *= knockbackScale;
+  
+  // Calculate attack angle from movement vector
+  const mvx = movementVector.x;
+  const mvy = movementVector.y;
+  const moveAngle = Math.atan2(-mvy, mvx); // Negative Y because down is positive
+  
+  // Determine facing based on horizontal input (or keep current if neutral)
+  if (Math.abs(mvx) > 0.1) {
+    p.facing = mvx > 0 ? 'right' : 'left';
+  }
   const dir = p.facing === 'right' ? 1 : -1;
+  
+  // Apply movement boost in the input direction
   if (!(controller.loopSelectedAttack || controller.freezePlayer)) {
-    if (frameData.movement) {
-      p.vx = dir * (frameData.movement.vx || 0);
-      // Add vertical component instead of replacing to preserve and augment current momentum
-      if (frameData.movement.vy !== undefined && frameData.movement.vy !== 0) {
-        p.vy += frameData.movement.vy;
-        p.isGrounded = false;
-      }
+    const moveMag = Math.sqrt(mvx * mvx + mvy * mvy);
+    if (moveMag > 0.1) {
+      const baseSpeed = CHARGE_CONFIG.baseMovementSpeed * movementScale;
+      p.vx += (mvx / moveMag) * baseSpeed * 0.8; // Blend with existing velocity
+      p.vy += (-mvy / moveMag) * baseSpeed * 0.8;
+      if (Math.abs(p.vy) > 2) p.isGrounded = false;
     }
-  } else {
-    // Ensure velocities are stable for tuner playback
-    p.vx = 0;
-    // don't forcibly change vertical grounding unless movement explicitly intends to send player airborne in non-loop mode
-    // preserve p.vy when freezePlayer is set (so you can test mid-air poses), but zero it for loopSelectedAttack to keep consistent frame playback
-    if (controller.loopSelectedAttack) p.vy = 0;
   }
   
-
+  // Adjust animation angles based on attack direction
+  if (frameData.anim) {
+    // Map attack angle to sword angles (relative to facing direction)
+    let relativeAngle = moveAngle;
+    if (dir === -1) {
+      relativeAngle = Math.PI - moveAngle;
+    }
+    
+    // Set start and end angles based on direction
+    frameData.anim.startAngle = (relativeAngle / Math.PI) + 0.3;
+    frameData.anim.endAngle = (relativeAngle / Math.PI) - 0.3;
+    
+    // Adjust body lean based on direction
+    const leanFactor = chargePower * 30;
+    frameData.anim.bodyTopX = Math.cos(relativeAngle) * leanFactor;
+    frameData.anim.bodyTopY = -35 + Math.sin(relativeAngle) * leanFactor * 0.5;
+    frameData.anim.headX = Math.cos(relativeAngle) * leanFactor * 1.3;
+    frameData.anim.headY = -55 + Math.sin(relativeAngle) * leanFactor * 0.5;
+  }
   
-  // Create attack-specific visual effects (simplified for now)
-  createAttackSwoosh(controller, p, attackType);
+  // Store attack metadata
+  p.state = 'attack';
+  p.stateTime = 0;
+  p.attackType = 'unified';
+  p.attackFrameData = new UNIFIED_ATTACK.constructor('unified', frameData);
+  p.attackFrameTime = 0;
+  p.attackHitConfirmed = false;
+  p.attackHitEntities = new Set();
+  p.attackAngle = moveAngle;
+  p.attackChargePower = chargePower;
+  
+  // Create procedural swoosh
+  createProceduralSwoosh(controller, p, moveAngle, chargePower);
   
   if (controller.audioEngine) {
-    controller.audioEngine.onAttackSwoosh(attackType);
+    controller.audioEngine.onAttackSwoosh('unified');
   }
 }
 
-function createAttackSwoosh(controller, p, attackType) {
-  const config = SWOOSH_CONFIG[attackType];
-  if (!config) return;
-  
+function createProceduralSwoosh(controller, p, attackAngle, chargePower) {
   const dir = p.facing === 'right' ? 1 : -1;
+  
+  // Calculate swoosh parameters based on attack angle
+  let relativeAngle = attackAngle;
+  if (dir === -1) {
+    relativeAngle = Math.PI - attackAngle;
+  }
+  
+  const swooshRadius = 80 + chargePower * 40;
+  const swooshThickness = 15 + chargePower * 25;
+  const swooshDuration = 0.2 + chargePower * 0.2;
+  
   const fx = {
     id: `fx_${controller.fxId++}`,
-    type: config.type,
+    type: 'arc_swoosh',
     entity: p,
-    offsetX: dir * config.offsetX,
-    offsetY: config.offsetY,
-    x: p.x + dir * config.offsetX,
-    y: p.y + config.offsetY,
+    offsetX: Math.cos(relativeAngle) * 30 * dir,
+    offsetY: -50 + Math.sin(relativeAngle) * 30,
+    x: p.x + Math.cos(relativeAngle) * 30 * dir,
+    y: p.y - 50 + Math.sin(relativeAngle) * 30,
     facing: p.facing,
+    startAngle: relativeAngle + 0.4,
+    endAngle: relativeAngle - 0.4,
+    radius: swooshRadius,
+    thickness: swooshThickness,
+    squashY: 0.3 + Math.abs(Math.sin(relativeAngle)) * 0.7,
     life: 0,
-    maxLife: config.maxLife
+    maxLife: swooshDuration
   };
-  
-  if (config.type === 'arc_swoosh') {
-    fx.startAngle = config.startAngle * Math.PI;
-    fx.endAngle = config.endAngle * Math.PI;
-    // Use global convention: radius 100 and thickness 20
-    fx.radius = 100;
-    fx.thickness = 20;
-    fx.squashY = config.squashY || 1.0;
-  } else if (config.type === 'streak') {
-    fx.angle = config.angle;
-    fx.length = config.length;
-    fx.width = config.width;
-  }
   
   controller.visualFx.push(fx);
 }

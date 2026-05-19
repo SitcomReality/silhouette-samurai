@@ -9,64 +9,54 @@ export class AttackPanel {
 
   render(container, attackKey) {
     container.innerHTML = '';
-    const data = this.attackData[attackKey];
-    if (!data) return;
-
-    createSectionHeader(container, 'Frame Data');
-    createSlider(container, 'Startup', data, 'startup', 0, 60, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
-    createSlider(container, 'Active', data, 'active', 1, 60, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
-    createSlider(container, 'Recovery', data, 'recovery', 0, 120, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
     
-    createSectionHeader(container, 'Combat');
-    createSlider(container, 'Damage', data, 'damage', 0, 100, 1);
-    createSlider(container, 'Hitstun (sec)', data, 'hitstun', 0, 2, 0.05);
-    if (!data.knockback) data.knockback = { x: 0, y: 0 };
-    createSlider(container, 'Knockback X', data.knockback, 'x', -20, 40, 1);
-    createSlider(container, 'Knockback Y', data.knockback, 'y', -40, 40, 1);
-    
-    createSectionHeader(container, 'Hitbox Area');
-    if (!data.range) data.range = { width: 50, height: 40, offsetX: 25, offsetY: -40 };
-    createSlider(container, 'Width', data.range, 'width', 10, 200, 1);
-    createSlider(container, 'Height', data.range, 'height', 10, 200, 1);
-    createSlider(container, 'Offset X', data.range, 'offsetX', -100, 100, 1);
-    createSlider(container, 'Offset Y', data.range, 'offsetY', -150, 50, 1);
-    
-    createSectionHeader(container, 'Movement');
-    if (!data.movement) data.movement = { vx: 0, vy: 0 };
-    createSlider(container, 'Velocity X', data.movement, 'vx', -30, 80, 1);
-    createSlider(container, 'Velocity Y', data.movement, 'vy', -40, 40, 1);
-    
-    createSectionHeader(container, 'Animation Setup');
-    if (!data.anim) data.anim = {};
-    createSlider(container, 'Sword Start Length', data.anim, 'swordStartLen', 0, 150, 1);
-    createSlider(container, 'Sword End Length', data.anim, 'swordLen', 20, 150, 1);
-    createSlider(container, 'Sword Origin Y', data.anim, 'swordOriginY', -100, 20, 1);
-    createSlider(container, 'Start Angle (x PI)', data.anim, 'startAngle', -2, 2, 0.05);
-    createSlider(container, 'End Angle (x PI)', data.anim, 'endAngle', -2, 2, 0.05);
-    createSlider(container, 'Sword Thickness', data.anim, 'swordThickness', 1, 15, 0.5);
-    createSlider(container, 'Body Lean X', data.anim, 'bodyTopX', -60, 60, 1);
-    createSlider(container, 'Head Lean X', data.anim, 'headX', -60, 60, 1);
-    createSlider(container, 'Body Top Y', data.anim, 'bodyTopY', -80, 20, 1);
-    createSlider(container, 'Head Y', data.anim, 'headY', -100, 20, 1);
-    createSlider(container, 'Body Bot X', data.anim, 'bodyBotX', -40, 40, 1);
-    createSlider(container, 'Body Bot Y', data.anim, 'bodyBotY', -40, 40, 1);
-
-    if (this.swooshData && this.swooshData[attackKey]) {
-      const s = this.swooshData[attackKey];
-      createSectionHeader(container, `Swoosh: ${s.type.replace('_', ' ')}`);
-      createSlider(container, 'Swoosh Offset X', s, 'offsetX', -100, 100, 1);
-      createSlider(container, 'Swoosh Offset Y', s, 'offsetY', -100, 100, 1);
-      createSlider(container, 'Swoosh Duration', s, 'maxLife', 0.05, 1.0, 0.01);
+    // Import charge config
+    import('../../../combat/frame-data.js').then(module => {
+      const chargeConfig = module.CHARGE_CONFIG;
+      const data = attackKey === 'unified' ? module.UNIFIED_ATTACK : this.attackData[attackKey];
       
-      if (s.type === 'arc_swoosh') {
-        createSlider(container, 'Start Angle (x PI)', s, 'startAngle', -2, 2, 0.05);
-        createSlider(container, 'End Angle (x PI)', s, 'endAngle', -2, 2, 0.05);
-        createSlider(container, 'Squash Y', s, 'squashY', 0.1, 2.0, 0.05);
-      } else if (s.type === 'streak') {
-        createSlider(container, 'Angle (Rad)', s, 'angle', -Math.PI, Math.PI, 0.05);
-        createSlider(container, 'Length', s, 'length', 10, 400, 1);
-        createSlider(container, 'Width', s, 'width', 1, 100, 1);
+      if (!data) return;
+
+      if (attackKey === 'unified') {
+        createSectionHeader(container, 'Charge System');
+        createSlider(container, 'Max Charge Time', chargeConfig, 'maxChargeTime', 0.2, 3.0, 0.1);
+        createSlider(container, 'Min Damage Scale', chargeConfig, 'minDamageScale', 0.5, 2.0, 0.1);
+        createSlider(container, 'Max Damage Scale', chargeConfig, 'maxDamageScale', 1.0, 5.0, 0.1);
+        createSlider(container, 'Min Knockback Scale', chargeConfig, 'minKnockbackScale', 0.5, 2.0, 0.1);
+        createSlider(container, 'Max Knockback Scale', chargeConfig, 'maxKnockbackScale', 1.0, 4.0, 0.1);
+        createSlider(container, 'Base Movement Speed', chargeConfig, 'baseMovementSpeed', 5, 60, 1);
       }
-    }
+
+      createSectionHeader(container, 'Frame Data');
+      createSlider(container, 'Startup', data, 'startup', 0, 60, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
+      createSlider(container, 'Active', data, 'active', 1, 60, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
+      createSlider(container, 'Recovery', data, 'recovery', 0, 120, 1, () => data.totalFrames = data.startup + data.active + data.recovery);
+      
+      createSectionHeader(container, 'Combat (Base Values)');
+      createSlider(container, 'Base Damage', data, 'damage', 0, 100, 1);
+      createSlider(container, 'Hitstun (sec)', data, 'hitstun', 0, 2, 0.05);
+      if (!data.knockback) data.knockback = { x: 0, y: 0 };
+      createSlider(container, 'Base Knockback X', data.knockback, 'x', -20, 40, 1);
+      createSlider(container, 'Base Knockback Y', data.knockback, 'y', -40, 40, 1);
+      
+      createSectionHeader(container, 'Hitbox Area');
+      if (!data.range) data.range = { width: 50, height: 40, offsetX: 25, offsetY: -40 };
+      createSlider(container, 'Width', data.range, 'width', 10, 200, 1);
+      createSlider(container, 'Height', data.range, 'height', 10, 200, 1);
+      createSlider(container, 'Offset Distance', data.range, 'offsetX', 10, 150, 1);
+      createSlider(container, 'Offset Y', data.range, 'offsetY', -150, 50, 1);
+      
+      createSectionHeader(container, 'Animation');
+      if (!data.anim) data.anim = {};
+      createSlider(container, 'Sword Start Length', data.anim, 'swordStartLen', 0, 150, 1);
+      createSlider(container, 'Sword End Length', data.anim, 'swordLen', 20, 150, 1);
+      createSlider(container, 'Sword Origin Y', data.anim, 'swordOriginY', -100, 20, 1);
+      createSlider(container, 'Sword Thickness', data.anim, 'swordThickness', 1, 15, 0.5);
+      
+      const note = document.createElement('div');
+      note.style.cssText = 'margin-top: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 0.5rem; font-size: 0.65rem; color: #94a3b8;';
+      note.textContent = 'Note: Attack angles and body poses are now procedurally generated based on movement direction. Base values shown here are modified at runtime.';
+      container.appendChild(note);
+    });
   }
 }

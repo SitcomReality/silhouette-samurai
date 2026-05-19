@@ -166,9 +166,20 @@ function getHitbox(entity, frameData) {
   const dir = entity.facing === 'right' ? 1 : -1;
   const range = frameData.range;
   
+  // For unified attacks, adjust hitbox position based on attack angle
+  let offsetX = range.offsetX;
+  let offsetY = range.offsetY;
+  
+  if (entity.attackAngle !== undefined) {
+    const angle = entity.attackAngle;
+    const dist = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+    offsetX = Math.cos(angle) * dist;
+    offsetY = -Math.sin(angle) * dist;
+  }
+  
   return {
-    x: entity.x + dir * range.offsetX,
-    y: entity.y + range.offsetY,
+    x: entity.x + dir * offsetX,
+    y: entity.y + offsetY,
     width: range.width,
     height: range.height
   };

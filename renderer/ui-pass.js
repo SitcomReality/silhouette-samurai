@@ -57,9 +57,9 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
     const p = controller.player;
     ctx.save();
     ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-    ctx.fillRect(10, 10, 200, 120);
+    ctx.fillRect(10, 10, 200, 150);
     ctx.strokeStyle = 'white';
-    ctx.strokeRect(10, 10, 200, 120);
+    ctx.strokeRect(10, 10, 200, 150);
     
     ctx.font = '10px monospace';
     ctx.fillStyle = 'white';
@@ -69,7 +69,19 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
     ctx.fillText(`FRAME: ${Math.floor(p.attackFrameTime * 60)}`, 20, y); y += 15;
     ctx.fillText(`COMBO: ${p.combo}`, 20, y); y += 15;
     
-    // Combo Decays
+    // Charge meter
+    if (p.attackCharging) {
+      ctx.fillText(`CHARGING...`, 20, y); y += 15;
+      const chargeBarW = 100;
+      const chargeProgress = Math.min(p.attackChargeTime / 1.2, 1.0);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fillRect(20, y, chargeBarW, 6);
+      ctx.fillStyle = chargeProgress >= 1.0 ? '#ec4899' : '#06b6d4';
+      ctx.fillRect(20, y, chargeBarW * chargeProgress, 6);
+      y += 10;
+    }
+    
+    // Combo Decay
     if (p.combo > 0) {
       const barW = 100;
       const decayTime = 1.4;

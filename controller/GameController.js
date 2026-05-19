@@ -89,7 +89,11 @@ export class GameController {
       finisherTransitionWindow: 0,
       blockToFinisher: false,
       ultraParryBonus: 1.0,
-      movementVector: { x: 0, y: 0 }
+      movementVector: { x: 0, y: 0 },
+      attackCharging: false,
+      attackChargeTime: 0,
+      attackAngle: 0,
+      attackChargePower: 1.0
     };
 
     spawnCratesSquareWave(this, 2500, 4);
@@ -106,9 +110,12 @@ export class GameController {
     this.keyboardKeys[key] = true;
 
     if (!wasPressed) {
-      // Attack button (J/1)
+      // Attack button (J/1) - Start charging
       if (['Digit1', '1', 'KeyJ'].includes(code)) {
-        this.player.attackBuffer = { btn: 1, time: 0.2 };
+        if (this.player.state !== 'attack' && this.player.state !== 'dead' && this.player.state !== 'block') {
+          this.player.attackCharging = true;
+          this.player.attackChargeTime = 0;
+        }
       }
       // Block button (K/2)
       if (['Digit2', '2', 'KeyK'].includes(code)) {
@@ -128,6 +135,20 @@ export class GameController {
   handleKeyUp(code, key) {
     this.keyboardKeys[code] = false;
     this.keyboardKeys[key] = false;
+    
+    // Release attack - trigger attack with charge
+    if (['Digit1', '1', 'KeyJ'].includes(code)) {
+      if (this.player.attackCharging) {
+        this.player.attackBuffer = { 
+          btn: 1, 
+          time: 0.2,
+          chargeTime: this.player.attackChargeTime,
+          movementVector: { ...this.player.movementVector }
+        };
+        this.player.attackCharging = false;
+        this.player.attackChargeTime = 0;
+      }
+    }
     
     // Release block
     if (['Digit2', '2', 'KeyK'].includes(code)) {
@@ -168,7 +189,24 @@ export class GameController {
       const atkPressed = b[0]?.pressed || b[3]?.pressed;
       const atkWasPressed = this.prevGamepadButtons[0] || this.prevGamepadButtons[3];
       if (atkPressed && !atkWasPressed) {
-        this.player.attackBuffer = { btn: 1, time: 0.2 };
+        // Start charging
+        if (this.player.state !== 'attack' && this.player.state !== 'dead' && this.player.state !== 'block') {
+          this.player.attackCharging = true;
+          this.player.attackChargeTime = 0;
+        }
+      }
+      if (!atkPressed && atkWasPressed) {
+        // Release - trigger attack
+        if (this.player.attackCharging) {
+          this.player.attackBuffer = { 
+            btn: 1, 
+            time: 0.2,
+            chargeTime: this.player.attackChargeTime,
+            movementVector: { ...this.player.movementVector }
+          };
+          this.player.attackCharging = false;
+          this.player.attackChargeTime = 0;
+        }
       }
       if (atkPressed) this.gamepadKeys['KeyJ'] = true;
 
