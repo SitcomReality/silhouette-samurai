@@ -25,7 +25,6 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
       const isInside = v <= 0;
 
       if (!inSpan && isInside) {
-        // Start of a span. Interpolate Y for a smooth transition.
         if (r > 0) {
           const vPrev = grid[cOffset + r - 1];
           const t = vPrev / (vPrev - v);
@@ -35,19 +34,22 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
         }
         inSpan = true;
       } else if (inSpan && !isInside) {
-        // End of a span. Interpolate Y.
-        let spanEndY;
         const vPrev = grid[cOffset + r - 1];
         const t = vPrev / (vPrev - v);
-        spanEndY = (r - 1 + t) * step;
+        const spanEndY = (r - 1 + t) * step;
         
-        ctx.rect(x, spanStartY, step + 0.1, spanEndY - spanStartY);
+        const height = spanEndY - spanStartY;
+        if (height > 0.5) { // Skip tiny slivers
+          ctx.rect(x, spanStartY, step + 0.1, height);
+        }
         inSpan = false;
       }
     }
-    // Handle spans that reach the bottom of the grid (like the ground)
     if (inSpan) {
-      ctx.rect(x, spanStartY, step + 0.1, (rows * step) - spanStartY);
+      const height = (rows * step) - spanStartY;
+      if (height > 0.5) {
+        ctx.rect(x, spanStartY, step + 0.1, height);
+      }
     }
   }
 

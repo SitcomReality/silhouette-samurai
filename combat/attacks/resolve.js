@@ -17,9 +17,13 @@ export function resolveAttackHits(controller) {
   
   const dir = p.facing === 'right' ? 1 : -1;
   
+  // Quick spatial culling - skip entities far from player
+  const maxReach = 200;
+  
   for (const ent of controller.entities) {
     if (ent.state === 'dead') continue;
-    if (p.attackHitEntities.has(ent.id)) continue; // Don't hit same entity twice
+    if (p.attackHitEntities.has(ent.id)) continue;
+    if (Math.abs(ent.x - p.x) > maxReach) continue; // Skip far entities
     
     // Check for parry
     if (ent.isBlocking && controller.parry) {

@@ -9,29 +9,32 @@ export function extractSDFSegments(
   const cols = Math.ceil(viewWidth / step);
   const rows = Math.ceil(viewHeight / step);
 
-  const colEntities = [];
-  const colParticles = [];
-  const colWorldX = [];
-  const colGroundY = [];
+  // Pre-allocate arrays for better performance
+  const colEntities = new Array(cols + 1);
+  const colParticles = new Array(cols + 1);
+  const colWorldX = new Array(cols + 1);
+  const colGroundY = new Array(cols + 1);
 
   for (let c = 0; c <= cols; c++) {
     const wx = cameraX + (c * step - viewWidth / 2);
-    colWorldX.push(wx);
-    colGroundY.push(getGroundY(wx, baseGroundY, shockwaves));
+    colWorldX[c] = wx;
+    colGroundY[c] = getGroundY(wx, baseGroundY, shockwaves);
 
     const activeEnts = [];
-    for (const ent of entities) {
+    for (let i = 0; i < entities.length; i++) {
+      const ent = entities[i];
       if (ent.state === 'dead' && !ent.isSliced) continue;
       const span = ent.type === 'crate' ? (ent.width || 25) / 2 + 40 : 80;
       if (Math.abs(ent.x - wx) < span + globalBlendK) activeEnts.push(ent);
     }
-    colEntities.push(activeEnts);
+    colEntities[c] = activeEnts;
 
     const activeParts = [];
-    for (const p of particles) {
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
       if (Math.abs(p.x - wx) < p.radius + globalBlendK + 10) activeParts.push(p);
     }
-    colParticles.push(activeParts);
+    colParticles[c] = activeParts;
   }
 
   const grid = new Float32Array((cols + 1) * (rows + 1));

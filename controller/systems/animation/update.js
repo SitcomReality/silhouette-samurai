@@ -30,8 +30,12 @@ export function updateAnimations(controller, dt) {
 
   animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0);
 
+  // Viewport culling for entity animations (skip far off-screen entities)
+  const viewLeft = controller.cameraX - 200;
+  const viewRight = controller.cameraX + 1200;
+  
   for (const ent of controller.entities) {
-    if (ent.type !== 'crate' && ent.character) {
+    if (ent.type !== 'crate' && ent.character && ent.x > viewLeft && ent.x < viewRight) {
       if (ent.state === 'dead' && ent.isSliced) {
         const dx = ent.x - ent.lastX;
         const dy = ent.y - ent.lastY;

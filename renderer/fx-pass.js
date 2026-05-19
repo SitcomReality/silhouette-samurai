@@ -28,7 +28,13 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
     ctx.restore();
   }
 
+  // Early viewport culling for effects
+  const viewLeft = controller.cameraX - 100;
+  const viewRight = controller.cameraX + viewWidth + 100;
+  
   for (const fx of controller.visualFx) {
+    if (fx.x < viewLeft || fx.x > viewRight) continue;
+    
     if (fx.type === 'parry_flash') {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
       const scY = fx.y + camYOffset;
