@@ -18,8 +18,8 @@ export const GROUND_ATTACKS = {
     anim: { swordLen: 33, swordStartLen: 71, swordOriginY: -60, startAngle: 1, endAngle: -0.1, bodyTopX: 13, bodyTopY: -34, headX: 12, headY: -48, bodyBotX: 31, bodyBotY: 4, swordThickness: 3 }
   }),
   forward: new AttackFrameData('forward', {
-    startup: 4, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
+    startup: 3, active: 8, recovery: 20, damage: 18, knockback: { x: 8, y: -1 }, hitstun: 0.45, movement: { vx: 30, vy: 0 },
     range: { width: 80, height: 50, offsetX: 50, offsetY: -60 },
-    anim: { swordLen: 55, swordStartLen: 15, swordOriginY: -36, startAngle: -0.85, endAngle: 0.1, bodyTopX: 0, bodyTopY: -36, headX: 6, headY: -55, bodyBotX: 5, bodyBotY: -6, swordThickness: 4 }
+    anim: { swordLen: 51, swordStartLen: 27, swordOriginY: -36, startAngle: -1.15, endAngle: -0.05, bodyTopX: 0, bodyTopY: -36, headX: 6, headY: -55, bodyBotX: 5, bodyBotY: -6, swordThickness: 4 }
   })
 };
