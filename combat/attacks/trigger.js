@@ -22,7 +22,7 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   // Calculate attack angle from movement vector
   const mvx = movementVector.x;
   const mvy = movementVector.y;
-  const moveAngle = Math.atan2(-mvy, mvx); // Negative Y because down is positive
+  const moveAngle = Math.atan2(mvy, mvx); // Standard screen Y-down angles
   
   // Determine facing based on horizontal input (or keep current if neutral)
   if (Math.abs(mvx) > 0.1) {
@@ -36,7 +36,7 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
     if (moveMag > 0.1) {
       const baseSpeed = CHARGE_CONFIG.baseMovementSpeed * movementScale;
       p.vx += (mvx / moveMag) * baseSpeed * 0.8; // Blend with existing velocity
-      p.vy += (-mvy / moveMag) * baseSpeed * 0.8;
+      p.vy += (mvy / moveMag) * baseSpeed * 0.8;
       if (Math.abs(p.vy) > 2) p.isGrounded = false;
     }
   }

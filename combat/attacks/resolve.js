@@ -173,10 +173,9 @@ function getHitbox(entity, frameData) {
   if (entity.attackAngle !== undefined) {
     const angle = entity.attackAngle;
     const dist = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
-    // Map polar angle into screen space: cos -> X, -sin -> Y because screen Y increases downward.
-    // This ensures an attack angle pointing "up" (positive polar sine) becomes a negative screen Y offset.
+    // Map angle into screen space. Standard atan2(mvy, mvx) now provides Y-down angles.
     offsetX = Math.cos(angle) * dist;
-    offsetY = -Math.sin(angle) * dist;
+    offsetY = Math.sin(angle) * dist;
   }
   
   return {
