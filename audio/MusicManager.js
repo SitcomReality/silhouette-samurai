@@ -79,68 +79,50 @@ export class MusicManager {
     const phraseStep = (this.barsInCurrentSection * 16) + step;
     const combo = this.currentCombo;
     
-    // Dynamic drum pattern level based on combo
-    let level = 0;
-    if (combo > 20) level = 2; // Aphex Twin style breakbeats
-    else if (combo > 8) level = 1; // 4-on-the-floor
+    // Consistent kick pattern for steady pulse
+    const kick = DRUM_PATTERNS.kick[step];
+    const snare = DRUM_PATTERNS.snare[step];
     
-    const kick = DRUM_PATTERNS.kick[level][step];
-    const snare = DRUM_PATTERNS.snare[level][step];
-    const hat = DRUM_PATTERNS.hat[level][step];
+    // Progressive hi-hat complexity
+    let hatLevel = 0;
+    if (combo > 20) hatLevel = 2;
+    else if (combo > 8) hatLevel = 1;
+    const hat = DRUM_PATTERNS.hat[hatLevel][step];
 
-    // Dynamic harmonic shift: Pop Major to Industrial Minor
     const scale = combo > 15 ? MINOR_PENTATONIC : MAJOR_PENTATONIC;
-
     const mapNote = (degree, baseOffset = 0) => {
       if (degree === -1) return null;
       return scale[degree % scale.length] + Math.floor(degree / scale.length) * 12 + baseOffset;
     };
     
     const melody = mapNote(this.sequencer.melodyPhrase[phraseStep]);
-    const arp = mapNote(this.sequencer.arpPhrase[phraseStep]);
-    const counter = mapNote(this.sequencer.counterPhrase[phraseStep]);
-    const bass = mapNote(this.sequencer.bassPhrase[phraseStep], -24); // 2 octaves down
+    const bass = mapNote(this.sequencer.bassPhrase[phraseStep], -24);
     
     const comboFactor = Math.min(combo / 50, 1.0);
-    const rhythmIntensity = 0.3 + comboFactor * 0.7;
+    const drumIntensity = 0.5 + comboFactor * 0.5;
 
-    // Play drums with conditional stutter for breakbeat level
-    if (kick) this.synth.playKick(time, 'action', rhythmIntensity);
-    if (snare) this.synth.playSnare(time, 'action', rhythmIntensity);
-    if (hat) {
-      const stutters = (level === 2 && step % 4 === 3 && Math.random() > 0.5) ? 3 : 1;
-      this.synth.playHat(time, 'action', rhythmIntensity * 0.8, stutters);
-    }
+    // Powerful consistent drums
+    if (kick) this.synth.playKick(time, 'action', drumIntensity);
+    if (snare) this.synth.playSnare(time, 'action', drumIntensity);
+    if (hat) this.synth.playHat(time, 'action', drumIntensity * 0.7);
     
-    // Acid Bass line integration
+    // Driving bass line (always present when combo > 4)
     if (bass !== null && combo > 4) {
-      const isAccent = (level === 2 && step % 4 !== 0 && Math.random() > 0.3);
-      const bassVol = 0.1 + comboFactor * 0.1;
-      this.synth.playAcidBass(bass, time, 'action', bassVol, 0.25, isAccent);
+      const isAccent = step % 4 === 0; // Accent downbeats
+      const bassVol = 0.15 + comboFactor * 0.15;
+      this.synth.playAcidBass(bass, time, 'action', bassVol, 0.3, isAccent);
     }
     
-    // Primary melody layering
+    // Single clean melody (no conflicting layers)
     if (melody !== null) {
-      const melodyVol = 0.12 + comboFactor * 0.08;
-      if (combo < 10) {
-        this.synth.playPiano(melody, time, 'base', melodyVol, 0.5);
-      } else if (combo < 25) {
-        this.synth.playPluck(melody, time, 'base', melodyVol, 0.5);
+      const melodyVol = 0.1 + comboFactor * 0.05;
+      if (combo < 15) {
+        // Warm synth lead
+        this.synth.playSynthLead(melody, time, 'ballet', melodyVol, 0.4);
       } else {
-        this.synth.playString(melody, time, 'ballet', melodyVol, 0.6, true);
+        // Aggressive saw lead for high intensity
+        this.synth.playSawLead(melody, time, 'ballet', melodyVol, 0.35);
       }
-    }
-    
-    // Counter-melody glockenspiel
-    if (counter !== null && combo >= 8) {
-      const bellVol = 0.06 + comboFactor * 0.1;
-      this.synth.playBell(counter, time, 'ballet', bellVol, 0.35);
-    }
-    
-    // Arpeggio
-    if (arp !== null && combo >= 4) {
-      const arpVol = 0.04 + comboFactor * 0.05;
-      this.synth.playPluck(arp, time, 'action', arpVol, 0.2);
     }
   }
 
