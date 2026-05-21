@@ -54,10 +54,11 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
     const relativeAngle = Math.atan2(Math.sin(moveAngle), Math.cos(moveAngle) * dir);
     
     // Set start and end angles for the swing (normalized to PI in the animator)
-    // A wider swing for "epic" feel: +/- 0.45 PI (~80 deg each way, total 160 deg)
+    // Make the sweep conclude exactly at the attack direction so a forward attack ends horizontal (0)
     const sweepRange = 0.45;
     frameData.anim.startAngle = (relativeAngle / Math.PI) + sweepRange;
-    frameData.anim.endAngle = (relativeAngle / Math.PI) - sweepRange;
+    // End angle now matches the relative direction (no extra downward/upward offset)
+    frameData.anim.endAngle = (relativeAngle / Math.PI);
     
     // Adjust body lean based on direction
     const leanFactor = chargePower * 30;
