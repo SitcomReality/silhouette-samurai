@@ -20,8 +20,15 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   frameData.knockback.y *= knockbackScale;
   
   // Calculate attack angle from movement vector
-  const mvx = movementVector.x;
-  const mvy = movementVector.y;
+  let mvx = movementVector.x;
+  let mvy = movementVector.y;
+  
+  // If no direction is held, default to the facing direction
+  if (Math.abs(mvx) < 0.01 && Math.abs(mvy) < 0.01) {
+    mvx = p.facing === 'right' ? 1 : -1;
+    mvy = 0;
+  }
+  
   const moveAngle = Math.atan2(mvy, mvx); // Standard screen Y-down angles
   
   // Determine facing based on horizontal input (or keep current if neutral)
@@ -44,14 +51,13 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   // Adjust animation angles based on attack direction
   if (frameData.anim) {
     // Map attack angle to sword angles (relative to facing direction)
-    let relativeAngle = moveAngle;
-    if (dir === -1) {
-      relativeAngle = Math.PI - moveAngle;
-    }
+    const relativeAngle = Math.atan2(Math.sin(moveAngle), Math.cos(moveAngle) * dir);
     
-    // Set start and end angles based on direction
-    frameData.anim.startAngle = (relativeAngle / Math.PI) + 0.3;
-    frameData.anim.endAngle = (relativeAngle / Math.PI) - 0.3;
+    // Set start and end angles for the swing (normalized to PI in the animator)
+    // A wider swing for "epic" feel: +/- 0.45 PI (~80 deg each way, total 160 deg)
+    const sweepRange = 0.45;
+    frameData.anim.startAngle = (relativeAngle / Math.PI) + sweepRange;
+    frameData.anim.endAngle = (relativeAngle / Math.PI) - sweepRange;
     
     // Adjust body lean based on direction
     const leanFactor = chargePower * 30;
@@ -83,32 +89,42 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
 function createProceduralSwoosh(controller, p, attackAngle, chargePower) {
   const dir = p.facing === 'right' ? 1 : -1;
   
-  // Calculate swoosh parameters based on attack angle
-  let relativeAngle = attackAngle;
-  if (dir === -1) {
-    relativeAngle = Math.PI - attackAngle;
-  }
+  // Relative angle for the sweep (0 is forward relative to facing, -PI/2 is up)
+  const relA = Math.atan2(Math.sin(attackAngle), Math.cos(attackAngle) * dir);
   
-  const swooshRadius = 80 + chargePower * 40;
-  const swooshThickness = 15 + chargePower * 25;
-  const swooshDuration = 0.2 + chargePower * 0.2;
+  // Sweep Width: much wider arcs for more "epic" feel, scaled by charge
+  // Base 1.3 PI, up to 1.9 PI at full charge
+  const sweepWidth = (1.3 + chargePower * 0.6) * Math.PI; 
+  
+  // Baseline values inspired by old "delightful" configs (radius 100, thickness 20)
+  const radius = 90 + chargePower * 35;
+  const thickness = 22 + chargePower * 25;
+  const duration = 0.25 + chargePower * 0.15;
+  
+  // Verticality-based squash logic:
+  // Purely horizontal (relA=0) -> high squash (low squashY)
+  // Purely vertical (relA=+/-PI/2) -> less squash (high squashY)
+  const verticality = Math.abs(Math.sin(relA));
+  const squashY = 0.2 + (verticality * 0.65);
   
   const fx = {
     id: `fx_${controller.fxId++}`,
     type: 'arc_swoosh',
     entity: p,
-    offsetX: Math.cos(relativeAngle) * 30 * dir,
-    offsetY: -50 + Math.sin(relativeAngle) * 30,
-    x: p.x + Math.cos(relativeAngle) * 30 * dir,
-    y: p.y - 50 + Math.sin(relativeAngle) * 30,
+    // Pivot the swoosh slightly forward from center
+    offsetX: Math.cos(relA) * 15 * dir,
+    offsetY: -45 + Math.sin(relA) * 15,
+    x: p.x, // Handled by updateFX using entity + offset
+    y: p.y,
     facing: p.facing,
-    startAngle: relativeAngle + 0.4,
-    endAngle: relativeAngle - 0.4,
-    radius: swooshRadius,
-    thickness: swooshThickness,
-    squashY: 0.3 + Math.abs(Math.sin(relativeAngle)) * 0.7,
+    // Swings counter-clockwise for a classic follow-through look (startAngle > endAngle)
+    startAngle: relA + (sweepWidth * 0.5),
+    endAngle: relA - (sweepWidth * 0.5),
+    radius: radius,
+    thickness: thickness,
+    squashY: squashY,
     life: 0,
-    maxLife: swooshDuration
+    maxLife: duration
   };
   
   controller.visualFx.push(fx);

@@ -2,21 +2,24 @@ export function getHitbox(entity, frameData) {
   const dir = entity.facing === 'right' ? 1 : -1;
   const range = frameData.range;
   
-  // For unified attacks, adjust hitbox position based on attack angle
-  let offsetX = range.offsetX;
-  let offsetY = range.offsetY;
-  
+  // For unified attacks, adjust hitbox position based on world attack angle
   if (entity.attackAngle !== undefined) {
     const angle = entity.attackAngle;
-    const dist = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
-    // Map angle into screen space. Standard atan2(mvy, mvx) now provides Y-down angles.
-    offsetX = Math.cos(angle) * dist;
-    offsetY = Math.sin(angle) * dist;
+    const dist = Math.sqrt(range.offsetX * range.offsetX + range.offsetY * range.offsetY);
+    
+    // Calculate world position directly from moveAngle to ensure it matches the visuals
+    return {
+      x: entity.x + Math.cos(angle) * dist,
+      y: entity.y + Math.sin(angle) * dist,
+      width: range.width,
+      height: range.height
+    };
   }
   
+  // Fallback for standard attacks
   return {
-    x: entity.x + dir * offsetX,
-    y: entity.y + offsetY,
+    x: entity.x + dir * range.offsetX,
+    y: entity.y + range.offsetY,
     width: range.width,
     height: range.height
   };
