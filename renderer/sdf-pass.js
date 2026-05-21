@@ -59,27 +59,118 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
   ctx.fillStyle = gradient;
   ctx.fill();
 
-  // 2. Render the Outlines (Marching Squares segments)
-  ctx.beginPath();
-  for (let i = 0; i < segments.length; i++) {
-    const seg = segments[i];
-    ctx.moveTo(seg.x1, seg.y1);
-    ctx.lineTo(seg.x2, seg.y2);
-  }
-
+  // 2. Chain segments into continuous polylines for better performance
+  const polylines = chainSegments(segments);
+  
+  // 3. Render outlines with layered strokes (no shadowBlur for Firefox performance)
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = themeColor;
-  ctx.shadowColor = themeColor;
-  ctx.shadowBlur = 12;
-  ctx.stroke();
-
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#ffffff';
-  ctx.shadowBlur = 3;
-  ctx.stroke();
   
-  ctx.shadowBlur = 0;
+  for (const polyline of polylines) {
+    ctx.beginPath();
+    ctx.moveTo(polyline[0].x, polyline[0].y);
+    for (let i = 1; i < polyline.length; i++) {
+      ctx.lineTo(polyline[i].x, polyline[i].y);
+    }
+    
+    // Outer glow layer
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = themeColor;
+    ctx.globalAlpha = 0.12;
+    ctx.stroke();
+    
+    // Medium glow layer
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = themeColor;
+    ctx.globalAlpha = 0.35;
+    ctx.stroke();
+    
+    // Core colored line
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = themeColor;
+    ctx.globalAlpha = 1.0;
+    ctx.stroke();
+    
+    // Inner white highlight
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.globalAlpha = 1.0;
+    ctx.stroke();
+  }
+  
+  ctx.globalAlpha = 1.0;
+}
+
+// Chain connected segments into continuous polylines
+function chainSegments(segments) {
+  if (segments.length === 0) return [];
+  
+  const epsilon = 0.01;
+  const used = new Set();
+  const polylines = [];
+  
+  const pointsEqual = (p1, p2) => 
+    Math.abs(p1.x - p2.x) < epsilon && Math.abs(p1.y - p2.y) < epsilon;
+  
+  for (let i = 0; i < segments.length; i++) {
+    if (used.has(i)) continue;
+    
+    const chain = [
+      { x: segments[i].x1, y: segments[i].y1 },
+      { x: segments[i].x2, y: segments[i].y2 }
+    ];
+    used.add(i);
+    
+    // Extend chain forward
+    let extended = true;
+    while (extended) {
+      extended = false;
+      const lastPoint = chain[chain.length - 1];
+      
+      for (let j = 0; j < segments.length; j++) {
+        if (used.has(j)) continue;
+        
+        const seg = segments[j];
+        if (pointsEqual(lastPoint, { x: seg.x1, y: seg.y1 })) {
+          chain.push({ x: seg.x2, y: seg.y2 });
+          used.add(j);
+          extended = true;
+          break;
+        } else if (pointsEqual(lastPoint, { x: seg.x2, y: seg.y2 })) {
+          chain.push({ x: seg.x1, y: seg.y1 });
+          used.add(j);
+          extended = true;
+          break;
+        }
+      }
+    }
+    
+    // Extend chain backward
+    extended = true;
+    while (extended) {
+      extended = false;
+      const firstPoint = chain[0];
+      
+      for (let j = 0; j < segments.length; j++) {
+        if (used.has(j)) continue;
+        
+        const seg = segments[j];
+        if (pointsEqual(firstPoint, { x: seg.x2, y: seg.y2 })) {
+          chain.unshift({ x: seg.x1, y: seg.y1 });
+          used.add(j);
+          extended = true;
+          break;
+        } else if (pointsEqual(firstPoint, { x: seg.x1, y: seg.y1 })) {
+          chain.unshift({ x: seg.x2, y: seg.y2 });
+          used.add(j);
+          extended = true;
+          break;
+        }
+      }
+    }
+    
+    polylines.push(chain);
+  }
+  
+  return polylines;
 }
