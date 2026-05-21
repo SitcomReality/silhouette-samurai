@@ -23,13 +23,12 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   let mvx = movementVector.x;
   let mvy = movementVector.y;
   
-  // If no direction is held, default to the facing direction
-  if (Math.abs(mvx) < 0.01 && Math.abs(mvy) < 0.01) {
-    mvx = p.facing === 'right' ? 1 : -1;
-    mvy = 0;
-  }
-  
-  const moveAngle = Math.atan2(mvy, mvx); // Standard screen Y-down angles
+  // Determine magnitude of input; do NOT substitute facing for movement here.
+  // We still need a sensible visual attack angle when there's no directional input.
+  const inputMag = Math.sqrt(mvx * mvx + mvy * mvy);
+  const dir = p.facing === 'right' ? 1 : -1;
+  // If there's meaningful input, use it for angle; otherwise, use facing-horizontal for visuals
+  const moveAngle = inputMag > 0.01 ? Math.atan2(mvy, mvx) : (dir === 1 ? 0 : Math.PI);
   
   // Determine facing based on horizontal input (or keep current if neutral)
   if (Math.abs(mvx) > 0.1) {
