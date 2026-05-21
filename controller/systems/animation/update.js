@@ -28,7 +28,7 @@ export function updateAnimations(controller, dt) {
     progress = eased;
   }
 
-  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0);
+  animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0, p.attackFrameData);
 
   // Viewport culling for entity animations (skip far off-screen entities)
   const viewLeft = controller.cameraX - 200;
@@ -101,7 +101,7 @@ export function updateAnimations(controller, dt) {
         }
         
         const scale = ent.scale || 1.0;
-        animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, 'none', 0, ent.isGrounded, ent.vy, false, dt, false, scale);
+        animateCharacter(ent.character, ent.x, ent.y, ent.facing, ent.state, ent.stateTime, ent.attackType || 'none', 0, ent.isGrounded, ent.vy, false, dt, false, scale, ent.attackFrameData);
       }
     }
   }

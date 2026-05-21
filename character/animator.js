@@ -3,7 +3,7 @@ import { applyLocomotionPose } from './animation/states/locomotion.js';
 import { applyBasicAttackPose } from './animation/attacks/basic.js';
 import { applyFinisherPose } from './animation/attacks/dance.js';
 
-export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0) {
+export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0, frameData = null) {
   const dir = facing === 'right' ? 1 : -1;
   const t = char.target;
 
@@ -23,8 +23,8 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   // Apply state modifiers via modular helpers
   if (!applyReactionPose(t, dir, state)) {
     if (state === 'attack') {
-      applyBasicAttackPose(t, dir, attackType, attackProgress) ||
-      applyFinisherPose(t, dir, attackType, attackProgress);
+      applyBasicAttackPose(t, dir, attackType, attackProgress, frameData) ||
+      applyFinisherPose(t, dir, attackType, attackProgress, frameData);
     } else {
       applyLocomotionPose(t, dir, state, stateTime, isGrounded, vy, isCrouching, isSliding);
     }
