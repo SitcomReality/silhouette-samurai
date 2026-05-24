@@ -26,19 +26,34 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
     ctx.fill();
   }
   
-  // Player glow (increases with charge)
+  // Player glow (expands when charging)
   if (player.state !== 'dead') {
     const scX = (player.x - controller.cameraX) + viewWidth / 2;
     const scY = player.y - (player.character ? (player.character.height || 70) * 0.4 : 40) + camYOffset;
-    const glowRadius = (player.scale || 1.5) * 60;
     
-    // Base glow with charge intensity
+    // Charge intensity controls size and brightness
     const chargeIntensity = player.attackCharging ? Math.min(player.attackChargeTime / 1.2, 1.0) : 0;
-    ctx.globalAlpha = 0.12 + chargeIntensity * 0.35;
-    ctx.fillStyle = 'rgba(6, 182, 212, 1.0)'; // Theme cyan
+    const baseRadius = (player.scale || 1.5) * 40;
+    const chargeRadius = baseRadius * (1 + chargeIntensity * 1.2); // Grows by 120% at full charge
     
+    // Outer glow ring (faint, largest)
+    ctx.globalAlpha = 0.08 + chargeIntensity * 0.15;
+    ctx.fillStyle = 'rgba(6, 182, 212, 1.0)';
     ctx.beginPath();
-    ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
+    ctx.arc(scX, scY, chargeRadius * 1.4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Middle glow ring (medium intensity)
+    ctx.globalAlpha = 0.15 + chargeIntensity * 0.25;
+    ctx.beginPath();
+    ctx.arc(scX, scY, chargeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Inner core glow (bright, pulses at full charge)
+    const pulse = chargeIntensity >= 0.95 ? 0.5 + Math.sin(Date.now() * 0.01) * 0.15 : 1.0;
+    ctx.globalAlpha = (0.2 + chargeIntensity * 0.4) * pulse;
+    ctx.beginPath();
+    ctx.arc(scX, scY, chargeRadius * 0.6, 0, Math.PI * 2);
     ctx.fill();
   }
   
