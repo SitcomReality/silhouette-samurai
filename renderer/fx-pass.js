@@ -1,32 +1,49 @@
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
-  // Soft enemy glow rendered on FX layer so outlines remain unified in SDF pass
+  // Simple character glows (faster than gradients)
   const enemies = controller.entities.filter(e => e.state !== 'dead' && e.type === 'enemy');
-  if (enemies.length > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    for (const ent of enemies) {
-      const scX = (ent.x - controller.cameraX) + viewWidth / 2;
-      const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.4 : 40) + camYOffset;
-      const glowRadius = (ent.scale || 1.0) * 60;
-      const grad = ctx.createRadialGradient(scX, scY, 0, scX, scY, glowRadius);
-      
-      if (ent.flashTimer > 0) {
-        const flashP = Math.min(ent.flashTimer / 0.15, 1.0);
-        grad.addColorStop(0, `rgba(255, 255, 255, ${0.5 * flashP})`);
-        grad.addColorStop(0.3, `rgba(255, 255, 255, ${0.2 * flashP})`);
-      } else {
-        grad.addColorStop(0, 'rgba(255,110,30,0.28)');
-        grad.addColorStop(0.4, 'rgba(255,110,30,0.12)');
-      }
-      grad.addColorStop(1, 'rgba(255,110,30,0.0)');
-      
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
-      ctx.fill();
+  const player = controller.player;
+  
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  
+  // Enemy glows
+  for (const ent of enemies) {
+    const scX = (ent.x - controller.cameraX) + viewWidth / 2;
+    const scY = ent.y - (ent.character ? (ent.character.height || 70) * 0.4 : 40) + camYOffset;
+    const glowRadius = (ent.scale || 1.0) * 60;
+    
+    if (ent.flashTimer > 0) {
+      const flashP = Math.min(ent.flashTimer / 0.15, 1.0);
+      ctx.globalAlpha = 0.5 * flashP;
+      ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+    } else {
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = 'rgba(255, 110, 30, 1.0)';
     }
-    ctx.restore();
+    
+    ctx.beginPath();
+    ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
   }
+  
+  // Player glow (increases with charge)
+  if (player.state !== 'dead') {
+    const scX = (player.x - controller.cameraX) + viewWidth / 2;
+    const scY = player.y - (player.character ? (player.character.height || 70) * 0.4 : 40) + camYOffset;
+    const glowRadius = (player.scale || 1.5) * 60;
+    
+    // Base glow with charge intensity
+    const chargeIntensity = player.attackCharging ? Math.min(player.attackChargeTime / 1.2, 1.0) : 0;
+    ctx.globalAlpha = 0.12 + chargeIntensity * 0.35;
+    ctx.fillStyle = 'rgba(6, 182, 212, 1.0)'; // Theme cyan
+    
+    ctx.beginPath();
+    ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  ctx.globalAlpha = 1.0;
+  ctx.restore();
 
   // Early viewport culling for effects
   const viewLeft = controller.cameraX - 100;
