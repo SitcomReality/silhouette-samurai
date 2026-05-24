@@ -2,7 +2,7 @@ import { createCharacter } from '../character/representation.js';
 import { triggerUnifiedAttack as triggerAttack } from '../combat/attacks/trigger.js';
 import { spawnCratesSquareWave, spawnEnemy } from './spawner.js';
 import { updateEngine } from './update.js';
-import { determineAttack } from '../input/controls.js';
+import { getFinisherDirection } from '../input/controls.js';
 import { ParrySystem } from '../combat/parry.js';
 
 export class GameController {

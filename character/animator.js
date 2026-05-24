@@ -20,11 +20,13 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   t.swordBX = -dir * 35; t.swordBY = -50;
   t.swordThickness = 3;
 
-  // Apply state modifiers via modular helpers
+  // Apply state-specific poses
   if (!applyReactionPose(t, dir, state)) {
     if (state === 'attack') {
-      applyBasicAttackPose(t, dir, attackType, attackProgress, frameData) ||
-      applyFinisherPose(t, dir, attackType, attackProgress, frameData);
+      // Try finisher first (for combo finishers), fall back to unified attack
+      if (!applyFinisherPose(t, dir, attackType, attackProgress, frameData)) {
+        applyBasicAttackPose(t, dir, attackType, attackProgress, frameData);
+      }
     } else {
       applyLocomotionPose(t, dir, state, stateTime, isGrounded, vy, isCrouching, isSliding);
     }

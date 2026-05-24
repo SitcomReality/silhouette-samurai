@@ -1,8 +1,7 @@
-import { ATTACK_FRAME_DATA } from '../../../combat/frame-data.js';
-import { easeOutCubic, easeInCubic, easeInOutCubic } from '../easing.js';
+import { easeOutCubic, easeInCubic } from '../easing.js';
 
 export function applyFinisherPose(t, dir, attackType, attackProgress, frameData = null) {
-  const activeFrameData = frameData || ATTACK_FRAME_DATA[attackType];
+  const activeFrameData = frameData;
   const anim = activeFrameData?.anim || {};
   const sLen = anim.swordStartLen ?? (anim.swordLen ?? 62);
   const eLen = anim.swordLen ?? 62;

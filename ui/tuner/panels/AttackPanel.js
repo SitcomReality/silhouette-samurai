@@ -1,22 +1,21 @@
 import { createSectionHeader, createSlider } from '../TunerHelpers.js';
 
 export class AttackPanel {
-  constructor(controller, attackData, swooshData) {
+  constructor(controller, attackData) {
     this.controller = controller;
     this.attackData = attackData;
-    this.swooshData = swooshData;
   }
 
   render(container, attackKey) {
     container.innerHTML = '';
     
-    // Import charge config
     import('../../../combat/frame-data.js').then(module => {
       const chargeConfig = module.CHARGE_CONFIG;
-      const data = attackKey === 'unified' ? module.UNIFIED_ATTACK : this.attackData[attackKey];
+      const data = this.attackData[attackKey];
       
       if (!data) return;
 
+      // Show charge config for unified attack
       if (attackKey === 'unified') {
         createSectionHeader(container, 'Charge System');
         createSlider(container, 'Max Charge Time', chargeConfig, 'maxChargeTime', 0.2, 3.0, 0.1);
