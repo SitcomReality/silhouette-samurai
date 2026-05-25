@@ -32,7 +32,8 @@ export function updateAnimations(controller, dt) {
   const extraState = {
     isCharging: p.attackCharging,
     aimAngle: p.aimAngle || 0,
-    chargeProgress: p.attackCharging ? Math.min(p.attackChargeTime / CHARGE_CONFIG.maxChargeTime, 1.0) : 0
+    chargeProgress: p.attackCharging ? Math.min(p.attackChargeTime / CHARGE_CONFIG.maxChargeTime, 1.0) : 0,
+    attackChargePower: p.attackChargePower
   };
 
   animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0, p.attackFrameData, extraState);

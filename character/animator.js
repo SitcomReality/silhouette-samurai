@@ -43,18 +43,20 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
     if (isAttacking || extraState.isCharging) {
       const targetRot = extraState.aimAngle + Math.PI / 2;
       
+      let rotDiff = targetRot;
+      while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+      while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+
       if (extraState.isCharging && !isAttacking) {
-        let rotDiff = targetRot;
-        while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
-        while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-        
         const p = extraState.chargeProgress || 0;
         // Use a much gentler power curve so charge rotation eases more linearly
         const easedP = Math.pow(p, 1.25);
         t.rotation = rotDiff * easedP;
         rotLerpRate = 10;
       } else {
-        t.rotation = targetRot;
+        const p = extraState.attackChargePower !== undefined ? extraState.attackChargePower : 1.0;
+        const easedP = Math.pow(p, 1.25);
+        t.rotation = rotDiff * easedP;
         rotLerpRate = 25; // Quick complete rotation when attack released
       }
       

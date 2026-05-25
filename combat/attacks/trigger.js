@@ -56,10 +56,25 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   // Adjust animation angles based on attack direction
   if (frameData.anim) {
     if (!p.isGrounded) {
-      // In air: body is globally rotated. Sword sweeps relative to "up" (-PI/2 => -0.5)
+      // Body partially rotates based on charge, but attack sweeps exactly at moveAngle
+      const targetRot = moveAngle + Math.PI / 2;
+      let rotDiff = targetRot;
+      while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+      while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+      
+      const easedP = Math.pow(chargePower, 1.25);
+      const actualRot = rotDiff * easedP;
+      
+      let baseAngle;
+      if (dir === 1) {
+        baseAngle = moveAngle - actualRot;
+      } else {
+        baseAngle = Math.PI + actualRot - moveAngle;
+      }
+      
       const sweepRange = 0.45;
-      frameData.anim.startAngle = -0.5 + sweepRange;
-      frameData.anim.endAngle = -0.5;
+      frameData.anim.startAngle = (baseAngle / Math.PI) + sweepRange;
+      frameData.anim.endAngle = (baseAngle / Math.PI);
       
       // Sleek body pose (aerodynamic, no directional lean relative to the rotated body)
       frameData.anim.bodyTopX = 0;
