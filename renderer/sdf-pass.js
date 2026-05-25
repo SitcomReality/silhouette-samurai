@@ -12,8 +12,13 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
 
   const { segments, grid, cols, rows, step, rowStride } = sdfData;
 
+  const gradient = ctx.createLinearGradient(0, viewHeight * 0.4, 0, viewHeight);
+  gradient.addColorStop(0, `${themeColor}20`);
+  gradient.addColorStop(1, `${themeColor}02`);
+  ctx.fillStyle = gradient;
+
   // 1. Render the Fills (using scanline-like vertical spans to correctly handle overhangs and gaps)
-  ctx.beginPath();
+  // Replaced batched path rects with individual fillRects to bypass heavy tessellation in some browsers
   for (let c = 0; c <= cols; c++) {
     const cOffset = c * rowStride;
     const x = c * step;
@@ -40,7 +45,7 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
         
         const height = spanEndY - spanStartY;
         if (height > 0.5) { // Skip tiny slivers
-          ctx.rect(x, spanStartY, step + 0.1, height);
+          ctx.fillRect(x, spanStartY, step + 0.1, height);
         }
         inSpan = false;
       }
@@ -48,16 +53,10 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
     if (inSpan) {
       const height = (rows * step) - spanStartY;
       if (height > 0.5) {
-        ctx.rect(x, spanStartY, step + 0.1, height);
+        ctx.fillRect(x, spanStartY, step + 0.1, height);
       }
     }
   }
-
-  const gradient = ctx.createLinearGradient(0, viewHeight * 0.4, 0, viewHeight);
-  gradient.addColorStop(0, `${themeColor}20`);
-  gradient.addColorStop(1, `${themeColor}02`);
-  ctx.fillStyle = gradient;
-  ctx.fill();
 
   // 2. Chain segments into continuous polylines for better performance
   const polylines = chainSegments(segments);
@@ -66,110 +65,111 @@ export function renderSDF(ctx, canvas, controller, themeColor, viewWidth, viewHe
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   
+  // Batch all polylines into a single path for massive stroke performance improvement
+  ctx.beginPath();
   for (const polyline of polylines) {
-    ctx.beginPath();
     ctx.moveTo(polyline[0].x, polyline[0].y);
     for (let i = 1; i < polyline.length; i++) {
       ctx.lineTo(polyline[i].x, polyline[i].y);
     }
-    
-    // Outer glow layer
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = themeColor;
-    ctx.globalAlpha = 0.12;
-    ctx.stroke();
-    
-    // Medium glow layer
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = themeColor;
-    ctx.globalAlpha = 0.35;
-    ctx.stroke();
-    
-    // Core colored line
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = themeColor;
-    ctx.globalAlpha = 1.0;
-    ctx.stroke();
-    
-    // Inner white highlight
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#ffffff';
-    ctx.globalAlpha = 1.0;
-    ctx.stroke();
   }
+  
+  // Outer glow layer
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = themeColor;
+  ctx.globalAlpha = 0.12;
+  ctx.stroke();
+  
+  // Medium glow layer
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = themeColor;
+  ctx.globalAlpha = 0.35;
+  ctx.stroke();
+  
+  // Core colored line
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = themeColor;
+  ctx.globalAlpha = 1.0;
+  ctx.stroke();
+  
+  // Inner white highlight
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#ffffff';
+  ctx.globalAlpha = 1.0;
+  ctx.stroke();
   
   ctx.globalAlpha = 1.0;
 }
 
-// Chain connected segments into continuous polylines
+// Chain connected segments into continuous polylines (Optimized O(N) approach)
 function chainSegments(segments) {
   if (segments.length === 0) return [];
   
-  const epsilon = 0.01;
-  const used = new Set();
-  const polylines = [];
-  
-  const pointsEqual = (p1, p2) => 
-    Math.abs(p1.x - p2.x) < epsilon && Math.abs(p1.y - p2.y) < epsilon;
+  const ptMap = new Map();
+  const getKey = (x, y) => `${Math.round(x * 100)},${Math.round(y * 100)}`;
   
   for (let i = 0; i < segments.length; i++) {
-    if (used.has(i)) continue;
+    const s = segments[i];
+    const k1 = getKey(s.x1, s.y1);
+    const k2 = getKey(s.x2, s.y2);
     
-    const chain = [
-      { x: segments[i].x1, y: segments[i].y1 },
-      { x: segments[i].x2, y: segments[i].y2 }
-    ];
-    used.add(i);
+    if (!ptMap.has(k1)) ptMap.set(k1, []);
+    ptMap.get(k1).push({ idx: i, other: s.x2, otherY: s.y2, otherK: k2 });
     
-    // Extend chain forward
-    let extended = true;
-    while (extended) {
-      extended = false;
-      const lastPoint = chain[chain.length - 1];
+    if (!ptMap.has(k2)) ptMap.set(k2, []);
+    ptMap.get(k2).push({ idx: i, other: s.x1, otherY: s.y1, otherK: k1 });
+  }
+  
+  const used = new Uint8Array(segments.length);
+  const polylines = [];
+  
+  for (let i = 0; i < segments.length; i++) {
+    if (used[i]) continue;
+    
+    const polyline = [{ x: segments[i].x1, y: segments[i].y1 }];
+    let currentK = getKey(segments[i].x2, segments[i].y2);
+    polyline.push({ x: segments[i].x2, y: segments[i].y2 });
+    used[i] = 1;
+    
+    while (true) {
+      const connections = ptMap.get(currentK);
+      if (!connections) break;
       
-      for (let j = 0; j < segments.length; j++) {
-        if (used.has(j)) continue;
-        
-        const seg = segments[j];
-        if (pointsEqual(lastPoint, { x: seg.x1, y: seg.y1 })) {
-          chain.push({ x: seg.x2, y: seg.y2 });
-          used.add(j);
-          extended = true;
-          break;
-        } else if (pointsEqual(lastPoint, { x: seg.x2, y: seg.y2 })) {
-          chain.push({ x: seg.x1, y: seg.y1 });
-          used.add(j);
-          extended = true;
+      let found = false;
+      for (let j = 0; j < connections.length; j++) {
+        const conn = connections[j];
+        if (!used[conn.idx]) {
+          used[conn.idx] = 1;
+          polyline.push({ x: conn.other, y: conn.otherY });
+          currentK = conn.otherK;
+          found = true;
           break;
         }
       }
+      if (!found) break;
     }
     
     // Extend chain backward
-    extended = true;
-    while (extended) {
-      extended = false;
-      const firstPoint = chain[0];
+    currentK = getKey(segments[i].x1, segments[i].y1);
+    while (true) {
+      const connections = ptMap.get(currentK);
+      if (!connections) break;
       
-      for (let j = 0; j < segments.length; j++) {
-        if (used.has(j)) continue;
-        
-        const seg = segments[j];
-        if (pointsEqual(firstPoint, { x: seg.x2, y: seg.y2 })) {
-          chain.unshift({ x: seg.x1, y: seg.y1 });
-          used.add(j);
-          extended = true;
-          break;
-        } else if (pointsEqual(firstPoint, { x: seg.x1, y: seg.y1 })) {
-          chain.unshift({ x: seg.x2, y: seg.y2 });
-          used.add(j);
-          extended = true;
+      let found = false;
+      for (let j = 0; j < connections.length; j++) {
+        const conn = connections[j];
+        if (!used[conn.idx]) {
+          used[conn.idx] = 1;
+          polyline.unshift({ x: conn.other, y: conn.otherY });
+          currentK = conn.otherK;
+          found = true;
           break;
         }
       }
+      if (!found) break;
     }
     
-    polylines.push(chain);
+    polylines.push(polyline);
   }
   
   return polylines;

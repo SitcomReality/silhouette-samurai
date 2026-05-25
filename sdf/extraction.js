@@ -3,17 +3,32 @@ import { evalCharacterSDF } from '../character/sdf-eval.js';
 import { getGroundY } from './ground.js';
 import { textSDFManager } from './text-sdf.js';
 
+let cachedGrid = null;
+let cachedColEntities = null;
+let cachedColParticles = null;
+let cachedColWorldX = null;
+let cachedColGroundY = null;
+
 export function extractSDFSegments(
   viewWidth, viewHeight, cameraX, camYOffset, baseGroundY, entities, particles, shockwaves, step = 5, globalBlendK = 20, controller = null
 ) {
   const cols = Math.ceil(viewWidth / step);
   const rows = Math.ceil(viewHeight / step);
 
-  // Pre-allocate arrays for better performance
-  const colEntities = new Array(cols + 1);
-  const colParticles = new Array(cols + 1);
-  const colWorldX = new Array(cols + 1);
-  const colGroundY = new Array(cols + 1);
+  const gridSize = (cols + 1) * (rows + 1);
+  if (!cachedGrid || cachedGrid.length < gridSize) {
+    cachedGrid = new Float32Array(gridSize * 1.2); // +20% buffer for resizes
+    cachedColEntities = new Array(cols + 50);
+    cachedColParticles = new Array(cols + 50);
+    cachedColWorldX = new Float32Array(cols + 50);
+    cachedColGroundY = new Float32Array(cols + 50);
+  }
+
+  const grid = cachedGrid;
+  const colEntities = cachedColEntities;
+  const colParticles = cachedColParticles;
+  const colWorldX = cachedColWorldX;
+  const colGroundY = cachedColGroundY;
 
   for (let c = 0; c <= cols; c++) {
     const wx = cameraX + (c * step - viewWidth / 2);
@@ -76,6 +91,20 @@ export function extractSDFSegments(
     for (let r = 0; r < minRow; r++) grid[cOffset + r] = 100.0;
     for (let r = maxRow + 1; r <= rows; r++) grid[cOffset + r] = -100.0;
 
+    // Pre-calculate particle properties to avoid repeated math in the inner loop
+    const optParts = activeParts.map(p => {
+      if (p.shape === 'capsule') {
+        const len = p.length || 30;
+        const ang = p.angle || 0;
+        const cos = Math.cos(ang) * len * 0.5;
+        const sin = Math.sin(ang) * len * 0.5;
+        return { type: 1, ax: p.x - cos, ay: p.y - sin, bx: p.x + cos, by: p.y + sin, r: p.radius };
+      } else if (p.shape === 'square') {
+        return { type: 2, x: p.x, y: p.y, r: p.radius * 1.3 };
+      }
+      return { type: 3, x: p.x, y: p.y, r: p.radius };
+    });
+
     for (let r = minRow; r <= maxRow; r++) {
       const sy = r * step;
       const wy = sy - camYOffset;
@@ -92,21 +121,15 @@ export function extractSDFSegments(
         }
       }
 
-      for (let i = 0; i < activeParts.length; i++) {
-        const p = activeParts[i];
+      for (let i = 0; i < optParts.length; i++) {
+        const p = optParts[i];
         let pD;
-        if (p.shape === 'capsule') {
-          const len = p.length || 30;
-          const ang = p.angle || 0;
-          const ax = p.x - Math.cos(ang) * len * 0.5;
-          const ay = p.y - Math.sin(ang) * len * 0.5;
-          const bx = p.x + Math.cos(ang) * len * 0.5;
-          const by = p.y + Math.sin(ang) * len * 0.5;
-          pD = sdCapsule(wx, wy, ax, ay, bx, by, p.radius);
-        } else if (p.shape === 'square') {
-          pD = sdBox(wx, wy, p.x, p.y, p.radius * 1.3, p.radius * 1.3);
+        if (p.type === 1) {
+          pD = sdCapsule(wx, wy, p.ax, p.ay, p.bx, p.by, p.r);
+        } else if (p.type === 2) {
+          pD = sdBox(wx, wy, p.x, p.y, p.r, p.r);
         } else {
-          pD = sdCircle(wx, wy, p.x, p.y, p.radius);
+          pD = sdCircle(wx, wy, p.x, p.y, p.r);
         }
         d = smin(d, pD, globalBlendK);
       }
