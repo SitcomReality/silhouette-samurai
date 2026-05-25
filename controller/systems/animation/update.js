@@ -18,8 +18,8 @@ export function updateAnimations(controller, dt) {
 
     // Normalize progress across the startup->active span (so strikes accelerate into the last active frame)
     const normalized = Math.max(0, Math.min(currentFrame / Math.max(1, activeEndFrame), 1));
-    // Ease-in so movement accelerates into the strike
-    let eased = easeInCubic(normalized);
+    // Softer ease so movement is closer to linear (gentler than cubic)
+    let eased = Math.pow(normalized, 1.2);
 
     // If we've reached or passed the last active frame, snap and HOLD the final pose (linger into recovery)
     if (currentFrame >= activeEndFrame) {

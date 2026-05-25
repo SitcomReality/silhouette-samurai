@@ -49,7 +49,8 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
         while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
         
         const p = extraState.chargeProgress || 0;
-        const easedP = p * p * p;
+        // Use a much gentler power curve so charge rotation eases more linearly
+        const easedP = Math.pow(p, 1.25);
         t.rotation = rotDiff * easedP;
         rotLerpRate = 10;
       } else {
