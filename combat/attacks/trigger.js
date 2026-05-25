@@ -1,8 +1,12 @@
 import { UNIFIED_ATTACK, CHARGE_CONFIG } from '../frame-data.js';
+import { AERIAL_ATTACK_VISUALS } from '../config/aerial.js';
 
 export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   const p = controller.player;
   if (p.state === 'dead' || p.state === 'stagger') return;
+  
+  // Detect if this is an aerial attack
+  const isAerial = !p.isGrounded;
   
   // Clone the unified attack data so we can modify it per-attack
   const frameData = JSON.parse(JSON.stringify(UNIFIED_ATTACK));
@@ -76,18 +80,57 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   p.state = 'attack';
   p.stateTime = 0;
   p.attackType = 'unified';
-  p.attackFrameData = new UNIFIED_ATTACK.constructor('unified', frameData);
+  
+  // Create frame data and attach aerial attack metadata to it
+  const attackFrameData = new UNIFIED_ATTACK.constructor('unified', frameData);
+  attackFrameData.isAerialAttack = isAerial;
+  attackFrameData.aerialDiveAngle = isAerial ? moveAngle : 0;
+  
+  p.attackFrameData = attackFrameData;
   p.attackFrameTime = 0;
   p.attackHitConfirmed = false;
   p.attackHitEntities = new Set();
   p.attackAngle = moveAngle;
   p.attackChargePower = chargePower;
   
+  // Spawn motion streaks for aerial directional attacks
+  if (isAerial && AERIAL_ATTACK_VISUALS.streakEnabled) {
+    const isDirectional = Math.abs(mvx) > 0.1 || Math.abs(mvy) > 0.1;
+    const isNotPureUpward = !(Math.abs(mvx) < 0.1 && mvy < -0.5);
+    
+    if (isDirectional && isNotPureUpward) {
+      spawnAerialStreaks(controller, p, moveAngle, chargePower);
+    }
+  }
+  
   // Create procedural swoosh
   createProceduralSwoosh(controller, p, moveAngle, chargePower);
   
   if (controller.audioEngine) {
     controller.audioEngine.onAttackSwoosh('unified');
+  }
+}
+
+function spawnAerialStreaks(controller, p, attackAngle, chargePower) {
+  const cfg = AERIAL_ATTACK_VISUALS;
+  const intensity = 0.7 + chargePower * 0.3;
+  
+  // Spawn multiple parallel streak lines
+  for (let i = 0; i < cfg.streakCount; i++) {
+    const offset = (i - (cfg.streakCount - 1) / 2) * cfg.streakSpacing;
+    const perpAngle = attackAngle + Math.PI / 2;
+    
+    controller.visualFx.push({
+      id: `fx_aerial_${controller.fxId++}`,
+      type: 'streak',
+      x: p.x + Math.cos(perpAngle) * offset,
+      y: p.y + cfg.streakOffsetFromBody + Math.sin(perpAngle) * offset,
+      angle: attackAngle + Math.PI, // Point opposite to motion
+      length: cfg.streakLength * intensity,
+      width: cfg.streakWidth * (1 - i * 0.15), // Thinner outer streaks
+      life: 0,
+      maxLife: cfg.streakDuration
+    });
   }
 }
 

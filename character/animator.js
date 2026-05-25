@@ -24,8 +24,13 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   if (!applyReactionPose(t, dir, state)) {
     if (state === 'attack') {
       // Try finisher first (for combo finishers), fall back to unified attack
+      // Pass aerial attack info from the entity's attack metadata
+      const entity = { state, attackType, stateTime };
+      const isAerialAttack = attackType === 'unified' && frameData?.isAerialAttack;
+      const aerialDiveAngle = frameData?.aerialDiveAngle || 0;
+      
       if (!applyFinisherPose(t, dir, attackType, attackProgress, frameData)) {
-        applyBasicAttackPose(t, dir, attackType, attackProgress, frameData);
+        applyBasicAttackPose(t, dir, attackType, attackProgress, frameData, isAerialAttack, aerialDiveAngle);
       }
     } else {
       applyLocomotionPose(t, dir, state, stateTime, isGrounded, vy, isCrouching, isSliding);

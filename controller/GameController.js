@@ -93,7 +93,9 @@ export class GameController {
       attackCharging: false,
       attackChargeTime: 0,
       attackAngle: 0,
-      attackChargePower: 1.0
+      attackChargePower: 1.0,
+      isAerialAttack: false,
+      aerialDiveAngle: 0
     };
 
     spawnCratesSquareWave(this, 2500, 4);

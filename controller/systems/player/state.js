@@ -8,7 +8,16 @@ export function updatePlayerTimersAndRegen(controller, dt) {
   if (p.counterWindow > 0) p.counterWindow -= dt;
   if (p.dodgeTimer > 0) p.dodgeTimer -= dt;
   
-
+  // Update aerial attack metadata during charge
+  if (p.attackCharging && !p.isGrounded) {
+    p.isAerialAttack = true;
+    // Update dive angle in real-time as player holds direction during charge
+    const mvx = p.movementVector.x;
+    const mvy = p.movementVector.y;
+    if (Math.abs(mvx) > 0.0001 || Math.abs(mvy) > 0.0001) {
+      p.aerialDiveAngle = Math.atan2(mvy, mvx);
+    }
+  }
 
   const down = controller.keys['KeyS'] || controller.keys['ArrowDown'];
   
