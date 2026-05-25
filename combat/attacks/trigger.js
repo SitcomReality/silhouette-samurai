@@ -23,11 +23,17 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   let mvx = movementVector.x;
   let mvy = movementVector.y;
   
-  // If no direction is held, leave mvx/mvy at zero so a neutral attack does not apply movement
-  // (previously we defaulted to the facing direction which caused neutral attacks to propel the player)
-  // Intentionally do nothing here to ensure moveMag remains small when no input is provided.
+  // Determine a dir value from current facing for fallback calculations
+  const currentDir = p.facing === 'right' ? 1 : -1;
   
-  const moveAngle = Math.atan2(mvy, mvx); // Standard screen Y-down angles
+  // If no direction is held, default the attack angle to match facing (so left-facing players attack left)
+  // Otherwise use the movement vector angle.
+  let moveAngle;
+  if (Math.abs(mvx) <= 0.0001 && Math.abs(mvy) <= 0.0001) {
+    moveAngle = currentDir === 1 ? 0 : Math.PI;
+  } else {
+    moveAngle = Math.atan2(mvy, mvx); // Standard screen Y-down angles
+  }
   
   // Determine facing based on horizontal input (or keep current if neutral)
   if (Math.abs(mvx) > 0.1) {
