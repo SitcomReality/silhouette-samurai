@@ -1,5 +1,6 @@
 import { animateCharacter } from '../../../character/animator.js';
 import { easeInCubic } from '../../../character/animation/easing.js';
+import { CHARGE_CONFIG } from '../../../combat/frame-data.js';
 
 export function updateAnimations(controller, dt) {
   const p = controller.player;
@@ -30,7 +31,8 @@ export function updateAnimations(controller, dt) {
 
   const extraState = {
     isCharging: p.attackCharging,
-    aimAngle: p.aimAngle || 0
+    aimAngle: p.aimAngle || 0,
+    chargeProgress: p.attackCharging ? Math.min(p.attackChargeTime / CHARGE_CONFIG.maxChargeTime, 1.0) : 0
   };
 
   animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0, p.attackFrameData, extraState);

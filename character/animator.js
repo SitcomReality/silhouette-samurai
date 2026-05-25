@@ -37,10 +37,25 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   t.swordAX = 0;
   
   // Calculate target rotation for air attacks
+  let rotLerpRate = 20;
   if (!isGrounded && extraState) {
     const isAttacking = state === 'attack' && attackType === 'unified';
     if (isAttacking || extraState.isCharging) {
-      t.rotation = extraState.aimAngle + Math.PI / 2;
+      const targetRot = extraState.aimAngle + Math.PI / 2;
+      
+      if (extraState.isCharging && !isAttacking) {
+        let rotDiff = targetRot;
+        while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+        while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+        
+        const p = extraState.chargeProgress || 0;
+        const easedP = p * p * p;
+        t.rotation = rotDiff * easedP;
+        rotLerpRate = 10;
+      } else {
+        t.rotation = targetRot;
+        rotLerpRate = 25; // Quick complete rotation when attack released
+      }
       
       // Override pose to be a sleek dive if charging (attack overrides it via basic.js)
       if (extraState.isCharging && state !== 'attack') {
@@ -51,7 +66,11 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
         t.swordBX = 0; t.swordBY = -80;
         t.swordThickness = 4;
       }
+    } else {
+      rotLerpRate = 5; // Melted butter recovery
     }
+  } else if (isGrounded) {
+    rotLerpRate = 15;
   }
 
   // Apply scale to all calculated target positions
@@ -95,10 +114,11 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   c.swordBY += (t.swordBY - c.swordBY) * lerpFactor;
   c.swordThickness += (t.swordThickness - c.swordThickness) * lerpFactor;
 
+  const rotLerpFactor = 1.0 - Math.exp(-rotLerpRate * dtSafe);
   let rotDiff = t.rotation - (c.rotation || 0);
   while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
   while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-  c.rotation = (c.rotation || 0) + rotDiff * lerpFactor;
+  c.rotation = (c.rotation || 0) + rotDiff * rotLerpFactor;
   while (c.rotation > Math.PI) c.rotation -= Math.PI * 2;
   while (c.rotation < -Math.PI) c.rotation += Math.PI * 2;
 
