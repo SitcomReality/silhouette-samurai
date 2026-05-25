@@ -40,7 +40,9 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   let rotLerpRate = 20;
   if (!isGrounded && extraState) {
     const isAttacking = state === 'attack' && attackType === 'unified';
-    if (isAttacking || extraState.isCharging) {
+    const shouldRotate = (isAttacking && extraState.attackIsDirectional) || (extraState.isCharging && extraState.isMoving);
+    
+    if (shouldRotate) {
       const targetRot = extraState.aimAngle + Math.PI / 2;
       
       let rotDiff = targetRot;
@@ -49,7 +51,6 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
 
       if (extraState.isCharging && !isAttacking) {
         const p = extraState.chargeProgress || 0;
-        // Use a much gentler power curve so charge rotation eases more linearly
         const easedP = Math.pow(p, 1.25);
         t.rotation = rotDiff * easedP;
         rotLerpRate = 10;
@@ -57,20 +58,29 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
         const p = extraState.attackChargePower !== undefined ? extraState.attackChargePower : 1.0;
         const easedP = Math.pow(p, 1.25);
         t.rotation = rotDiff * easedP;
-        rotLerpRate = 25; // Quick complete rotation when attack released
+        rotLerpRate = 25;
       }
       
-      // Override pose to be a sleek dive if charging (attack overrides it via basic.js)
+      // Sleek body pose when rotating/diving, but sword stays relative
       if (extraState.isCharging && state !== 'attack') {
         t.bodyBotX = 0; t.bodyBotY = 0;
         t.bodyTopX = 0; t.bodyTopY = -40;
         t.headX = 0; t.headY = -60;
-        t.swordAX = 0; t.swordAY = -20;
-        t.swordBX = 0; t.swordBY = -80;
-        t.swordThickness = 4;
       }
     } else {
-      rotLerpRate = 5; // Melted butter recovery
+      t.rotation = 0;
+      rotLerpRate = 8; // Faster recovery if not directional to avoid sticking to angles
+    }
+
+    // Apply "pull back" to sword during charge without snapping to center
+    if (extraState.isCharging && state !== 'attack') {
+        const p = extraState.chargeProgress || 0;
+        const currentSwordBX = t.swordBX;
+        const currentSwordBY = t.swordBY;
+        // Shift sword further back based on charge progress
+        t.swordBX = currentSwordBX - dir * p * 25;
+        t.swordBY = currentSwordBY - p * 15;
+        t.swordThickness = 3 + p * 2;
     }
   } else if (isGrounded) {
     rotLerpRate = 15;

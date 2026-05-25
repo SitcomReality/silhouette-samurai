@@ -23,6 +23,7 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   // Calculate attack angle from movement vector
   let mvx = movementVector.x;
   let mvy = movementVector.y;
+  const isDirectional = Math.sqrt(mvx * mvx + mvy * mvy) > 0.1;
   
   // Determine a dir value from current facing for fallback calculations
   const currentDir = p.facing === 'right' ? 1 : -1;
@@ -30,7 +31,7 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   // If no direction is held, default the attack angle to match facing (so left-facing players attack left)
   // Otherwise use the movement vector angle.
   let moveAngle;
-  if (Math.abs(mvx) <= 0.0001 && Math.abs(mvy) <= 0.0001) {
+  if (!isDirectional) {
     moveAngle = currentDir === 1 ? 0 : Math.PI;
   } else {
     moveAngle = Math.atan2(mvy, mvx); // Standard screen Y-down angles
@@ -56,14 +57,17 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   // Adjust animation angles based on attack direction
   if (frameData.anim) {
     if (!p.isGrounded) {
-      // Body partially rotates based on charge, but attack sweeps exactly at moveAngle
-      const targetRot = moveAngle + Math.PI / 2;
-      let rotDiff = targetRot;
-      while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
-      while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-      
-      const easedP = Math.pow(chargePower, 1.25);
-      const actualRot = rotDiff * easedP;
+      // Body partially rotates based on charge if directional
+      let actualRot = 0;
+      if (isDirectional) {
+        const targetRot = moveAngle + Math.PI / 2;
+        let rotDiff = targetRot;
+        while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+        while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+        
+        const easedP = Math.pow(chargePower, 1.25);
+        actualRot = rotDiff * easedP;
+      }
       
       let baseAngle;
       if (dir === 1) {
@@ -125,6 +129,7 @@ export function triggerUnifiedAttack(controller, chargeTime, movementVector) {
   p.attackHitEntities = new Set();
   p.attackAngle = moveAngle;
   p.attackChargePower = chargePower;
+  p.attackIsDirectional = isDirectional;
   
   // Create procedural swoosh
   createProceduralSwoosh(controller, p, moveAngle, chargePower);

@@ -29,11 +29,14 @@ export function updateAnimations(controller, dt) {
     progress = eased;
   }
 
+  const mvec = p.movementVector;
   const extraState = {
     isCharging: p.attackCharging,
+    isMoving: Math.sqrt(mvec.x * mvec.x + mvec.y * mvec.y) > 0.1,
     aimAngle: p.aimAngle || 0,
     chargeProgress: p.attackCharging ? Math.min(p.attackChargeTime / CHARGE_CONFIG.maxChargeTime, 1.0) : 0,
-    attackChargePower: p.attackChargePower
+    attackChargePower: p.attackChargePower,
+    attackIsDirectional: p.attackIsDirectional
   };
 
   animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0, p.attackFrameData, extraState);
