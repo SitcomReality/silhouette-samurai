@@ -9,6 +9,17 @@ export function updatePlayerAttacks(controller, dt) {
   if (p.attackCharging && !controller.freezePlayer) {
     p.attackChargeTime += dt;
     p.attackChargeTime = Math.min(p.attackChargeTime, CHARGE_CONFIG.maxChargeTime);
+    
+    let mvx = p.movementVector.x;
+    let mvy = p.movementVector.y;
+    const currentDir = p.facing === 'right' ? 1 : -1;
+    if (Math.abs(mvx) <= 0.0001 && Math.abs(mvy) <= 0.0001) {
+      p.aimAngle = currentDir === 1 ? 0 : Math.PI;
+    } else {
+      p.aimAngle = Math.atan2(mvy, mvx);
+    }
+  } else if (p.state === 'attack') {
+    p.aimAngle = p.attackAngle;
   }
   
   if (p.state === 'attack') {

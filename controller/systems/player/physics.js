@@ -1,4 +1,5 @@
 import { PHYSICS_DATA } from '../../../combat/frame-data.js';
+import { FX_CONFIG } from '../fx/config.js';
 
 export function updatePlayerPhysics(controller, dt) {
   const p = controller.player;
@@ -85,16 +86,17 @@ export function updatePlayerPhysics(controller, dt) {
         p.jumpBuffer = 0;
         
         const jumpAngle = Math.atan2(p.vy, p.vx || lateralBoost);
+        const conf = FX_CONFIG.jumpStreak;
         controller.visualFx.push({
           id: `fx_jump_${controller.fxId++}`,
           type: 'streak',
           x: p.x,
           y: p.y - 20,
           angle: jumpAngle,
-          length: 120,
-          width: 25,
+          length: conf.length,
+          width: conf.width,
           life: 0,
-          maxLife: 0.3
+          maxLife: conf.maxLife
         });
 
         if (controller.audioEngine) {
@@ -112,16 +114,17 @@ export function updatePlayerPhysics(controller, dt) {
         p.jumpBuffer = 0;
 
         const jumpAngle = Math.atan2(p.vy, p.vx || lateralBoost);
+        const conf = FX_CONFIG.djumpStreak;
         controller.visualFx.push({
           id: `fx_djump_${controller.fxId++}`,
           type: 'streak',
           x: p.x,
           y: p.y - 40,
           angle: jumpAngle,
-          length: 100,
-          width: 20,
+          length: conf.length,
+          width: conf.width,
           life: 0,
-          maxLife: 0.25
+          maxLife: conf.maxLife
         });
 
         if (controller.audioEngine) {

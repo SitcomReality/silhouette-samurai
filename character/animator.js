@@ -3,7 +3,7 @@ import { applyLocomotionPose } from './animation/states/locomotion.js';
 import { applyBasicAttackPose } from './animation/attacks/basic.js';
 import { applyFinisherPose } from './animation/attacks/dance.js';
 
-export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0, frameData = null) {
+export function animateCharacter(char, x, y, facing, state, stateTime, attackType, attackProgress, isGrounded, vy, isCrouching, dt, isSliding = false, scale = 1.0, frameData = null, extraState = null) {
   const dir = facing === 'right' ? 1 : -1;
   const t = char.target;
 
@@ -19,18 +19,14 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   t.swordAX = 0; t.swordAY = -25;
   t.swordBX = -dir * 35; t.swordBY = -50;
   t.swordThickness = 3;
+  t.rotation = 0;
 
   // Apply state-specific poses
   if (!applyReactionPose(t, dir, state)) {
     if (state === 'attack') {
       // Try finisher first (for combo finishers), fall back to unified attack
-      // Pass aerial attack info from the entity's attack metadata
-      const entity = { state, attackType, stateTime };
-      const isAerialAttack = attackType === 'unified' && frameData?.isAerialAttack;
-      const aerialDiveAngle = frameData?.aerialDiveAngle || 0;
-      
       if (!applyFinisherPose(t, dir, attackType, attackProgress, frameData)) {
-        applyBasicAttackPose(t, dir, attackType, attackProgress, frameData, isAerialAttack, aerialDiveAngle);
+        applyBasicAttackPose(t, dir, attackType, attackProgress, frameData);
       }
     } else {
       applyLocomotionPose(t, dir, state, stateTime, isGrounded, vy, isCrouching, isSliding);
@@ -40,6 +36,24 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   // Ensure sword origin stays inside the body (prevent horizontal movement) before scaling
   t.swordAX = 0;
   
+  // Calculate target rotation for air attacks
+  if (!isGrounded && extraState) {
+    const isAttacking = state === 'attack' && attackType === 'unified';
+    if (isAttacking || extraState.isCharging) {
+      t.rotation = extraState.aimAngle + Math.PI / 2;
+      
+      // Override pose to be a sleek dive if charging (attack overrides it via basic.js)
+      if (extraState.isCharging && state !== 'attack') {
+        t.bodyBotX = 0; t.bodyBotY = 0;
+        t.bodyTopX = 0; t.bodyTopY = -40;
+        t.headX = 0; t.headY = -60;
+        t.swordAX = 0; t.swordAY = -20;
+        t.swordBX = 0; t.swordBY = -80;
+        t.swordThickness = 4;
+      }
+    }
+  }
+
   // Apply scale to all calculated target positions
   t.bodyBotX *= scale; t.bodyBotY *= scale;
   t.bodyTopX *= scale; t.bodyTopY *= scale;
@@ -81,17 +95,40 @@ export function animateCharacter(char, x, y, facing, state, stateTime, attackTyp
   c.swordBY += (t.swordBY - c.swordBY) * lerpFactor;
   c.swordThickness += (t.swordThickness - c.swordThickness) * lerpFactor;
 
+  let rotDiff = t.rotation - (c.rotation || 0);
+  while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
+  while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
+  c.rotation = (c.rotation || 0) + rotDiff * lerpFactor;
+  while (c.rotation > Math.PI) c.rotation -= Math.PI * 2;
+  while (c.rotation < -Math.PI) c.rotation += Math.PI * 2;
+
+  // Apply rotation to world points
+  const cosR = Math.cos(c.rotation);
+  const sinR = Math.sin(c.rotation);
+  const applyRot = (px, py) => ({
+    x: px * cosR - py * sinR,
+    y: px * sinR + py * cosR
+  });
+
+  const wBot = applyRot(c.bodyBotX, c.bodyBotY);
+  const wTop = applyRot(c.bodyTopX, c.bodyTopY);
+  const wHead = applyRot(c.headX, c.headY);
+  const wBulgeA = applyRot(c.bulgeAX, c.bulgeAY);
+  const wBulgeB = applyRot(c.bulgeBX, c.bulgeBY);
+  const wSwordA = applyRot(c.swordAX, c.swordAY);
+  const wSwordB = applyRot(c.swordBX, c.swordBY);
+
   // Store absolute world positions for rendering and collision
   char.world = {
-    bodyBot: { x: x + c.bodyBotX, y: y + c.bodyBotY },
-    bodyTop: { x: x + c.bodyTopX, y: y + c.bodyTopY },
+    bodyBot: { x: x + wBot.x, y: y + wBot.y },
+    bodyTop: { x: x + wTop.x, y: y + wTop.y },
     bodyThickness: c.bodyThickness,
-    head: { x: x + c.headX, y: y + c.headY, r: c.headR },
-    bulgeA: { x: x + c.bulgeAX, y: y + c.bulgeAY, r: c.bulgeAR },
-    bulgeB: { x: x + c.bulgeBX, y: y + c.bulgeBY, r: c.bulgeBR },
+    head: { x: x + wHead.x, y: y + wHead.y, r: c.headR },
+    bulgeA: { x: x + wBulgeA.x, y: y + wBulgeA.y, r: c.bulgeAR },
+    bulgeB: { x: x + wBulgeB.x, y: y + wBulgeB.y, r: c.bulgeBR },
     sword: { 
-      ax: x + c.swordAX, ay: y + c.swordAY, 
-      bx: x + c.swordBX, by: y + c.swordBY, 
+      ax: x + wSwordA.x, ay: y + wSwordA.y, 
+      bx: x + wSwordB.x, by: y + wSwordB.y, 
       thickness: c.swordThickness 
     }
   };

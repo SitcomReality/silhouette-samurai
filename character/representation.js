@@ -7,6 +7,7 @@ export function createCharacter(x, y) {
     bulgeAX: 0, bulgeAY: -20, bulgeAR: 0,
     bulgeBX: 0, bulgeBY: -20, bulgeBR: 0,
     swordAX: 0, swordAY: -35, swordBX: 0, swordBY: -35, swordThickness: 4,
+    rotation: 0,
   };
   
   return {

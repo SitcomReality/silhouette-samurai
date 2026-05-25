@@ -5,12 +5,32 @@ export function getHitbox(entity, frameData) {
   // For unified attacks, adjust hitbox position based on world attack angle
   if (entity.attackAngle !== undefined) {
     const angle = entity.attackAngle;
-    const dist = Math.sqrt(range.offsetX * range.offsetX + range.offsetY * range.offsetY);
+    // We want the hitbox to rotate around the entity's center (usually y - 40 is roughly center for these calculations)
+    // The base offsets assume facing right (angle 0). We should rotate the local offset by the attack angle.
+    const cx = 0;
+    const cy = -40; // pivot around body center
     
-    // Calculate world position directly from moveAngle to ensure it matches the visuals
+    // Local offsets relative to pivot
+    const localX = (dir * range.offsetX) - cx;
+    const localY = range.offsetY - cy;
+    
+    // To properly support the new full-body rotation, the attack hitbox must precisely follow the rotation.
+    // If not grounded, the entire body rotates. If grounded, the body leans but doesn't fully rotate,
+    // though the attack logic still directs the hitbox.
+    const rotAngle = entity.isGrounded ? angle * 0.5 : angle; // Grounded leans half as much visually
+    
+    const cosA = Math.cos(rotAngle);
+    const sinA = Math.sin(rotAngle);
+    
+    // In air, the base pose is 'up' (-PI/2), and it's rotated by aimAngle + PI/2.
+    // Wait, if it's rotated by aimAngle + PI/2, the offset should be calculated from the upright pose, then rotated!
+    // If the base pose is "up", the offset needs to match that. But unified attack uses standard offsets.
+    // Actually, a simpler robust way is just pushing the center out in the attack angle direction:
+    const pushDist = Math.max(Math.abs(range.offsetX), Math.abs(range.offsetY));
+    
     return {
-      x: entity.x + Math.cos(angle) * dist,
-      y: entity.y + Math.sin(angle) * dist,
+      x: entity.x + Math.cos(angle) * pushDist,
+      y: entity.y - 40 + Math.sin(angle) * pushDist,
       width: range.width,
       height: range.height
     };
