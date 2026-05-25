@@ -1,4 +1,4 @@
-import { AERIAL_ATTACK_VISUALS } from '../../combat/config/aerial.js';
+import { AERIAL_ATTACK_VISUALS } from '../../../combat/config/aerial.js';
 
 export function applyBasicAttackPose(t, dir, attackType, attackProgress, frameData = null, isAerialAttack = false, aerialDiveAngle = 0) {
   // Unified attack system - all attacks use procedural animation
