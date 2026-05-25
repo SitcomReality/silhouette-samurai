@@ -52,7 +52,7 @@ export function extractSDFSegments(
     colParticles[c] = activeParts;
   }
 
-  const grid = new Float32Array((cols + 1) * (rows + 1));
+  const gridBuf = new Float32Array((cols + 1) * (rows + 1));
   const rowStride = rows + 1;
 
   for (let c = 0; c <= cols; c++) {
@@ -88,8 +88,8 @@ export function extractSDFSegments(
     const minRow = Math.max(0, Math.floor((highestTop - globalBlendK * 2.5 + camYOffset) / step));
     const maxRow = Math.min(rows, Math.ceil((gY + globalBlendK * 2.5 + camYOffset) / step));
 
-    for (let r = 0; r < minRow; r++) grid[cOffset + r] = 100.0;
-    for (let r = maxRow + 1; r <= rows; r++) grid[cOffset + r] = -100.0;
+    for (let r = 0; r < minRow; r++) gridBuf[cOffset + r] = 100.0;
+    for (let r = maxRow + 1; r <= rows; r++) gridBuf[cOffset + r] = -100.0;
 
     // Pre-calculate particle properties to avoid repeated math in the inner loop
     const optParts = activeParts.map(p => {
@@ -143,7 +143,7 @@ export function extractSDFSegments(
         }
       }
 
-      grid[cOffset + r] = d;
+      gridBuf[cOffset + r] = d;
     }
   }
 
@@ -155,10 +155,10 @@ export function extractSDFSegments(
     const c1 = (c + 1) * rowStride;
 
     for (let r = 0; r < rows; r++) {
-      const v0 = grid[c0 + r];
-      const v1 = grid[c1 + r];
-      const v2 = grid[c1 + r + 1];
-      const v3 = grid[c0 + r + 1];
+      const v0 = gridBuf[c0 + r];
+      const v1 = gridBuf[c1 + r];
+      const v2 = gridBuf[c1 + r + 1];
+      const v3 = gridBuf[c0 + r + 1];
 
       let state = 0;
       if (v0 <= 0) state |= 8;
@@ -205,7 +205,7 @@ export function extractSDFSegments(
 
   return {
     segments,
-    grid,
+    grid: gridBuf,
     cols,
     rows,
     step,
