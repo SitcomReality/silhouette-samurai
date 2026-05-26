@@ -7,8 +7,24 @@ export class AudioPanel {
 
   render(container) {
     container.innerHTML = '';
-    if (!this.audioEngine || !this.audioEngine.music) {
-      container.innerHTML = '<p style="color: #94a3b8; padding: 1rem;">Audio engine not initialized</p>';
+    if (!this.audioEngine || !this.audioEngine.music || !this.audioEngine.initialized) {
+      const msg = document.createElement('div');
+      msg.style.padding = '1rem';
+      msg.innerHTML = `
+        <p style="color: #94a3b8; margin-bottom: 1rem; font-size: 0.7rem; line-height: 1.4;">
+          Audio engine not initialized. WebAudio requires a user interaction (like a click or key press) to start.
+        </p>
+        <button id="btn-init-audio-tuner" class="btn-tuner-toggle" style="width: 100%; height: 2.5rem; color: white; border-color: var(--theme-color); font-size: 0.75rem;">
+          🔊 Initialize Audio Now
+        </button>
+      `;
+      container.appendChild(msg);
+      
+      const btn = container.querySelector('#btn-init-audio-tuner');
+      btn.onclick = async () => {
+        await this.audioEngine.start();
+        this.render(container);
+      };
       return;
     }
 

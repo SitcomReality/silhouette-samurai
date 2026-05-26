@@ -21,7 +21,6 @@ export class CombatTuner {
     if (!this.tunerEl || !btnToggle) return;
 
     this.tunerEl.innerHTML = TUNER_HTML;
-    setupTabs(this.tunerEl);
 
     const btnClose = document.getElementById('btn-close-tuner');
     const tunerSelect = document.getElementById('tuner-attack-select');
@@ -34,7 +33,11 @@ export class CombatTuner {
     btnToggle.onclick = () => {
       this.tunerEl.classList.toggle('hidden');
       this.controller.tunerActive = !this.tunerEl.classList.contains('hidden');
-      if (this.controller.tunerActive) this.refreshAttacksTuner();
+      if (this.controller.tunerActive) {
+        this.refreshAttacksTuner();
+        this.refreshPhysicsTuner();
+        this.refreshAudioTuner();
+      }
     };
     btnClose.onclick = () => {
       this.tunerEl.classList.add('hidden');
@@ -48,6 +51,12 @@ export class CombatTuner {
       this.attackPanel = new AttackPanel(this.controller, this.attackData);
       this.physicsPanel = new PhysicsPanel(this.physicsData);
       this.audioPanel = new AudioPanel(this.controller.audioEngine);
+      
+      setupTabs(this.tunerEl, (tab) => {
+        if (tab === 'attacks') this.refreshAttacksTuner();
+        if (tab === 'physics') this.refreshPhysicsTuner();
+        if (tab === 'audio') this.refreshAudioTuner();
+      });
 
       this._tunerBaseline = {
         physics: this.physicsData ? JSON.parse(JSON.stringify(this.physicsData)) : {},

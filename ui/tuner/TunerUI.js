@@ -40,7 +40,7 @@ export const TUNER_HTML = `
   </div>
 `;
 
-export function setupTabs(container) {
+export function setupTabs(container, onTabChange = null) {
   const tabs = container.querySelectorAll('.tuner-tab');
   const panels = container.querySelectorAll('.tuner-panel');
 
@@ -49,9 +49,12 @@ export function setupTabs(container) {
       tabs.forEach(t => t.classList.remove('active'));
       panels.forEach(p => p.classList.add('hidden'));
       
+      const tabName = e.target.dataset.tab;
       e.target.classList.add('active');
-      const targetId = `tuner-${e.target.dataset.tab}`;
+      const targetId = `tuner-${tabName}`;
       container.querySelector(`#${targetId}`).classList.remove('hidden');
+      
+      if (onTabChange) onTabChange(tabName);
     };
   });
 }
