@@ -1,11 +1,12 @@
 export const TUNER_HTML = `
   <div class="tuner-header">
-    <span>Combat & Ability Tuner</span>
+    <span>Combat & Audio Tuner</span>
     <button id="btn-close-tuner">✕</button>
   </div>
   <div class="tuner-nav">
     <button class="tuner-tab active" data-tab="attacks">Attacks</button>
     <button class="tuner-tab" data-tab="physics">Physics</button>
+    <button class="tuner-tab" data-tab="audio">Audio</button>
   </div>
   <div class="tuner-content">
     <div id="tuner-attacks" class="tuner-panel">
@@ -29,6 +30,9 @@ export const TUNER_HTML = `
     </div>
     <div id="tuner-physics" class="tuner-panel hidden">
       <div id="tuner-controls-physics" class="tuner-controls"></div>
+    </div>
+    <div id="tuner-audio" class="tuner-panel hidden">
+      <div id="tuner-controls-audio" class="tuner-controls"></div>
     </div>
   </div>
   <div class="tuner-footer">

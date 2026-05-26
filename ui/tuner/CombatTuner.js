@@ -1,6 +1,7 @@
 import { TUNER_HTML, setupTabs } from './TunerUI.js';
 import { AttackPanel } from './panels/AttackPanel.js';
 import { PhysicsPanel } from './panels/PhysicsPanel.js';
+import { AudioPanel } from './panels/AudioPanel.js';
 
 export class CombatTuner {
   constructor(controller) {
@@ -12,6 +13,7 @@ export class CombatTuner {
     this._tunerBaseline = null;
     this.attackPanel = null;
     this.physicsPanel = null;
+    this.audioPanel = null;
   }
 
   init() {
@@ -45,6 +47,7 @@ export class CombatTuner {
       
       this.attackPanel = new AttackPanel(this.controller, this.attackData);
       this.physicsPanel = new PhysicsPanel(this.physicsData);
+      this.audioPanel = new AudioPanel(this.controller.audioEngine);
 
       this._tunerBaseline = {
         physics: this.physicsData ? JSON.parse(JSON.stringify(this.physicsData)) : {},
@@ -81,6 +84,7 @@ export class CombatTuner {
 
       this.refreshAttacksTuner();
       this.refreshPhysicsTuner();
+      this.refreshAudioTuner();
     });
   }
 
@@ -97,12 +101,27 @@ export class CombatTuner {
     this.physicsPanel.render(container);
   }
 
+  refreshAudioTuner() {
+    if (!this.audioPanel) return;
+    const container = document.getElementById('tuner-controls-audio');
+    this.audioPanel.render(container);
+  }
+
   exportToClipboard() {
     const baseline = this._tunerBaseline;
-    const exportData = { PHYSICS_DATA: {}, ATTACK_FRAME_DATA: {} };
+    const exportData = { PHYSICS_DATA: {}, ATTACK_FRAME_DATA: {}, AUDIO_CONFIG: {} };
 
     for (const [k, v] of Object.entries(this.physicsData)) {
       if (baseline.physics[k] !== v) exportData.PHYSICS_DATA[k] = v;
+    }
+    
+    // Export audio settings
+    if (this.controller.audioEngine && this.controller.audioEngine.music) {
+      const music = this.controller.audioEngine.music;
+      exportData.AUDIO_CONFIG.bpm = music.bpm;
+      if (music.masterGain) {
+        exportData.AUDIO_CONFIG.masterVolume = music.masterGain.gain.value;
+      }
     }
     for (const [key, data] of Object.entries(this.attackData)) {
       const base = baseline.attacks[key] || {};
@@ -122,6 +141,7 @@ export class CombatTuner {
 
     if (Object.keys(exportData.PHYSICS_DATA).length === 0) delete exportData.PHYSICS_DATA;
     if (Object.keys(exportData.ATTACK_FRAME_DATA).length === 0) delete exportData.ATTACK_FRAME_DATA;
+    if (Object.keys(exportData.AUDIO_CONFIG).length === 0) delete exportData.AUDIO_CONFIG;
 
     const payload = JSON.stringify(exportData, null, 2);
     navigator.clipboard.writeText(payload)
