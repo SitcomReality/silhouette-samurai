@@ -31,6 +31,22 @@ export class AudioPanel {
     const music = this.audioEngine.music;
     
     createSectionHeader(container, 'Tempo & Master');
+    
+    // Force max combo toggle
+    const forceMaxDiv = document.createElement('div');
+    forceMaxDiv.className = 'tuner-control';
+    forceMaxDiv.innerHTML = `
+      <label class="dev-mode-toggle" style="border: none; padding: 0; margin: 0 0 0.5rem 0;">
+        <input type="checkbox" id="force-max-combo" ${music.forceMaxCombo ? 'checked' : ''} />
+        <span>Force Max Intensity (Combo 50+)</span>
+      </label>
+    `;
+    container.appendChild(forceMaxDiv);
+    const forceMaxCheckbox = forceMaxDiv.querySelector('#force-max-combo');
+    forceMaxCheckbox.onchange = (e) => {
+      music.forceMaxCombo = e.target.checked;
+    };
+    
     createSlider(container, 'BPM', music, 'bpm', 60, 180, 1, (val) => {
       if (this.audioEngine.beatClock) {
         this.audioEngine.beatClock.bpm = val;
@@ -79,6 +95,38 @@ export class AudioPanel {
       });
     }
     
+    createSectionHeader(container, 'Instruments');
+    
+    const instruments = [
+      { value: 'synthLead', label: 'Synth Lead (Warm)' },
+      { value: 'sawLead', label: 'Saw Lead (Aggressive)' },
+      { value: 'acidBass', label: 'Acid Bass' },
+      { value: 'piano', label: 'Piano' },
+      { value: 'pluck', label: 'Pluck' },
+      { value: 'bell', label: 'Bell' },
+      { value: 'string', label: 'String' }
+    ];
+    
+    const createInstrumentSelect = (label, key) => {
+      const div = document.createElement('div');
+      div.className = 'tuner-control';
+      div.innerHTML = `
+        <label style="color:#94a3b8;font-weight:600;display:block;margin-bottom:4px;">${label}</label>
+        <select class="instrument-select" data-key="${key}" style="width:100%;background:#0f172a;color:white;border:1px solid #334155;padding:4px;border-radius:4px;">
+          ${instruments.map(inst => `<option value="${inst.value}" ${music.instruments[key] === inst.value ? 'selected' : ''}>${inst.label}</option>`).join('')}
+        </select>
+      `;
+      container.appendChild(div);
+      const select = div.querySelector('select');
+      select.onchange = (e) => {
+        music.instruments[key] = e.target.value;
+      };
+    };
+    
+    createInstrumentSelect('Melody Instrument', 'melody');
+    createInstrumentSelect('Bass Instrument', 'bass');
+    createInstrumentSelect('Counter Melody Instrument', 'counter');
+    
     createSectionHeader(container, 'Generative Music');
     if (music.sequencer) {
       const seqControl = {
@@ -92,7 +140,7 @@ export class AudioPanel {
       
       const note = document.createElement('div');
       note.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem; background: rgba(6, 182, 212, 0.1); border-left: 2px solid #06b6d4; font-size: 0.7rem; color: #94a3b8;';
-      note.textContent = 'Note: Density changes affect newly generated phrases. Adjust then wait for next section.';
+      note.textContent = 'Note: Changes take effect immediately. Experiment with different instrument combinations!';
       container.appendChild(note);
     }
   }

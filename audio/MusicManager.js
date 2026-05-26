@@ -20,6 +20,12 @@ export class MusicManager {
     this.enemyProximity = 1000;
     this.sequencer = new MusicSequencer();
     this.synth = null;
+    this.forceMaxCombo = false;
+    this.instruments = {
+      melody: 'synthLead',
+      bass: 'acidBass',
+      counter: 'pluck'
+    };
   }
 
   async load() {
@@ -77,7 +83,7 @@ export class MusicManager {
 
   playStep(step, time) {
     const phraseStep = (this.barsInCurrentSection * 16) + step;
-    const combo = this.currentCombo;
+    const combo = this.forceMaxCombo ? 50 : this.currentCombo;
     
     // Consistent kick pattern for steady pulse
     const kick = DRUM_PATTERNS.kick[step];
@@ -97,6 +103,7 @@ export class MusicManager {
     
     const melody = mapNote(this.sequencer.melodyPhrase[phraseStep]);
     const bass = mapNote(this.sequencer.bassPhrase[phraseStep], -24);
+    const counter = mapNote(this.sequencer.counterPhrase[phraseStep]);
     
     const comboFactor = Math.min(combo / 50, 1.0);
     const drumIntensity = 0.5 + comboFactor * 0.5;
@@ -108,21 +115,49 @@ export class MusicManager {
     
     // Driving bass line (always present when combo > 4)
     if (bass !== null && combo > 4) {
-      const isAccent = step % 4 === 0; // Accent downbeats
+      const isAccent = step % 4 === 0;
       const bassVol = 0.15 + comboFactor * 0.15;
-      this.synth.playAcidBass(bass, time, 'action', bassVol, 0.3, isAccent);
+      this.playInstrument(this.instruments.bass, bass, time, 'action', bassVol, 0.3, isAccent);
     }
     
-    // Single clean melody (no conflicting layers)
+    // Single clean melody
     if (melody !== null) {
       const melodyVol = 0.1 + comboFactor * 0.05;
-      if (combo < 15) {
-        // Warm synth lead
-        this.synth.playSynthLead(melody, time, 'ballet', melodyVol, 0.4);
-      } else {
-        // Aggressive saw lead for high intensity
-        this.synth.playSawLead(melody, time, 'ballet', melodyVol, 0.35);
-      }
+      this.playInstrument(this.instruments.melody, melody, time, 'ballet', melodyVol, 0.4);
+    }
+    
+    // Counter-melody layer
+    if (counter !== null && combo > 10) {
+      const counterVol = 0.08 + comboFactor * 0.04;
+      this.playInstrument(this.instruments.counter, counter, time, 'ballet', counterVol, 0.35);
+    }
+  }
+  
+  playInstrument(instrumentType, note, time, layer, vol, duration, accent = false) {
+    switch(instrumentType) {
+      case 'acidBass':
+        this.synth.playAcidBass(note, time, layer, vol, duration, accent);
+        break;
+      case 'piano':
+        this.synth.playPiano(note, time, layer, vol, duration);
+        break;
+      case 'pluck':
+        this.synth.playPluck(note, time, layer, vol, duration);
+        break;
+      case 'bell':
+        this.synth.playBell(note, time, layer, vol, duration);
+        break;
+      case 'string':
+        this.synth.playString(note, time, layer, vol, duration, false);
+        break;
+      case 'synthLead':
+        this.synth.playSynthLead(note, time, layer, vol, duration);
+        break;
+      case 'sawLead':
+        this.synth.playSawLead(note, time, layer, vol, duration);
+        break;
+      default:
+        this.synth.playSynthLead(note, time, layer, vol, duration);
     }
   }
 
@@ -131,20 +166,21 @@ export class MusicManager {
     this.enemyProximity = enemyProximity;
     if (!this.loaded || !this.playing) return;
     
-    const comboFactor = Math.min(combo / 50, 1.0);
+    const effectiveCombo = this.forceMaxCombo ? 50 : combo;
+    const comboFactor = Math.min(effectiveCombo / 50, 1.0);
     
     // Dynamic intensity scaling across layers
     const actionTarget = 0.4 + comboFactor * 0.6;
     this.gainNodes.action.gain.setTargetAtTime(actionTarget, this.ctx.currentTime, 0.5);
     
-    const balletTarget = combo > 8 ? 0.3 + Math.min((combo - 8) / 42, 1.0) * 0.7 : 0.1;
+    const balletTarget = effectiveCombo > 8 ? 0.3 + Math.min((effectiveCombo - 8) / 42, 1.0) * 0.7 : 0.1;
     this.gainNodes.ballet.gain.setTargetAtTime(balletTarget, this.ctx.currentTime, 0.7);
     
     const baseTarget = 0.7 + comboFactor * 0.3;
     this.gainNodes.base.gain.setTargetAtTime(baseTarget, this.ctx.currentTime, 0.6);
     
     // More intense filter changes for industrial shift
-    let targetFreq = combo > 15 ? 12000 + comboFactor * 8000 : 8000 + comboFactor * 12000;
+    let targetFreq = effectiveCombo > 15 ? 12000 + comboFactor * 8000 : 8000 + comboFactor * 12000;
     if (enemyCount === 0) targetFreq = Math.max(3000, targetFreq * 0.5);
     this.filterNode.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.4);
   }
