@@ -60,7 +60,8 @@ export class CombatTuner {
 
       this._tunerBaseline = {
         physics: this.physicsData ? JSON.parse(JSON.stringify(this.physicsData)) : {},
-        attacks: {}
+        attacks: {},
+        audio: null
       };
       if (this.attackData) {
         for (const [k, v] of Object.entries(this.attackData)) {
@@ -112,6 +113,19 @@ export class CombatTuner {
 
   refreshAudioTuner() {
     if (!this.audioPanel) return;
+
+    // Capture audio baseline if we haven't yet and music is initialized
+    if (!this._tunerBaseline.audio && this.controller.audioEngine && this.controller.audioEngine.music && this.controller.audioEngine.music.loaded) {
+      const music = this.controller.audioEngine.music;
+      this._tunerBaseline.audio = {
+        bpm: music.bpm,
+        masterVolume: music.masterGain ? music.masterGain.gain.value : 0.5,
+        forceMaxCombo: music.forceMaxCombo,
+        filterQ: music.filterNode ? music.filterNode.Q.value : 1.0,
+        instruments: JSON.parse(JSON.stringify(music.instruments))
+      };
+    }
+
     const container = document.getElementById('tuner-controls-audio');
     this.audioPanel.render(container);
   }
@@ -127,9 +141,27 @@ export class CombatTuner {
     // Export audio settings
     if (this.controller.audioEngine && this.controller.audioEngine.music) {
       const music = this.controller.audioEngine.music;
-      exportData.AUDIO_CONFIG.bpm = music.bpm;
-      if (music.masterGain) {
-        exportData.AUDIO_CONFIG.masterVolume = music.masterGain.gain.value;
+      const audioBase = baseline.audio || {};
+      const audioOut = {};
+
+      if (music.bpm !== audioBase.bpm) audioOut.bpm = music.bpm;
+      if (music.masterGain && Math.abs(music.masterGain.gain.value - (audioBase.masterVolume || 0)) > 0.001) {
+        audioOut.masterVolume = music.masterGain.gain.value;
+      }
+      if (music.forceMaxCombo !== audioBase.forceMaxCombo) {
+        audioOut.forceMaxCombo = music.forceMaxCombo;
+      }
+      if (music.filterNode && Math.abs(music.filterNode.Q.value - (audioBase.filterQ || 0)) > 0.001) {
+        audioOut.filterQ = music.filterNode.Q.value;
+      }
+      
+      // Compare instruments
+      if (audioBase.instruments && JSON.stringify(music.instruments) !== JSON.stringify(audioBase.instruments)) {
+        audioOut.instruments = JSON.parse(JSON.stringify(music.instruments));
+      }
+
+      if (Object.keys(audioOut).length > 0) {
+        exportData.AUDIO_CONFIG = audioOut;
       }
     }
     for (const [key, data] of Object.entries(this.attackData)) {
