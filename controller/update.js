@@ -5,6 +5,8 @@ import { integratePlayerPhysics } from './systems/player/integration.js';
 import { updatePlayerAttacks } from './systems/combat/attacks.js';
 import { updateClashes } from './systems/combat/clashes.js';
 import { updateEntities } from './systems/entities/update.js';
+import { updateEnemyAI } from './systems/entities/ai.js';
+import { resolveEnemyAttacks } from './systems/combat/enemy-attacks.js';
 import { updateSpawner } from './systems/entities/spawner.js';
 import { updateCollisions } from './systems/entities/collision.js';
 import { updateFX } from './systems/fx/update.js';
@@ -39,8 +41,10 @@ export function updateEngine(controller, dt) {
   updateCamera(controller);
   updateSpawner(controller);
   
+  updateEnemyAI(controller, dt);
   updateEntities(controller, dt);
   updateClashes(controller);
+  resolveEnemyAttacks(controller);
   updateCollisions(controller);
   
   updateAnimations(controller, dt);

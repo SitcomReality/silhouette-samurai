@@ -7,6 +7,10 @@ import { ParrySystem } from '../combat/parry.js';
 
 export class GameController {
   constructor() {
+    this.initializeGameState();
+  }
+
+  initializeGameState() {
     this.entities = [];
     this.particles = [];
     this.shockwaves = [];
@@ -97,6 +101,81 @@ export class GameController {
       aimAngle: 0
     };
 
+    spawnCratesSquareWave(this, 2500, 4);
+    spawnEnemy(this, 2800);
+  }
+
+  restartGame() {
+    // Clear all game state
+    this.entities = [];
+    this.particles = [];
+    this.shockwaves = [];
+    this.floatingTexts = [];
+    this.visualFx = [];
+    this.fxId = 0;
+    this.particleId = 0;
+    this.waveId = 0;
+    this.textId = 0;
+    
+    // Reset stats
+    this.stats = { score: 0, maxCombo: 0, enemiesDefeated: 0, bossesDefeated: 0 };
+    this.enemiesSpawnedSinceBoss = 0;
+    this.nextSpawnX = 3000;
+    
+    // Reset camera
+    this.cameraX = 0;
+    this.hitstop = 0;
+    this.screenShake = 0;
+    
+    // Reset player to initial state
+    this.player.x = 0;
+    this.player.y = this.baseGroundY;
+    this.player.vx = 0;
+    this.player.vy = 0;
+    this.player.facing = 'right';
+    this.player.isGrounded = true;
+    this.player.isCrouching = false;
+    this.player.health = 100;
+    this.player.state = 'idle';
+    this.player.stateTime = 0;
+    this.player.attackType = 'none';
+    this.player.attackFrameData = null;
+    this.player.attackFrameTime = 0;
+    this.player.attackHitConfirmed = false;
+    this.player.attackHitEntities.clear();
+    this.player.combo = 0;
+    this.player.slidePower = 100;
+    this.player.aerialPower = 100;
+    this.player.slideTime = 0;
+    this.player.airTime = 0;
+    this.player.groundStandTime = 0;
+    this.player.doubleJumped = false;
+    this.player.isSliding = false;
+    this.player.jumpBuffer = 0;
+    this.player.attackBuffer = null;
+    this.player.isBlocking = false;
+    this.player.blockStartTime = 0;
+    this.player.canCounter = false;
+    this.player.counterWindow = 0;
+    this.player.counterBonusDamage = 1.0;
+    this.player.hitstunTimer = 0;
+    this.player.staggerTimer = 0;
+    this.player.tripTimer = 0;
+    this.player.dodgeTimer = 0;
+    this.player.finisherTransitionWindow = 0;
+    this.player.blockToFinisher = false;
+    this.player.ultraParryBonus = 1.0;
+    this.player.movementVector = { x: 0, y: 0 };
+    this.player.attackCharging = false;
+    this.player.attackChargeTime = 0;
+    this.player.attackAngle = 0;
+    this.player.attackChargePower = 1.0;
+    this.player.aimAngle = 0;
+    
+    // Reset character animation
+    this.player.character = createCharacter(0, this.baseGroundY);
+    
+    // Respawn initial enemies
     spawnCratesSquareWave(this, 2500, 4);
     spawnEnemy(this, 2800);
   }
