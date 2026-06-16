@@ -12,3 +12,10 @@ export function getFinisherDirection(controller) {
   if (forward) return 'forward';
   return null;
 }
+
+export function getFinisherAttackName(direction) {
+  if (direction === 'up') return 'dance_finisher_up';
+  if (direction === 'down') return 'dance_finisher_down';
+  if (direction === 'forward') return 'dance_finisher_neutral';
+  return null;
+}
