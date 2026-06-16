@@ -2,6 +2,8 @@ import { createCharacter } from '../character/representation.js';
 
 export function spawnEnemy(controller, x, difficulty = 1) {
   const hp = 20;
+  // Record spawn time so AI respects cooldown before first attack
+  const now = performance.now() / 1000;
   controller.entities.push({
     id: `enemy_${Math.random()}`,
     type: 'enemy',
@@ -23,7 +25,7 @@ export function spawnEnemy(controller, x, difficulty = 1) {
     attackFrameData: null,
     attackFrameTime: 0,
     attackHitEntities: new Set(),
-    lastAttackTime: 0,
+    lastAttackTime: now,
     combo: 0,
     character: createCharacter(x, controller.baseGroundY),
   });
@@ -32,6 +34,8 @@ export function spawnEnemy(controller, x, difficulty = 1) {
 export function spawnBoss(controller, x, difficulty = 1) {
   const hp = 300 * difficulty;
   const scale = 1.8 + Math.min((difficulty - 1) * 0.1, 0.6);
+  // Initialize lastAttackTime to spawn time so boss delays its first swing
+  const now = performance.now() / 1000;
   controller.entities.push({
     id: `boss_${Math.random()}`,
     type: 'enemy',
@@ -52,7 +56,7 @@ export function spawnBoss(controller, x, difficulty = 1) {
     attackFrameData: null,
     attackFrameTime: 0,
     attackHitEntities: new Set(),
-    lastAttackTime: 0,
+    lastAttackTime: now,
     combo: 0,
     scale: scale,
     character: createCharacter(x, controller.baseGroundY),
