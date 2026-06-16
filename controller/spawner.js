@@ -25,7 +25,7 @@ export function spawnEnemy(controller, x, difficulty = 1) {
     attackFrameData: null,
     attackFrameTime: 0,
     attackHitEntities: new Set(),
-    lastAttackTime: now,
+    attackCooldownStart: null,
     combo: 0,
     character: createCharacter(x, controller.baseGroundY),
   });
@@ -56,7 +56,7 @@ export function spawnBoss(controller, x, difficulty = 1) {
     attackFrameData: null,
     attackFrameTime: 0,
     attackHitEntities: new Set(),
-    lastAttackTime: now,
+    attackCooldownStart: null,
     combo: 0,
     scale: scale,
     character: createCharacter(x, controller.baseGroundY),

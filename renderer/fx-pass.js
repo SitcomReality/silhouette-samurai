@@ -16,14 +16,39 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
       const flashP = Math.min(ent.flashTimer / 0.15, 1.0);
       ctx.globalAlpha = 0.5 * flashP;
       ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+      ctx.beginPath();
+      ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
     } else {
-      ctx.globalAlpha = 0.18;
+      // Enemy charging/cooldown telegraph
+      const cp = ent.chargeProgress || 0;
+      const chargeGlowScale = 1.0 + cp * 1.5; // Grow by 150%
+      const alpha = 0.15 + cp * 0.25;
+      
+      // Outer glow (Atmospheric)
+      ctx.globalAlpha = alpha * 0.4;
+      ctx.fillStyle = 'rgba(244, 63, 94, 1.0)'; // Rose/Red tint for danger
+      ctx.beginPath();
+      ctx.arc(scX, scY, glowRadius * chargeGlowScale * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core glow (Theme color equivalent for enemies)
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = 'rgba(255, 110, 30, 1.0)';
+      ctx.beginPath();
+      ctx.arc(scX, scY, glowRadius * chargeGlowScale, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Highlight pulse when fully charged and about to strike
+      if (cp >= 1.0) {
+        const pulse = 0.4 + Math.sin(Date.now() * 0.02) * 0.2;
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(scX, scY, glowRadius * chargeGlowScale * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
-    
-    ctx.beginPath();
-    ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
-    ctx.fill();
   }
   
   // Player glow (expands when charging)
@@ -66,48 +91,6 @@ export function renderFX(ctx, controller, viewWidth, camYOffset) {
   
   for (const fx of controller.visualFx) {
     if (fx.x < viewLeft || fx.x > viewRight) continue;
-    
-    if (fx.type === 'enemy_charge' && fx.entity) {
-      // Charge telegraph tied to an enemy entity: expand a colored glow as progress approaches 1
-      const ent = fx.entity;
-      const scX = (ent.x - controller.cameraX) + viewWidth / 2 + (fx.offsetX || 0);
-      const scY = ent.y + camYOffset + (fx.offsetY || -40);
-      const progress = Math.min(Math.max(fx.progress || (fx.life / Math.max(fx.maxLife, 1)), 0), 1);
-      
-      // Compute radii and alpha
-      const base = fx.baseRadius || 30;
-      const extra = fx.maxExtra || 50;
-      const radius = base + extra * progress;
-      const glowAlpha = 0.08 + 0.35 * progress; // faint at start, bright at full
-      const coreAlpha = 0.12 + 0.6 * progress;
-      
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      
-      // Outer soft glow
-      ctx.globalAlpha = glowAlpha;
-      ctx.fillStyle = 'rgba(244,63,94,1)'; // enemy red/pink
-      ctx.beginPath();
-      ctx.arc(scX, scY, radius * 1.6, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Middle ring
-      ctx.globalAlpha = 0.18 + 0.5 * progress;
-      ctx.beginPath();
-      ctx.arc(scX, scY, radius, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Core pulse when almost ready
-      const pulse = progress > 0.9 ? 0.6 + Math.sin(Date.now() * 0.02) * 0.2 : 1.0;
-      ctx.globalAlpha = coreAlpha * pulse;
-      ctx.fillStyle = 'rgba(255,255,255,1)';
-      ctx.beginPath();
-      ctx.arc(scX, scY, Math.max(6, radius * 0.25), 0, Math.PI * 2);
-      ctx.fill();
-      
-      ctx.restore();
-      continue;
-    }
     
     if (fx.type === 'parry_flash') {
       const scX = (fx.x - controller.cameraX) + viewWidth / 2;
