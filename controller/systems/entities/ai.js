@@ -11,7 +11,7 @@ export function updateEnemyAI(controller, dt) {
     
     // If already attacking, let the attack finish
     if (ent.state === 'attack') {
-      updateEnemyAttack(ent, dt);
+      updateEnemyAttack(controller, ent, dt);
       continue;
     }
     
@@ -22,20 +22,55 @@ export function updateEnemyAI(controller, dt) {
     
     // Attack range check
     const attackRange = 80;
-    const attackCooldown = 1.2; // ~half the player's max attack speed
+    const attackCooldown = 1.2; // cooldown before each swing and also the charge duration
     
     if (dist < attackRange && ent.isGrounded && p.state !== 'dead') {
-      // Check if enough time has passed since last attack
-      if (!ent.lastAttackTime || (performance.now() / 1000 - ent.lastAttackTime) > attackCooldown) {
-        triggerEnemyAttack(controller, ent);
-      } else {
-        // In range but on cooldown - stand ready
+      const now = performance.now() / 1000;
+      const elapsed = now - (ent.lastAttackTime || 0);
+      
+      // If still in cooldown, show a charging telegraph
+      if (elapsed < attackCooldown) {
+        // Ensure idle while charging
         ent.state = 'idle';
         ent.vx *= 0.85;
+        
+        // Create or update an enemy_charge visualFx entry tied to this entity
+        const fxId = `enemy_charge_${ent.id}`;
+        let fx = controller.visualFx.find(f => f.id === fxId);
+        const progress = Math.min(Math.max(elapsed / attackCooldown, 0), 1);
+        
+        if (!fx) {
+          fx = {
+            id: fxId,
+            type: 'enemy_charge',
+            entity: ent,
+            life: elapsed,
+            maxLife: attackCooldown,
+            progress: progress,
+            // visual parameters
+            baseRadius: (ent.scale || 1.0) * 30,
+            maxExtra: (ent.scale || 1.0) * 50
+          };
+          controller.visualFx.push(fx);
+        } else {
+          fx.life = elapsed;
+          fx.maxLife = attackCooldown;
+          fx.progress = progress;
+          fx.baseRadius = (ent.scale || 1.0) * 30;
+          fx.maxExtra = (ent.scale || 1.0) * 50;
+        }
+      } else {
+        // Time to attack
+        triggerEnemyAttack(controller, ent);
+        // Remove any lingering charge fx for this enemy
+        const fxIndex = controller.visualFx.findIndex(f => f.id === `enemy_charge_${ent.id}`);
+        if (fxIndex !== -1) controller.visualFx.splice(fxIndex, 1);
       }
     } else {
-      // Move towards player
+      // Move towards player and ensure no lingering charge FX
       moveTowardsPlayer(ent, p, dt);
+      const fxIndex = controller.visualFx.findIndex(f => f.id === `enemy_charge_${ent.id}`);
+      if (fxIndex !== -1) controller.visualFx.splice(fxIndex, 1);
     }
   }
 }
@@ -77,12 +112,16 @@ function triggerEnemyAttack(controller, ent) {
   ent.attackIsDirectional = false;
   ent.lastAttackTime = performance.now() / 1000;
   
+  // Remove charge fx if present
+  const fxIndex = controller.visualFx.findIndex(f => f.id === `enemy_charge_${ent.id}`);
+  if (fxIndex !== -1) controller.visualFx.splice(fxIndex, 1);
+  
   if (controller.audioEngine) {
     controller.audioEngine.onAttackSwoosh('unified');
   }
 }
 
-function updateEnemyAttack(ent, dt) {
+function updateEnemyAttack(controller, ent, dt) {
   ent.attackFrameTime += dt;
   
   if (!ent.attackFrameData) {
