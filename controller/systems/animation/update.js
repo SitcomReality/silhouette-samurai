@@ -49,6 +49,7 @@ export function updateAnimations(controller, dt) {
   const viewRight = controller.cameraX + margin;
   
   for (const ent of controller.entities) {
+    if (ent.type === 'projectile') continue;
     if (ent.type !== 'crate' && ent.character && ent.x > viewLeft && ent.x < viewRight) {
       if (ent.state === 'dead' && ent.isSliced) {
         const dx = ent.x - ent.lastX;

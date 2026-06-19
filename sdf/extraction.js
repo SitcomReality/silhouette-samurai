@@ -38,6 +38,7 @@ export function extractSDFSegments(
     const activeEnts = [];
     for (let i = 0; i < entities.length; i++) {
       const ent = entities[i];
+      if (ent.type === 'projectile') continue;
       if (ent.state === 'dead' && !ent.isSliced) continue;
       const span = ent.type === 'crate' ? (ent.width || 25) / 2 + 40 : 80;
       if (Math.abs(ent.x - wx) < span + globalBlendK) activeEnts.push(ent);

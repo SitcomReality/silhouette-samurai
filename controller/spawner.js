@@ -31,6 +31,69 @@ export function spawnEnemy(controller, x, difficulty = 1) {
   });
 }
 
+export function spawnArcher(controller, x, difficulty = 1) {
+  const hp = 15;
+  controller.entities.push({
+    id: `archer_${Math.random()}`,
+    type: 'enemy',
+    subtype: 'archer',
+    x,
+    y: controller.baseGroundY,
+    vx: 0,
+    vy: 0,
+    facing: 'left',
+    isGrounded: true,
+    isCrouching: false,
+    health: hp,
+    maxHealth: hp,
+    flashTimer: 0,
+    scale: 1.5,
+    state: 'idle',
+    stateTime: Math.random() * 2,
+    attackType: 'none',
+    attackFrameData: null,
+    attackFrameTime: 0,
+    attackHitEntities: new Set(),
+    attackCooldownStart: null,
+    chargeProgress: 0,
+    combo: 0,
+    character: createCharacter(x, controller.baseGroundY),
+  });
+}
+
+export function spawnFloater(controller, x, difficulty = 1) {
+  const hp = 18;
+  const floatY = controller.baseGroundY - 130;
+  controller.entities.push({
+    id: `floater_${Math.random()}`,
+    type: 'enemy',
+    subtype: 'floater',
+    x,
+    y: floatY,
+    vx: 0,
+    vy: 0,
+    facing: 'left',
+    isGrounded: false,
+    isCrouching: false,
+    health: hp,
+    maxHealth: hp,
+    flashTimer: 0,
+    scale: 1.3,
+    state: 'idle',
+    stateTime: Math.random() * 2,
+    attackType: 'none',
+    attackFrameData: null,
+    attackFrameTime: 0,
+    attackHitEntities: new Set(),
+    attackCooldownStart: null,
+    chargeProgress: 0,
+    combo: 0,
+    floatBaseY: floatY,
+    floatPhase: Math.random() * Math.PI * 2,
+    character: createCharacter(x, floatY),
+  });
+}
+
 export function spawnBoss(controller, x, difficulty = 1) {
   const hp = 300 * difficulty;
   const scale = 1.8 + Math.min((difficulty - 1) * 0.1, 0.6);

@@ -4,6 +4,7 @@ export function renderUI(ctx, controller, viewWidth, camYOffset) {
   
   for (const ent of controller.entities) {
     if (ent.state === 'dead') continue;
+    if (ent.type === 'projectile') continue;
     const scX = (ent.x - controller.cameraX) + viewWidth / 2;
     if (scX > -50 && scX < viewWidth + 50) {
       const healthBarY = ent.type === 'crate' 

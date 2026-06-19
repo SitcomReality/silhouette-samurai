@@ -1,4 +1,4 @@
-import { spawnCratesSquareWave, spawnEnemy, spawnBoss } from '../../spawner.js';
+import { spawnCratesSquareWave, spawnEnemy, spawnBoss, spawnArcher, spawnFloater } from '../../spawner.js';
 
 export function updateSpawner(controller) {
   const p = controller.player;
@@ -18,17 +18,29 @@ export function updateSpawner(controller) {
         spawnCratesSquareWave(controller, controller.nextSpawnX, 2 + Math.floor(Math.random() * 2));
         controller.nextSpawnX += 900;
       } else {
-        // Favor single spawns, occasionally a spaced-out pair
-        const count = Math.random() < 0.65 ? 1 : 2;
-        const gap = 320; // wider gap so pairs don't clump
-        for (let i = 0; i < count; i++) {
-          // add a moderate jitter so enemies aren't perfectly grid-aligned
-          const jitter = (Math.random() - 0.5) * 120;
-          spawnEnemy(controller, controller.nextSpawnX + i * gap + jitter, diff);
+        // Choose enemy type based on weighted random
+        const roll = Math.random();
+        if (roll < 0.25) {
+          // Floater - airborne enemy
+          spawnFloater(controller, controller.nextSpawnX, diff);
           controller.enemiesSpawnedSinceBoss++;
+          controller.nextSpawnX += 900 + Math.floor(Math.random() * 250);
+        } else if (roll < 0.50) {
+          // Archer - ranged projectile shooter
+          spawnArcher(controller, controller.nextSpawnX, diff);
+          controller.enemiesSpawnedSinceBoss++;
+          controller.nextSpawnX += 850 + Math.floor(Math.random() * 250);
+        } else {
+          // Favor single spawns, occasionally a spaced-out pair
+          const count = Math.random() < 0.65 ? 1 : 2;
+          const gap = 320;
+          for (let i = 0; i < count; i++) {
+            const jitter = (Math.random() - 0.5) * 120;
+            spawnEnemy(controller, controller.nextSpawnX + i * gap + jitter, diff);
+            controller.enemiesSpawnedSinceBoss++;
+          }
+          controller.nextSpawnX += 950 + Math.floor(Math.random() * 350);
         }
-        // Advance further to avoid immediate subsequent spawns
-        controller.nextSpawnX += 950 + Math.floor(Math.random() * 350);
       }
     }
   }
