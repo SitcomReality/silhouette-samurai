@@ -69,6 +69,10 @@ export function resolveAttackHits(controller) {
       ent.health -= damage;
       ent.flashTimer = 0.15;
       
+      // Reset enemy attack charge when they are hit
+      ent.attackCooldownStart = null;
+      ent.chargeProgress = 0;
+      
       if (frameData.spike && !ent.isGrounded) {
         ent.vx = 0; ent.vy = knockback.y;
       } else if (frameData.trip && ent.isGrounded) {
