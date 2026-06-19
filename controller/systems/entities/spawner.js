@@ -13,21 +13,22 @@ export function updateSpawner(controller) {
       controller.nextSpawnX += 900;
     } else {
       // Widen gaps between regular spawns: crates and enemies are spaced further apart
-      if (Math.random() < 0.4) {
+      if (Math.random() < 0.45) {
         // Increase crate block spacing and reduce tightly-packed counts
         spawnCratesSquareWave(controller, controller.nextSpawnX, 2 + Math.floor(Math.random() * 2));
-        controller.nextSpawnX += 700;
+        controller.nextSpawnX += 900;
       } else {
-        const count = 1 + Math.floor(Math.random() * 2); // avoid triples/pairs; favor singles or pairs
-        const gap = 120; // larger gap between neighbouring enemies
+        // Favor single spawns, occasionally a spaced-out pair
+        const count = Math.random() < 0.65 ? 1 : 2;
+        const gap = 320; // wider gap so pairs don't clump
         for (let i = 0; i < count; i++) {
-          // add a small jitter so enemies aren't perfectly grid-aligned
-          const jitter = (Math.random() - 0.5) * 30;
+          // add a moderate jitter so enemies aren't perfectly grid-aligned
+          const jitter = (Math.random() - 0.5) * 120;
           spawnEnemy(controller, controller.nextSpawnX + i * gap + jitter, diff);
           controller.enemiesSpawnedSinceBoss++;
         }
-        // Advance more to avoid immediate subsequent spawns
-        controller.nextSpawnX += 700 + Math.floor(Math.random() * 200);
+        // Advance further to avoid immediate subsequent spawns
+        controller.nextSpawnX += 950 + Math.floor(Math.random() * 350);
       }
     }
   }
