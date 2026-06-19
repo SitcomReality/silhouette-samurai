@@ -8,9 +8,14 @@ export function renderCombatFX(ctx, fx, controller, viewWidth, camYOffset) {
     const size = 40 + p * 20;
     ctx.save();
     ctx.globalAlpha = alpha;
+    
+    // Performant layered circles for glow
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(scX, scY, size + 30, 0, Math.PI * 2);
+    ctx.fill();
+    
     ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 30;
     ctx.beginPath();
     ctx.arc(scX, scY, size, 0, Math.PI * 2);
     ctx.fill();
@@ -18,16 +23,23 @@ export function renderCombatFX(ctx, fx, controller, viewWidth, camYOffset) {
   } else if (fx.type === 'clash_spark') {
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = '#ffff00';
-    ctx.lineWidth = 3;
-    ctx.shadowColor = '#ffff00';
-    ctx.shadowBlur = 20;
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
       const len = 30 + p * 20;
+      const tx = scX + Math.cos(angle) * len;
+      const ty = scY + Math.sin(angle) * len;
+      
       ctx.beginPath();
       ctx.moveTo(scX, scY);
-      ctx.lineTo(scX + Math.cos(angle) * len, scY + Math.sin(angle) * len);
+      ctx.lineTo(tx, ty);
+      
+      // Layered strokes for glow
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = 'rgba(255, 255, 0, 0.25)';
+      ctx.stroke();
+      
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffff00';
       ctx.stroke();
     }
     ctx.restore();
@@ -41,9 +53,9 @@ export function renderCombatFX(ctx, fx, controller, viewWidth, camYOffset) {
     grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
     grad.addColorStop(0.5, `rgba(255, 255, 255, ${alpha})`);
     grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    // Core shape (gradient itself provides nice depth without shadowBlur)
     ctx.fillStyle = grad;
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 20 * alpha;
     ctx.beginPath();
     ctx.moveTo(-length, 0);
     ctx.lineTo(0, -width);
