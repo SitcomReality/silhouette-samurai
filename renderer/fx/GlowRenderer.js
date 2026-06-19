@@ -13,40 +13,40 @@ export function renderGlows(ctx, controller, viewWidth, camYOffset) {
     
     if (ent.flashTimer > 0) {
       const flashP = Math.min(ent.flashTimer / 0.15, 1.0);
-      ctx.globalAlpha = 0.5 * flashP;
-      ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+      ctx.globalAlpha = 0.8 * flashP;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 6 * (ent.scale || 1.0);
       ctx.beginPath();
-      ctx.arc(scX, scY, glowRadius, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(scX, scY, glowRadius * 0.8, 0, Math.PI * 2);
+      ctx.stroke();
     } else {
       // Enemy charging/cooldown telegraph
       const cp = ent.chargeProgress || 0;
-      const chargeGlowScale = 1.0 + cp * 1.5; // Grow by 150%
-      const alpha = 0.15 + cp * 0.25;
       
-      // Outer glow (Atmospheric)
+      // Ring aesthetic parameters
+      const pulseSpeed = 0.01 + cp * 0.04;
+      const pulseMag = 0.02 + cp * 0.08;
+      const pulse = 1.0 + Math.sin(Date.now() * pulseSpeed) * pulseMag;
+      
+      // Growth is more subtle (max 25%)
+      const chargeRadius = glowRadius * (0.7 + cp * 0.25) * pulse;
+      const alpha = 0.2 + cp * 0.6;
+      
+      // Outer danger ring
+      ctx.lineWidth = (cp >= 1.0 ? 5 : 3) * (ent.scale || 1.0);
       ctx.globalAlpha = alpha * 0.4;
-      ctx.fillStyle = 'rgba(244, 63, 94, 1.0)'; // Rose/Red tint for danger
+      ctx.strokeStyle = '#f43f5e'; // Rose
       ctx.beginPath();
-      ctx.arc(scX, scY, glowRadius * chargeGlowScale * 1.2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(scX, scY, chargeRadius * 1.15, 0, Math.PI * 2);
+      ctx.stroke();
 
-      // Core glow (Theme color equivalent for enemies)
+      // Inner tracking ring
+      ctx.lineWidth = (cp >= 1.0 ? 3 : 1.5) * (ent.scale || 1.0);
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = 'rgba(255, 110, 30, 1.0)';
+      ctx.strokeStyle = cp >= 1.0 ? '#ffffff' : '#fb923c'; // Orange-to-white shift
       ctx.beginPath();
-      ctx.arc(scX, scY, glowRadius * chargeGlowScale, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Highlight pulse when fully charged and about to strike
-      if (cp >= 1.0) {
-        const pulse = 0.4 + Math.sin(Date.now() * 0.02) * 0.2;
-        ctx.globalAlpha = pulse;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(scX, scY, glowRadius * chargeGlowScale * 0.7, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.arc(scX, scY, chargeRadius, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
   
@@ -56,25 +56,35 @@ export function renderGlows(ctx, controller, viewWidth, camYOffset) {
     const scY = player.y - (player.character ? (player.character.height || 70) * 0.4 : 40) + camYOffset;
     
     const chargeIntensity = player.attackCharging ? Math.min(player.attackChargeTime / 1.2, 1.0) : 0;
-    const baseRadius = (player.scale || 1.5) * 40;
-    const chargeRadius = baseRadius * (1 + chargeIntensity * 1.2); // Grows by 120% at full charge
+    const baseRadius = (player.scale || 1.5) * 35;
     
-    ctx.globalAlpha = 0.08 + chargeIntensity * 0.15;
-    ctx.fillStyle = 'rgba(6, 182, 212, 1.0)';
-    ctx.beginPath();
-    ctx.arc(scX, scY, chargeRadius * 1.4, 0, Math.PI * 2);
-    ctx.fill();
+    // Pulsate only when fully charged
+    let pulse = 1.0;
+    if (chargeIntensity >= 1.0) {
+      pulse = 1.0 + Math.sin(Date.now() * 0.02) * 0.08;
+    }
     
-    ctx.globalAlpha = 0.15 + chargeIntensity * 0.25;
+    // Growth is minimal (max 20%)
+    const chargeRadius = baseRadius * (1.0 + chargeIntensity * 0.2) * pulse;
+    const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim() || '#06b6d4';
+    
+    // Primary outer ring
+    ctx.lineWidth = (chargeIntensity >= 1.0 ? 4 : 2);
+    ctx.globalAlpha = 0.2 + chargeIntensity * 0.4;
+    ctx.strokeStyle = themeColor;
     ctx.beginPath();
     ctx.arc(scX, scY, chargeRadius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.stroke();
     
-    const pulse = chargeIntensity >= 0.95 ? 0.5 + Math.sin(Date.now() * 0.01) * 0.15 : 1.0;
-    ctx.globalAlpha = (0.2 + chargeIntensity * 0.4) * pulse;
-    ctx.beginPath();
-    ctx.arc(scX, scY, chargeRadius * 0.6, 0, Math.PI * 2);
-    ctx.fill();
+    // Sharp inner highlight
+    if (chargeIntensity > 0.1) {
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = chargeIntensity * 0.8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(scX, scY, chargeRadius * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
   
   ctx.globalAlpha = 1.0;
