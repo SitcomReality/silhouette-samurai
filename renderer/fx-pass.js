@@ -5,8 +5,8 @@ import { renderMotionFX } from './fx/MotionFXRenderer.js';
 export function renderFX(ctx, controller, viewWidth, camYOffset) {
   renderGlows(ctx, controller, viewWidth, camYOffset);
 
-  const viewLeft = controller.cameraX - 100;
-  const viewRight = controller.cameraX + viewWidth + 100;
+  const viewLeft = controller.cameraX - viewWidth / 2 - 200;
+  const viewRight = controller.cameraX + viewWidth / 2 + 200;
   
   for (const fx of controller.visualFx) {
     if (fx.x < viewLeft || fx.x > viewRight) continue;

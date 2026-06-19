@@ -42,8 +42,11 @@ export function updateAnimations(controller, dt) {
   animateCharacter(p.character, p.x, p.y, p.facing, p.state, p.stateTime, p.attackType, progress, p.isGrounded, p.vy, p.isCrouching, dt, isSliding, p.scale || 1.0, p.attackFrameData, extraState);
 
   // Viewport culling for entity animations (skip far off-screen entities)
-  const viewLeft = controller.cameraX - 200;
-  const viewRight = controller.cameraX + 1200;
+  // cameraX represents the viewport center. We use a generous symmetric margin 
+  // to ensure bodies are updated well before entering the screen.
+  const margin = 2000;
+  const viewLeft = controller.cameraX - margin;
+  const viewRight = controller.cameraX + margin;
   
   for (const ent of controller.entities) {
     if (ent.type !== 'crate' && ent.character && ent.x > viewLeft && ent.x < viewRight) {
