@@ -51,7 +51,7 @@ export function updatePlayerTimersAndRegen(controller, dt) {
   const jumpJustPressed = jumpPressed && !prevJumpPressed;
 
   if (jumpJustPressed) {
-    p.jumpBuffer = 0.15;
+    p.jumpBuffer = 0.25;
   }
   if (p.jumpBuffer > 0) {
     p.jumpBuffer -= dt;

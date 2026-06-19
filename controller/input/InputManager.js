@@ -17,17 +17,18 @@ export class InputManager {
     if (!wasPressed) {
       // Attack button (J/1) - Start charging
       if (['Digit1', '1', 'KeyJ'].includes(code)) {
-        if (p.state !== 'attack' && p.state !== 'dead' && p.state !== 'block') {
+        if (p.state !== 'dead' && p.state !== 'block') {
           p.attackCharging = true;
           p.attackChargeTime = 0;
+          p.attackBuffer = null;
         }
       }
       // Block button (K/2)
       if (['Digit2', '2', 'KeyK'].includes(code)) {
-        if (p.state !== 'attack' && p.state !== 'dead') {
+        if (p.state !== 'dead') {
           p.isBlocking = true;
           p.blockStartTime = performance.now() / 1000;
-          p.blockBuffer = { time: 0.2 };
+          p.blockBuffer = { time: 0.4 };
           if (p.combo >= 5) {
             p.finisherTransitionWindow = 0.4;
           }
@@ -48,7 +49,7 @@ export class InputManager {
       if (p.attackCharging) {
         p.attackBuffer = { 
           btn: 1, 
-          time: 0.2,
+          time: 0.4,
           chargeTime: p.attackChargeTime,
           movementVector: { ...p.movementVector }
         };
@@ -98,16 +99,17 @@ export class InputManager {
       const atkPressed = b[0]?.pressed || b[3]?.pressed;
       const atkWasPressed = this.prevGamepadButtons[0] || this.prevGamepadButtons[3];
       if (atkPressed && !atkWasPressed) {
-        if (p.state !== 'attack' && p.state !== 'dead' && p.state !== 'block') {
+        if (p.state !== 'dead' && p.state !== 'block') {
           p.attackCharging = true;
           p.attackChargeTime = 0;
+          p.attackBuffer = null;
         }
       }
       if (!atkPressed && atkWasPressed) {
         if (p.attackCharging) {
           p.attackBuffer = { 
             btn: 1, 
-            time: 0.2,
+            time: 0.4,
             chargeTime: p.attackChargeTime,
             movementVector: { ...p.movementVector }
           };
@@ -121,10 +123,10 @@ export class InputManager {
       const blockPressed = b[1]?.pressed || b[2]?.pressed;
       const blockWasPressed = this.prevGamepadButtons[1] || this.prevGamepadButtons[2];
       if (blockPressed && !blockWasPressed) {
-        if (p.state !== 'attack' && p.state !== 'dead') {
+        if (p.state !== 'dead') {
           p.isBlocking = true;
           p.blockStartTime = performance.now() / 1000;
-          p.blockBuffer = { time: 0.2 };
+          p.blockBuffer = { time: 0.4 };
           if (p.combo >= 5) p.finisherTransitionWindow = 0.4;
         }
       }

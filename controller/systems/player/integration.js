@@ -27,7 +27,7 @@ export function integratePlayerPhysics(controller, dt) {
       p.doubleJumped = false;
       
       if (jumpPressed && p.state !== 'attack') {
-        p.jumpBuffer = 0.15;
+        p.jumpBuffer = 0.25;
       }
 
       if (down && Math.abs(p.vx) > 5) {
