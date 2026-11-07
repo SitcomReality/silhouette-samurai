@@ -1,0 +1,57 @@
+# Operating system junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE state
+.idea/
+.history/
+*.swp
+*.swo
+*.code-workspace
+
+# VS Code: ignore personal state, but allow shareable project config if added later
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.yarn/
+*.tsbuildinfo
+
+# Local environment files (no secrets belong in this project, but keep them out)
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs and caches
+*.log
+.cache/
+.parcel-cache/
+.eslintcache
+.wrangler/
+.netlify/
+_site/
+
+# Build / test output (the game itself has no build step)
+dist/
+build/
+out/
+coverage/
+
+# Python static servers
+__pycache__/
+*.py[cod]
+
+# Temporary files
+*.tmp
+*.temp
