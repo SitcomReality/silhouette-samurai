@@ -6,7 +6,7 @@ How to run, check, and deploy Silhouette Samurai.
 
 - [Node.js](https://nodejs.org/) 18 or newer, **or** Python 3 (for the fallback server)
 - A browser (Firefox/Chrome work)
-- Internet access on first load, so the `tiny-sdf` import map entry on esm.sh can be fetched
+- No internet access required — the game is fully self-contained (see below)
 
 ## Run it locally
 
@@ -44,7 +44,7 @@ npm run check
 The game is a static site and is deployed in two ways:
 
 - **GitHub Pages** — `.github/workflows/deploy-pages.yml` uploads the repo root as a Pages artifact on every push to `main`. Enable Pages in the repository settings with "GitHub Actions" as the source. The `.nojekyll` file prevents Jekyll from processing the repo.
-- **Cloudflare Pages** — also serves the raw file tree with no build command (a Cloudflare analytics beacon is present in `index.html`, and is inert anywhere else).
+- **Cloudflare Pages** — also serves the raw file tree with no build command.
 
 There is no build step: the files in this repo are served as-is.
 
@@ -88,7 +88,7 @@ Note: the game itself never loads a `.env` file — it's a fully static page. Th
 ## Security notes
 
 - No user input is sent anywhere — entirely client-side game
-- The Cloudflare analytics beacon is the only external request besides the `tiny-sdf` CDN import
-- TinySDF is loaded from a CDN (esm.sh) at runtime via the import map in `index.html`
+- No external requests at all: no CDN, analytics, or remote assets. The game runs fully offline once the files are on disk
+- TinySDF (`@mapbox/tiny-sdf@2.0.6`, BSD-2-Clause) is vendored at `vendor/tiny-sdf.js` and loaded via the import map in `index.html`. `npm run check` fails if an external URL is reintroduced into runtime files (`index.html`, JS, or CSS)
 - No authentication, no API endpoints, no database
 - No user-generated content is persisted

@@ -13,7 +13,7 @@ The game is a side-scrolling action-fighter with procedural music, real-time com
 | Language | **Vanilla JavaScript (ES Modules)** — no TypeScript, no transpilers |
 | Rendering | **Canvas 2D API** — 4 layered canvases (bg, sdf, fx, ui) |
 | Audio | **Web Audio API** — all sounds are procedurally synthesized, no audio files |
-| Text SDF | `@mapbox/tiny-sdf` (loaded via importmap from esm.sh) |
+| Text SDF | `@mapbox/tiny-sdf` (vendored locally in `vendor/tiny-sdf.js`, via importmap) |
 | Build | **None** — static files served directly |
 | Hosting | GitHub Pages (`.github/workflows/deploy-pages.yml`) and Cloudflare Pages |
 | CSS | Plain CSS, no preprocessors |
@@ -25,11 +25,15 @@ The game is a side-scrolling action-fighter with procedural music, real-time com
 <script type="importmap">
 {
   "imports": {
-    "tiny-sdf": "https://esm.sh/@mapbox/tiny-sdf@2.0.6"
+    "tiny-sdf": "./vendor/tiny-sdf.js"
   }
 }
 </script>
 ```
+
+The game is fully self-contained: no CDN, analytics, or other external
+requests at runtime. Keep it that way — vendor any future dependency
+under `vendor/` instead of loading it from a URL.
 
 ## Quick start
 

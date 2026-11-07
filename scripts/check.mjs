@@ -52,9 +52,49 @@ if (!fs.existsSync(indexHtml)) {
   let match
   while ((match = assetPattern.exec(html))) {
     const asset = match[1]
-    if (/^(?:https?:)?\/\//.test(asset) || asset.startsWith('#') || asset.startsWith('data:')) continue
+    if (asset.startsWith('#') || asset.startsWith('data:')) continue
+    if (/^(?:https?:)?\/\//.test(asset)) {
+      failures.push(`index.html: external asset "${asset}" — vendor it locally instead`)
+      continue
+    }
     const assetPath = path.resolve(root, asset.replace(/^\.?\//, ''))
     if (!fs.existsSync(assetPath)) failures.push(`index.html: missing local asset "${asset}"`)
+  }
+  // Import map entries must also be local files (xmlns identifiers are not fetched).
+  const importMapPattern = /<script type="importmap">([\s\S]*?)<\/script>/g
+  while ((match = importMapPattern.exec(html))) {
+    let importMap
+    try {
+      importMap = JSON.parse(match[1])
+    } catch {
+      failures.push('index.html: import map is not valid JSON')
+      continue
+    }
+    for (const [specifier, target] of Object.entries(importMap.imports ?? {})) {
+      if (/^(?:https?:)?\/\//.test(target)) {
+        failures.push(`index.html: external import "${specifier}" -> "${target}" — vendor it locally instead`)
+        continue
+      }
+      const targetPath = path.resolve(root, target.replace(/^\.?\//, ''))
+      if (!fs.existsSync(targetPath)) failures.push(`index.html: missing import map target "${target}" for "${specifier}"`)
+    }
+  }
+}
+
+// Runtime code must not reference external URLs (vendor/ is excluded: it carries
+// attribution URLs in comments; scripts/ is the localhost dev server).
+const runtimeFiles = walk(root).filter((file) => {
+  if (!/\.(?:js|mjs|css)$/.test(file)) return false
+  const relative = path.relative(root, file)
+  return !relative.startsWith(`vendor${path.sep}`) && !relative.startsWith(`scripts${path.sep}`)
+})
+const externalPattern = /(?:import\s+(?:[^'"]*?\s+from\s+)?|export\s+[^'"]*?\s+from\s+|fetch\s*\(\s*|url\s*\(\s*|@import\s+)[\"']?(https?:\/\/[^\s\"')]+|\/\/[^\s\"')]+)/g
+for (const file of runtimeFiles) {
+  const source = fs.readFileSync(file, 'utf8')
+  const relative = path.relative(root, file)
+  let match
+  while ((match = externalPattern.exec(source))) {
+    failures.push(`${relative}: external URL "${match[1]}" — vendor it locally instead`)
   }
 }
 
