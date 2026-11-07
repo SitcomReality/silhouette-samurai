@@ -13,7 +13,7 @@ export class GameController {
     // Configuration & Core Hub Properties
     this.baseGroundY = 400;
     this.introTexts = [
-      { text: 'SitcomReality presents Untitled', x: 800 }
+      { text: 'SILHOUETTE SAMURAI', x: 800 }
     ];
     this.introLayoutsGenerated = false;
     this.introLayouts = [];

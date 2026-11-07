@@ -38,6 +38,9 @@ export class AudioEngine {
       await this.initialize();
     }
     
+    // Audio initialization can fail (for example, if WebAudio is unavailable).
+    if (!this.ctx || !this.music) return;
+    
     // Resume audio context (required by browsers after user interaction)
     if (this.ctx.state === 'suspended') {
       await this.ctx.resume();

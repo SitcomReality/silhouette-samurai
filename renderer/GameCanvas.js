@@ -73,7 +73,8 @@ export class GameCanvas {
 
     let shakeX = 0;
     let shakeY = 0;
-    if (this.controller.screenShake > 0) {
+    const shaking = this.controller.screenShake > 0;
+    if (shaking) {
       shakeX = (Math.random() - 0.5) * this.controller.screenShake;
       shakeY = (Math.random() - 0.5) * this.controller.screenShake;
       
@@ -98,7 +99,7 @@ export class GameCanvas {
 
     renderUI(this.uiCtx, this.controller, viewWidth, camYOffset);
 
-    if (shakeX !== 0 || shakeY !== 0) {
+    if (shaking) {
       this.sdfCtx.restore();
       this.fxCtx.restore();
       this.uiCtx.restore();
