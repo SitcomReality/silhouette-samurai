@@ -37,7 +37,37 @@ python3 -m http.server 8080
 npm run check
 ```
 
-`scripts/check.mjs` verifies that every `.js`/`.mjs` file in the repo parses as an ES module, that every relative import resolves to a real file, and that the local assets referenced by `index.html` exist. It is a static check only — it does not run the game. Manual browser testing plus the in-game Combat Tuner remain the real verification.
+`scripts/check.mjs` verifies that every `.js`/`.mjs` file in the repo parses as an ES module, that every relative import resolves to a real file, and that the local assets referenced by `index.html` exist. It is a static check only — it does not run the game.
+
+The shared harness has a second, broader static pass:
+
+```bash
+npm run check:static
+```
+
+It walks the repo, runs `node --check`, resolves imports and CSS/HTML/JS asset references, reports external loading URLs, and warns if the readiness hook disappeared. It writes `.artifacts/webgame/check.json`. Keep both checks: the project check owns project-specific rules, the harness check catches file references in modules that `scripts/check.mjs` may not load.
+
+## Browser smoke test
+
+`webgame.config.json` is a repeatable headless-browser smoke test run by the shared harness in `../webgame-tools/`. The harness requires Node 22+ (the game itself still runs on Node 18+):
+
+```bash
+node ../webgame-tools/bin/webgame-harness.mjs smoke
+```
+
+The harness starts a static server on a free port, waits for `window.__APP_READY__`, and then checks the title, HUD highlight, theme buttons, Combat Tuner tabs/sliders, theme change, keyboard input, and that `#sdf-canvas` actually painted. It fails on page errors, unexpected external requests, or a blank canvas. Output is written under `.artifacts/webgame/<timestamp>-silhouette-samurai/` (`report.json`, `final.png`, `tuner.png`); `.artifacts/` is gitignored.
+
+`webgame.config.json` also enables **visual regression**. `npm run smoke` captures the settled 1280x720 frame with a seeded RNG, paused CSS animations, and 150 settle frames, then compares it with `test/baselines/silhouette-samurai-1280x720.png` (0.2% threshold, 24/255 per-channel tolerance). A failure writes `visual-diff.png` with the changed region in red. Review the diff; if the change is intentional:
+
+```bash
+npm run visual:update
+```
+
+and commit the updated baseline. Do not raise the threshold to hide drift. The first run on a machine without the baseline fails because `visual.createBaseline` is false; use `visual:update` once.
+
+`npm run runs` writes `.artifacts/webgame/index.html`, a self-contained history of pass/fail, checks, screenshots, and visual diffs.
+
+The readiness hook lives in `renderer/GameCanvas.js` (set after the first completed frame) and `engine/GameEngine.js` (`window.__webgame.snapshot()` for assertions). Keep both cheap and side-effect free. If the harness is unavailable, the same checks can be run manually with `npm run dev` plus browser devtools.
 
 ## Deployment
 

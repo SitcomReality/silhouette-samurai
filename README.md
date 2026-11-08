@@ -26,7 +26,17 @@ Do not open `index.html` directly with `file://` — the game uses ES modules an
 npm run check
 ```
 
-This is a fast smoke check (JavaScript syntax, local imports, and `index.html` assets), not a replacement for playing the game.
+This is a fast static check (JavaScript syntax, local imports, and `index.html` assets), not a replacement for playing the game.
+
+The shared harness adds a second static pass and a real browser run:
+
+```bash
+npm run check:static  # imports, assets, external URLs, readiness; no browser
+npm run smoke         # rendered canvas, HUD, tuner, input, console, visual diff
+npm run runs          # dashboard of recent runs
+```
+
+`smoke` verifies the rendered canvas, HUD, theme buttons, Combat Tuner, keyboard input, console health, external-request freedom, and the committed visual baseline in `test/baselines/`. It writes screenshots plus `report.json` under `.artifacts/webgame/`. Use `npm run visual:update` only when the visual change is intentional, then commit the updated baseline.
 
 ## Controls
 
@@ -44,4 +54,5 @@ This is a fast smoke check (JavaScript syntax, local imports, and `index.html` a
 - [docs/architecture.md](docs/architecture.md) — module map and runtime architecture
 - [docs/development.md](docs/development.md) — local workflow, conventions, deployment
 - [docs/gameplay.md](docs/gameplay.md) — controls and combat systems
+- [docs/design.md](docs/design.md) — coherent design extrapolated from git history (PC + controller-first)
 - [docs/known-issues.md](docs/known-issues.md) — known problems and limitations

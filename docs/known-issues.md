@@ -27,7 +27,9 @@ The per-frame SDF extraction runs on the CPU at canvas resolution. In software-r
 
 ## Runtime verification status
 
-The game was verified by loading it in headless Firefox via WebDriver BiDi (session-level): title/header read "Silhouette Samurai", all 5 theme buttons work, the Combat Tuner opens with 3 tabs and 4 attack options and renders sliders, the audio panel initializes audio after a click, and keyboard attack input produced no JS exceptions, console errors, or warnings. A long play session (combos, clashes, boss fights) has **not** been exhaustively tested in a real browser — see development.md for how to run it locally.
+The game now has a repeatable browser smoke test: `webgame.config.json`, run by the shared harness in `../webgame-tools/`. It loads the game in headless Firefox via WebDriver BiDi and checks the title, HUD highlight, all 5 theme buttons, a theme change, the Combat Tuner (3 tabs, at least 3 attack options, at least 5 sliders), audio initialization after a trusted click, keyboard input, and that `#sdf-canvas` painted content. It fails on page errors, unexpected external requests, or a blank canvas, and it compares the settled frame with the committed baseline in `test/baselines/`. See `docs/development.md` for the commands.
+
+A long play session (combos, clashes, boss fights) has **not** been exhaustively tested in a real browser — the smoke test proves the frame and core UI, not full gameplay balance.
 
 ## Git history notes
 

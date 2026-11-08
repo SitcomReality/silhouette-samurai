@@ -7,7 +7,12 @@
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "start": "node scripts/dev-server.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "check:static": "node ../webgame-tools/bin/webgame-harness.mjs check",
+    "smoke": "node ../webgame-tools/bin/webgame-harness.mjs smoke",
+    "visual": "node ../webgame-tools/bin/webgame-harness.mjs visual",
+    "visual:update": "node ../webgame-tools/bin/webgame-harness.mjs visual --update",
+    "runs": "node ../webgame-tools/bin/webgame-harness.mjs runs"
   },
   "engines": {
     "node": ">=18"

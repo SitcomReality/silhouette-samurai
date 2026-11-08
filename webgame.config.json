@@ -1,0 +1,113 @@
+{
+  "name": "Silhouette Samurai",
+  "url": "/",
+  "serve": {
+    "root": ".",
+    "port": 0
+  },
+  "ready": "window.__APP_READY__ === true",
+  "viewport": {
+    "width": 1280,
+    "height": 720,
+    "dpr": 1
+  },
+  "timeoutMs": 30000,
+  "artifacts": ".artifacts/webgame",
+  "engine": "auto",
+  "expect": {
+    "noPageErrors": true,
+    "consoleErrors": "warn",
+    "noExternalRequests": true
+  },
+  "steps": [
+    {
+      "name": "title",
+      "assertTitle": "Silhouette Samurai"
+    },
+    {
+      "name": "hud highlight",
+      "assertText": {
+        "selector": "#header-highlight",
+        "equals": "SAMURAI"
+      }
+    },
+    {
+      "name": "theme buttons",
+      "assertCount": {
+        "selector": "#theme-buttons button",
+        "equals": 5
+      }
+    },
+    {
+      "name": "choose crimson theme",
+      "click": "#theme-buttons button:nth-child(3)"
+    },
+    {
+      "name": "theme applied",
+      "assert": "getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim() === '#f43f5e'"
+    },
+    {
+      "name": "open combat tuner",
+      "click": "#btn-toggle-tuner"
+    },
+    {
+      "name": "tuner visible",
+      "waitFor": "!document.querySelector('#combat-tuner').classList.contains('hidden')"
+    },
+    {
+      "name": "tuner tabs",
+      "assertCount": {
+        "selector": "#combat-tuner .tuner-tab",
+        "equals": 3
+      }
+    },
+    {
+      "name": "attack options",
+      "waitFor": "document.querySelectorAll('#tuner-attack-select option').length >= 3"
+    },
+    {
+      "name": "attack sliders",
+      "waitFor": "document.querySelectorAll('#tuner-controls-attacks input[type=range]').length >= 5"
+    },
+    {
+      "name": "audio state after gesture",
+      "eval": "window.__webgame.audio"
+    },
+    {
+      "name": "move right",
+      "press": "KeyD"
+    },
+    {
+      "name": "attack",
+      "press": "KeyJ"
+    },
+    {
+      "name": "first frame advanced",
+      "assert": "window.__webgame.frame > 1"
+    },
+    {
+      "name": "sdf canvas painted",
+      "assertCanvas": {
+        "selector": "#sdf-canvas",
+        "minPainted": 10000
+      }
+    },
+    {
+      "name": "tuner screenshot",
+      "screenshot": "tuner.png"
+    }
+  ],
+  "check": {
+    "external": "error"
+  },
+  "visual": {
+    "enabled": true,
+    "baselineDir": "test/baselines",
+    "threshold": 0.002,
+    "pixelTolerance": 24,
+    "settleFrames": 150,
+    "seed": 1337,
+    "createBaseline": false,
+    "freezeTime": false
+  }
+}

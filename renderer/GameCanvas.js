@@ -21,6 +21,7 @@ export class GameCanvas {
     
     this.animationId = null;
     this.lastTime = performance.now();
+    this.frameCount = 0;
     
     this.handleResize = this.handleResize.bind(this);
     this.render = this.render.bind(this);
@@ -103,6 +104,14 @@ export class GameCanvas {
       this.sdfCtx.restore();
       this.fxCtx.restore();
       this.uiCtx.restore();
+    }
+
+    this.frameCount++;
+    if (this.frameCount === 1) {
+      // Readiness contract for headless smoke tests (and humans debugging the
+      // first frame). Cheap, side-effect free, and harmless in production.
+      window.__APP_READY__ = true;
+      window.dispatchEvent(new CustomEvent('app-ready'));
     }
 
     this.animationId = requestAnimationFrame(this.render);

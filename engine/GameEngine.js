@@ -23,6 +23,52 @@ export class GameEngine {
   }
 
   start() {
+    const engine = this;
+    window.__webgame = {
+      get ready() {
+        return Boolean(window.__APP_READY__);
+      },
+      get frame() {
+        return engine.gameCanvas.frameCount;
+      },
+      get player() {
+        return engine.controller.player;
+      },
+      get controller() {
+        return engine.controller;
+      },
+      get audio() {
+        return {
+          started: engine.audioStarted,
+          initialized: engine.audioEngine.initialized,
+          state: engine.audioEngine.ctx?.state ?? null,
+        };
+      },
+      snapshot() {
+        const player = engine.controller.player;
+        return {
+          ready: Boolean(window.__APP_READY__),
+          frame: engine.gameCanvas.frameCount,
+          player: {
+            x: player?.x ?? null,
+            y: player?.y ?? null,
+            vx: player?.vx ?? null,
+            vy: player?.vy ?? null,
+            state: player?.state ?? null,
+            combo: player?.combo ?? null,
+          },
+          entities: engine.controller.entities.length,
+          tunerActive: engine.controller.tunerActive,
+          theme: getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim(),
+          audio: {
+            started: engine.audioStarted,
+            initialized: engine.audioEngine.initialized,
+            state: engine.audioEngine.ctx?.state ?? null,
+          },
+        };
+      },
+    };
+
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
     window.addEventListener('click', this.handleClick);

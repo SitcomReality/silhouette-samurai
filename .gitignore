@@ -47,6 +47,7 @@ dist/
 build/
 out/
 coverage/
+test/
 
 # Python static servers
 __pycache__/
@@ -55,3 +56,6 @@ __pycache__/
 # Temporary files
 *.tmp
 *.temp
+
+# Headless browser run output (screenshots, reports, Firefox profiles)
+.artifacts/
