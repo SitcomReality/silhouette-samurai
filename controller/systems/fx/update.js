@@ -19,8 +19,9 @@ export function updateFX(controller, dt) {
       continue;
     }
 
-    if (pt.y >= controller.baseGroundY) {
-      pt.y = controller.baseGroundY;
+    const gY = controller.groundYAt(pt.x);
+    if (pt.y >= gY) {
+      pt.y = gY;
       pt.vy = 0;
       pt.vx *= 0.7;
       pt.isGrounded = true;

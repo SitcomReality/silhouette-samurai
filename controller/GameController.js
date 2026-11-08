@@ -3,6 +3,7 @@ import { ParrySystem } from '../combat/parry.js';
 import { InputManager } from './input/InputManager.js';
 import { resetGameState } from './state/ResetHandler.js';
 import { getFinisherAttackName } from '../input/controls.js';
+import { getGroundY, groundSlopeAt, TerrainState } from '../sdf/ground.js';
 
 export class GameController {
   constructor() {
@@ -12,6 +13,9 @@ export class GameController {
   initializeGameState() {
     // Configuration & Core Hub Properties
     this.baseGroundY = 400;
+    // Layer A terrain testbed: ?flat disables the test course (flat line).
+    this.useTerrainCourse = !(typeof location !== 'undefined' && new URLSearchParams(location.search).has('flat'));
+    TerrainState.courseEnabled = this.useTerrainCourse;
     this.introTexts = [
       { text: 'SILHOUETTE SAMURAI', x: 800 }
     ];
@@ -61,5 +65,14 @@ export class GameController {
 
   getFinisherAttack(direction) {
     return getFinisherAttackName(direction);
+  }
+
+  // Unified ground lookup (sdf/ground.js) — physics, spawner, FX, telegraphs.
+  groundYAt(x) {
+    return getGroundY(x, this.baseGroundY, this.shockwaves || []);
+  }
+
+  groundSlopeAt(x) {
+    return groundSlopeAt(x, this.baseGroundY);
   }
 }

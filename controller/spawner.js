@@ -8,7 +8,7 @@ export function spawnEnemy(controller, x, difficulty = 1) {
     id: `enemy_${Math.random()}`,
     type: 'enemy',
     x,
-    y: controller.baseGroundY,
+    y: controller.groundYAt(x),
     vx: 0,
     vy: 0,
     facing: 'left',
@@ -27,7 +27,7 @@ export function spawnEnemy(controller, x, difficulty = 1) {
     attackHitEntities: new Set(),
     attackCooldownStart: null,
     combo: 0,
-    character: createCharacter(x, controller.baseGroundY),
+    character: createCharacter(x, controller.groundYAt(x)),
   });
 }
 
@@ -38,7 +38,7 @@ export function spawnArcher(controller, x, difficulty = 1) {
     type: 'enemy',
     subtype: 'archer',
     x,
-    y: controller.baseGroundY,
+    y: controller.groundYAt(x),
     vx: 0,
     vy: 0,
     facing: 'left',
@@ -57,13 +57,13 @@ export function spawnArcher(controller, x, difficulty = 1) {
     attackCooldownStart: null,
     chargeProgress: 0,
     combo: 0,
-    character: createCharacter(x, controller.baseGroundY),
+    character: createCharacter(x, controller.groundYAt(x)),
   });
 }
 
 export function spawnFloater(controller, x, difficulty = 1) {
   const hp = 18;
-  const floatY = controller.baseGroundY - 130;
+  const floatY = controller.groundYAt(x) - 130;
   controller.entities.push({
     id: `floater_${Math.random()}`,
     type: 'enemy',
@@ -104,7 +104,7 @@ export function spawnBoss(controller, x, difficulty = 1) {
     type: 'enemy',
     isBoss: true,
     x,
-    y: controller.baseGroundY,
+    y: controller.groundYAt(x),
     vx: 0,
     vy: 0,
     facing: 'left',
@@ -122,7 +122,7 @@ export function spawnBoss(controller, x, difficulty = 1) {
     attackCooldownStart: null,
     combo: 0,
     scale: scale,
-    character: createCharacter(x, controller.baseGroundY),
+    character: createCharacter(x, controller.groundYAt(x)),
   });
 }
 
@@ -135,7 +135,7 @@ export function spawnCratesSquareWave(controller, startX, count) {
       id: `crate_${Math.random()}`,
       type: 'crate',
       x: cx,
-      y: controller.baseGroundY,
+      y: controller.groundYAt(cx),
       vx: 0,
       vy: 0,
       facing: 'left',
@@ -152,4 +152,35 @@ export function spawnCratesSquareWave(controller, startX, count) {
       height: 25,
     });
   }
+}
+// Static training dummy for Layer A movement/combat testing (docs/design.md §8):
+// no AI, never moves or attacks — just a target for attacks.
+export function spawnDummy(controller, x) {
+  const hp = 100000;
+  controller.entities.push({
+    id: `dummy_${Math.random()}`,
+    type: 'enemy',
+    subtype: 'dummy',
+    x,
+    y: controller.groundYAt(x),
+    vx: 0,
+    vy: 0,
+    facing: 'left',
+    isGrounded: true,
+    isCrouching: false,
+    health: hp,
+    maxHealth: hp,
+    flashTimer: 0,
+    scale: 1.5,
+    state: 'idle',
+    stateTime: 0,
+    attackType: 'none',
+    attackFrameData: null,
+    attackFrameTime: 0,
+    attackHitEntities: new Set(),
+    attackCooldownStart: null,
+    chargeProgress: 0,
+    combo: 0,
+    character: createCharacter(x, controller.groundYAt(x)),
+  });
 }

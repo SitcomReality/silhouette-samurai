@@ -10,6 +10,9 @@ export function updateEnemyAI(controller, dt) {
     // Skip AI during hitstun or other locked states
     if (ent.hitstunTimer > 0 || ent.staggerTimer > 0 || ent.tripTimer > 0) continue;
 
+    // Training dummy: no AI, never moves or attacks
+    if (ent.subtype === 'dummy') continue;
+
     // Route to subtype-specific AI
     if (ent.subtype === 'floater') {
       updateFloaterAI(controller, ent, p, dt, now);

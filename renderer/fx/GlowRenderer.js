@@ -92,7 +92,7 @@ export function renderGlows(ctx, controller, viewWidth, camYOffset) {
   
 function renderAttackTelegraph(ctx, ent, controller, viewWidth, camYOffset, cp) {
   const scX = (ent.x - controller.cameraX) + viewWidth / 2;
-  const groundY = controller.baseGroundY + camYOffset;
+  const groundY = controller.groundYAt(ent.x) + camYOffset;
   const dir = ent.facing === 'right' ? 1 : -1;
   const alpha = (cp - 0.3) / 0.7 * 0.7;
 

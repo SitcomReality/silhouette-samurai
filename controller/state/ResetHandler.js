@@ -1,5 +1,5 @@
 import { createPlayer } from './PlayerFactory.js';
-import { spawnCratesSquareWave, spawnEnemy } from '../spawner.js';
+import { spawnCratesSquareWave, spawnEnemy, spawnDummy } from '../spawner.js';
 
 export function resetGameState(controller) {
   // Clear entities and effects
@@ -24,9 +24,10 @@ export function resetGameState(controller) {
   controller.screenShake = 0;
   
   // Recreate player
-  controller.player = createPlayer(controller.baseGroundY);
+  controller.player = createPlayer(controller.groundYAt(0));
   
-  // Initial population
+  // Initial population: static dummy on the first plateau for attack testing
+  spawnDummy(controller, 1200);
   spawnCratesSquareWave(controller, 2500, 4);
   spawnEnemy(controller, 2800);
 }

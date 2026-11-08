@@ -268,6 +268,16 @@ Consequences of the forced decision:
 
 **Answer: implement terrain *early*, but split it.**
 
+> **Status: Layer A implemented (2026-11-08).** `sdf/ground.js` is now the
+> single ground source (`terrainY`/`groundSlopeAt`/`getGroundY`), read by
+> the SDF pass, player/entity physics, spawner, FX and telegraphs.
+> Test course: flat → gentle slope → plateau → ramp → high plateau →
+> downhill → flat → steep drop → low tail. Features: slope gravity
+> (0.5), crest launch via remembered steep uphill + `exponentialLaunch`,
+> edge-drop airborne, static training dummy at x=1200, `?flat` URL flag
+> for a flat-line baseline. Verified in Firefox: ramp launch, downhill
+> vx≈11, drop-edge fall, dummy placement.
+
 ### Why early is right
 Movement is the whole game (§4). A flat line hides entire classes of
 feel bugs: does a slide hold speed downhill? Does a charged dive launch

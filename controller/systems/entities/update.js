@@ -43,8 +43,9 @@ export function updateEntities(controller, dt) {
         ent.y += ent.vy;
         
         // Sliced debris halves now fall through the ground instead of colliding.
-        if (!ent.isSliced && ent.y >= controller.baseGroundY) {
-          ent.y = controller.baseGroundY;
+        const gY = controller.groundYAt(ent.x);
+        if (!ent.isSliced && ent.y >= gY) {
+          ent.y = gY;
           ent.vy *= -0.3; // slight bounce
           ent.vx *= 0.6;
           if (Math.abs(ent.vy) < 2) {
@@ -69,8 +70,9 @@ export function updateEntities(controller, dt) {
       ent.x += ent.vx;
       ent.y += ent.vy;
 
-      if (ent.y >= controller.baseGroundY) {
-        ent.y = controller.baseGroundY;
+      const gY2 = controller.groundYAt(ent.x);
+      if (ent.y >= gY2) {
+        ent.y = gY2;
         ent.vy = 0;
         ent.vx *= 0.5;
         ent.isGrounded = true;
@@ -82,7 +84,7 @@ export function updateEntities(controller, dt) {
     } else {
       ent.vx *= 0.8;
       ent.x += ent.vx;
-      ent.y = controller.baseGroundY;
+      ent.y = controller.groundYAt(ent.x);
     }
 
     if (ent.state === 'hit' && ent.stateTime > 0.4) {

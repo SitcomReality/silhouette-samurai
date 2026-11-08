@@ -23,7 +23,7 @@ export function updateEngine(controller, dt) {
     controller.introLayouts = controller.introTexts.map(it => textSDFManager.getTextLayout(
       it.text,
       it.x,
-      controller.baseGroundY - 20,
+      controller.groundYAt(800) - 20,
       1.0
     ));
     controller.introLayoutsGenerated = true;
