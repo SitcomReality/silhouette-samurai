@@ -26,8 +26,8 @@ export function updateFX(controller, dt) {
       pt.vx *= 0.7;
       pt.isGrounded = true;
       
-      if (controller.audioEngine && pt.radius > 8) {
-        controller.audioEngine.sfx.playFusionHum(pt.radius / 20);
+      if (pt.radius > 8) {
+        controller.audioEngine?.onFusionHum(pt.radius / 20);
       }
     }
   }

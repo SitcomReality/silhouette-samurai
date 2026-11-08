@@ -40,9 +40,7 @@ export class ParrySystem {
     controller.hitstop = 4;
     controller.screenShake = 10;
     
-    if (controller.audioEngine) {
-      controller.audioEngine.sfx.playParry();
-    }
+    controller.audioEngine?.onParry();
     
     // Spawn parry flash effect
     controller.visualFx.push({
@@ -94,9 +92,7 @@ export class ParrySystem {
     controller.hitstop = 3;
     controller.screenShake = 6;
     
-    if (controller.audioEngine) {
-      controller.audioEngine.sfx.playClash();
-    }
+    controller.audioEngine?.onClash();
     
     // Spawn clash spark
     const midX = (attacker1.x + attacker2.x) / 2;
